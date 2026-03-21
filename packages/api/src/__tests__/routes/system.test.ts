@@ -9,7 +9,7 @@ vi.mock("../../db/connection.js", () => ({
 }));
 
 import { db } from "../../db/connection.js";
-import { systemRoutes } from "../../routes/system.js";
+import { createSystemRoutes } from "../../routes/system.js";
 
 const mockDb = vi.mocked(db);
 
@@ -23,7 +23,7 @@ function makeSelectChain(result: unknown[]) {
 }
 
 const app = new Hono();
-app.route("/api", systemRoutes);
+app.route("/api", createSystemRoutes(null));
 
 describe("GET /api/health", () => {
   it("returns status ok", async () => {
@@ -58,7 +58,9 @@ describe("GET /api/sync/status", () => {
     const res = await app.request("/api/sync/status");
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(Array.isArray(body)).toBe(true);
+    expect(body).toHaveProperty("jobs");
+    expect(body).toHaveProperty("isSyncing", false);
+    expect(Array.isArray(body.jobs)).toBe(true);
   });
 
   it("returns empty array when no sync status exists", async () => {
@@ -70,6 +72,6 @@ describe("GET /api/sync/status", () => {
     const res = await app.request("/api/sync/status");
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toEqual([]);
+    expect(body).toEqual({ jobs: [], isSyncing: false });
   });
 });
