@@ -11,6 +11,12 @@ import {
 } from "../db/schema.js";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
+function si(v: unknown): number {
+  if (v === null || v === undefined || v === "") return 0;
+  const n = Number(v);
+  return Number.isNaN(n) ? 0 : Math.floor(n);
+}
+
 export interface EquipeRow {
   id: number;
   lib_equipe: string;
@@ -38,8 +44,6 @@ export async function syncClassementsPoule(
   if (standings.length === 0) {
     return;
   }
-
-  const si = (v: unknown): number => { if (v === null || v === undefined || v === "") return 0; const n = Number(v); return Number.isNaN(n) ? 0 : Math.floor(n); };
 
   const rows = standings.map((s) => ({
     equipe_id: equipe.id,
@@ -161,8 +165,8 @@ export async function syncDetailsRencontres(
         classement_a: joueurInfo?.classement_a ?? "",
         joueur_b: partie.jb,
         classement_b: joueurInfo?.classement_b ?? "",
-        score_a: parseInt(partie.scorea, 10),
-        score_b: parseInt(partie.scoreb, 10),
+        score_a: si(partie.scorea),
+        score_b: si(partie.scoreb),
         detail_sets: partie.detail,
       };
     });
