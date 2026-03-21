@@ -39,7 +39,7 @@ export async function syncClassementsPoule(
     return;
   }
 
-  const si = (v: string): number => { const n = parseInt(v, 10); return Number.isNaN(n) ? 0 : n; };
+  const si = (v: string | undefined): number => { if (!v) return 0; const n = parseInt(v, 10); return Number.isNaN(n) ? 0 : n; };
 
   const rows = standings.map((s) => ({
     equipe_id: equipe.id,
