@@ -1,13 +1,19 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NavBar } from "../../components/NavBar";
 
 describe("NavBar", () => {
   function renderNavBar(initialPath = "/equipes") {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
     return render(
-      <MemoryRouter initialEntries={[initialPath]}>
-        <NavBar />
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[initialPath]}>
+          <NavBar />
+        </MemoryRouter>
+      </QueryClientProvider>
     );
   }
 
