@@ -125,8 +125,8 @@ describe("syncParties", () => {
     await syncParties(db as SyncDb, FFTT_CONFIG);
 
     const rows = insertedValues as Array<Record<string, unknown>>;
-    const victoire = rows.find((r) => r.adversaireLicence === "87654321");
-    const defaite = rows.find((r) => r.adversaireLicence === "99999999");
+    const victoire = rows.find((r) => r.adversaire_licence === "87654321");
+    const defaite = rows.find((r) => r.adversaire_licence === "99999999");
     expect(victoire?.victoire).toBe(true);
     expect(defaite?.victoire).toBe(false);
   });
@@ -158,13 +158,13 @@ describe("syncParties", () => {
     expect(insertedValues).toHaveLength(1);
     const row = insertedValues[0] as Record<string, unknown>;
     expect(row.licence).toBe("12345678");
-    expect(row.adversaireLicence).toBe("87654321");
-    expect(row.adversaireNom).toBe("MARTIN Pierre");
-    expect(row.adversaireClassement).toBe(1600);
+    expect(row.adversaire_licence).toBe("87654321");
+    expect(row.adversaire_nom).toBe("MARTIN Pierre");
+    expect(row.adversaire_classement).toBe(1600);
     expect(row.victoire).toBe(true);
-    expect(row.pointsResultat).toBe(2.5);
+    expect(row.points_resultat).toBe(2.5);
     expect(row.coefficient).toBe(1.0);
-    expect(row.datePartie).toBe("15/01/2025");
+    expect(row.date_partie).toBe("15/01/2025");
     expect(row.epreuve).toBe("FM01");
     expect(row.journee).toBe(5);
   });
@@ -196,12 +196,12 @@ describe("syncParties", () => {
     await syncParties(db as SyncDb, FFTT_CONFIG);
 
     const row = insertedValues[0] as Record<string, unknown>;
-    expect(row.adversaireClassement).toBe(1750);
-    expect(row.pointsResultat).toBe(3.5);
+    expect(row.adversaire_classement).toBe(1750);
+    expect(row.points_resultat).toBe(3.5);
     expect(row.coefficient).toBe(0.5);
     expect(row.journee).toBe(12);
-    expect(typeof row.adversaireClassement).toBe("number");
-    expect(typeof row.pointsResultat).toBe("number");
+    expect(typeof row.adversaire_classement).toBe("number");
+    expect(typeof row.points_resultat).toBe("number");
     expect(typeof row.coefficient).toBe("number");
     expect(typeof row.journee).toBe("number");
   });

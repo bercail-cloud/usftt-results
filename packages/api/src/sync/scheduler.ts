@@ -22,17 +22,17 @@ async function logSyncStatus(
   await db
     .insert(sync_status)
     .values({
-      jobName,
-      lastRun: new Date(),
+      job_name: jobName,
+      last_run: new Date(),
       status,
-      errorMessage: errorMessage ?? null,
+      error_message: errorMessage ?? null,
     })
     .onConflictDoUpdate({
       target: [sync_status.job_name],
       set: {
-        lastRun: new Date(),
+        last_run: new Date(),
         status,
-        errorMessage: errorMessage ?? null,
+        error_message: errorMessage ?? null,
       },
     })
     .returning();

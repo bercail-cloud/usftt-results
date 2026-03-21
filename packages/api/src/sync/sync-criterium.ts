@@ -68,8 +68,8 @@ export async function syncCriterium(
         const licence = joueursByNom.get(nomUpper) ?? null;
 
         return {
-          divisionId: division.iddivision,
-          divisionLibelle: division.libelle,
+          division_id: division.iddivision,
+          division_libelle: division.libelle,
           rang: parseInt(s.rang, 10),
           licence,
           nom: s.nom,
@@ -90,13 +90,13 @@ export async function syncCriterium(
             criterium_classement.tour,
           ],
           set: {
-            divisionLibelle: sql`excluded.division_libelle`,
+            division_libelle: sql`excluded.division_libelle`,
             rang: sql`excluded.rang`,
             licence: sql`excluded.licence`,
             club: sql`excluded.club`,
             classement: sql`excluded.classement`,
             points: sql`excluded.points`,
-            updatedAt: sql`now()`,
+            updated_at: sql`now()`,
           },
         })
         .returning();

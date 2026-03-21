@@ -98,9 +98,9 @@ describe("syncJoueurs", () => {
     expect(row.licence).toBe("12345678");
     expect(row.nom).toBe("DUPONT");
     expect(row.prenom).toBe("Jean");
-    expect(row.clubNumero).toBe("99999");
-    expect(row.pointsOfficiels).toBe(1500);
-    expect(row.pointsMensuels).toBe(1520);
+    expect(row.club_numero).toBe("99999");
+    expect(row.points_officiels).toBe(1500);
+    expect(row.points_mensuels).toBe(1520);
     expect(row.categorie).toBe("SH");
     expect(row.sexe).toBe("M");
   });
@@ -125,10 +125,10 @@ describe("syncJoueurs", () => {
     await syncJoueurs(db as SyncDb, FFTT_CONFIG);
 
     const row = insertedValues[0] as Record<string, unknown>;
-    expect(row.pointsOfficiels).toBe(1750);
-    expect(row.pointsMensuels).toBe(1800);
-    expect(typeof row.pointsOfficiels).toBe("number");
-    expect(typeof row.pointsMensuels).toBe("number");
+    expect(row.points_officiels).toBe(1750);
+    expect(row.points_mensuels).toBe(1800);
+    expect(typeof row.points_officiels).toBe("number");
+    expect(typeof row.points_mensuels).toBe("number");
   });
 
   it("returns count of synced players", async () => {
@@ -170,6 +170,6 @@ describe("syncJoueurs", () => {
     };
 
     await syncJoueurs(db as SyncDb, FFTT_CONFIG);
-    expect(conflictSetArg).toHaveProperty("updatedAt");
+    expect(conflictSetArg).toHaveProperty("updated_at");
   });
 });

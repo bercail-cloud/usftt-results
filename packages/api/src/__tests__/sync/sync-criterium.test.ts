@@ -273,8 +273,8 @@ describe("syncCriterium", () => {
 
     const inserted = db._inserted[0]! as Array<Record<string, unknown>>;
     expect(inserted).toHaveLength(1);
-    expect(inserted[0]!.divisionId).toBe("DIV1");
-    expect(inserted[0]!.divisionLibelle).toBe("Division A");
+    expect(inserted[0]!.division_id).toBe("DIV1");
+    expect(inserted[0]!.division_libelle).toBe("Division A");
     expect(inserted[0]!.rang).toBe(1);
     expect(inserted[0]!.nom).toBe("DUPONT");
     expect(inserted[0]!.club).toBe("FONTENAY USTT");

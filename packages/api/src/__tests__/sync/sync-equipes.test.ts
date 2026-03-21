@@ -76,8 +76,8 @@ describe("syncEquipes", () => {
 
     expect(insertedValues).toHaveLength(1);
     const inserted = insertedValues[0] as Record<string, unknown>;
-    expect(inserted.idPoule).toBe("123");
-    expect(inserted.idDivision).toBe("456");
+    expect(inserted.id_poule).toBe("123");
+    expect(inserted.id_division).toBe("456");
   });
 
   it("maps equipe fields correctly into db row", async () => {
@@ -108,10 +108,10 @@ describe("syncEquipes", () => {
     await syncEquipes(db as SyncDb, FFTT_CONFIG);
 
     const inserted = insertedValues[0] as Record<string, unknown>;
-    expect(inserted.libEquipe).toBe("USFTT 2");
-    expect(inserted.libDivision).toBe("D1 Departementale");
-    expect(inserted.idEpreuve).toBe("EP2");
-    expect(inserted.libEpreuve).toBe("Champ Dep");
+    expect(inserted.lib_equipe).toBe("USFTT 2");
+    expect(inserted.lib_division).toBe("D1 Departementale");
+    expect(inserted.id_epreuve).toBe("EP2");
+    expect(inserted.lib_epreuve).toBe("Champ Dep");
   });
 
   it("returns empty array when no equipes found", async () => {

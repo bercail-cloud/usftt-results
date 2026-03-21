@@ -16,13 +16,13 @@ export async function syncJoueurs(db: SyncDb, ffttConfig: FfttConfig): Promise<n
     licence: player.licence,
     nom: player.nom,
     prenom: player.prenom,
-    clubNumero: player.numclub,
-    pointsOfficiels: parseInt(player.point, 10),
-    pointsMensuels: parseInt(player.pointm, 10),
+    club_numero: player.numclub,
+    points_officiels: parseInt(player.point, 10),
+    points_mensuels: parseInt(player.pointm, 10),
     categorie: player.cat,
     sexe: player.sexe,
-    rangDepartemental: null,
-    rangRegional: null,
+    rang_departemental: null,
+    rang_regional: null,
   }));
 
   const upserted = await db
@@ -33,12 +33,12 @@ export async function syncJoueurs(db: SyncDb, ffttConfig: FfttConfig): Promise<n
       set: {
         nom: sql`excluded.nom`,
         prenom: sql`excluded.prenom`,
-        clubNumero: sql`excluded.club_numero`,
-        pointsOfficiels: sql`excluded.points_officiels`,
-        pointsMensuels: sql`excluded.points_mensuels`,
+        club_numero: sql`excluded.club_numero`,
+        points_officiels: sql`excluded.points_officiels`,
+        points_mensuels: sql`excluded.points_mensuels`,
         categorie: sql`excluded.categorie`,
         sexe: sql`excluded.sexe`,
-        updatedAt: sql`now()`,
+        updated_at: sql`now()`,
       },
     })
     .returning();
