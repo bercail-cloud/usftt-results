@@ -83,28 +83,48 @@ export async function syncCriterium(
   const organismeIds = getOrganismeIds(organismeId);
 
   // Fetch all joueurs for name matching
-  const joueursAll: Array<{ licence: string; nom: string; prenom: string }> =
+  const joueursAll: Array<{ licence: string; nom: string; prenom: string; points_officiels: number | null }> =
     await db
       .select({
         licence: joueurs.licence,
         nom: joueurs.nom,
         prenom: joueurs.prenom,
+        points_officiels: joueurs.points_officiels,
       })
       .from(joueurs);
 
-  const joueursByFullName = new Map(
-    joueursAll.map((j) => [j.nom.toUpperCase(), j.licence])
-  );
+  // Map by "NOM Prenom" (exact match)
   const joueursByNomPrenom = new Map(
     joueursAll.map((j) => [`${j.nom} ${j.prenom}`.toUpperCase(), j.licence])
   );
 
-  function findLicence(fullName: string): string | null {
+  // Group by last name for fallback (handles siblings via classement)
+  const joueursByLastName = new Map<string, typeof joueursAll>();
+  for (const j of joueursAll) {
+    const key = j.nom.toUpperCase();
+    if (!joueursByLastName.has(key)) joueursByLastName.set(key, []);
+    joueursByLastName.get(key)!.push(j);
+  }
+
+  function findLicence(fullName: string, classement?: number): string | null {
     const upper = fullName.toUpperCase().trim();
+    // Try "NOM Prenom" exact match
     if (joueursByNomPrenom.has(upper)) return joueursByNomPrenom.get(upper)!;
+    // Fallback: match by last name
     const lastName = upper.split(" ")[0];
-    if (lastName && joueursByFullName.has(lastName))
-      return joueursByFullName.get(lastName)!;
+    if (!lastName) return null;
+    const candidates = joueursByLastName.get(lastName);
+    if (!candidates) return null;
+    // If only one match, use it
+    if (candidates.length === 1) return candidates[0]!.licence;
+    // Multiple candidates (siblings) — use classement to disambiguate
+    if (classement && classement > 0) {
+      const byClassement = candidates.find(
+        (c) => c.points_officiels !== null && Math.abs(c.points_officiels - classement) < 50
+      );
+      if (byClassement) return byClassement.licence;
+    }
+    // Can't disambiguate — return null rather than wrong match
     return null;
   }
 
@@ -278,7 +298,7 @@ export async function syncCriterium(
             .map((s) => ({
               criterium_tour_id: tourId,
               rang: si(s.rang),
-              licence: findLicence(s.nom),
+              licence: findLicence(s.nom, parseClassementFromClt(String(s.clt ?? ""))),
               nom: s.nom,
               club: s.club,
               classement: parseClassementFromClt(String(s.clt ?? "")),
