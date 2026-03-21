@@ -115,16 +115,15 @@ export async function syncCriterium(
     if (!lastName) return null;
     const candidates = joueursByLastName.get(lastName);
     if (!candidates) return null;
-    // If only one match, use it
-    if (candidates.length === 1) return candidates[0]!.licence;
-    // Multiple candidates (siblings) — use classement to disambiguate
+    // Use classement to verify match (avoids homonyms from other clubs)
     if (classement && classement > 0) {
       const byClassement = candidates.find(
-        (c) => c.points_officiels !== null && Math.abs(c.points_officiels - classement) < 50
+        (c) => c.points_officiels !== null && Math.abs(c.points_officiels - classement) < 100
       );
       if (byClassement) return byClassement.licence;
     }
-    // Can't disambiguate — return null rather than wrong match
+    // No classement provided: only match if single candidate
+    if (candidates.length === 1 && !classement) return candidates[0]!.licence;
     return null;
   }
 
