@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useCriteriumTours, useCriteriumTour } from "../hooks/use-criterium.js";
 import { LoadingSkeleton } from "../components/LoadingSkeleton.js";
 import { EmptyState } from "../components/EmptyState.js";
-import { DivisionBadge } from "../components/DivisionBadge.js";
+import { RankCircle } from "../components/RankCircle.js";
 
 interface TourSummary {
   tour: number;
@@ -26,23 +26,146 @@ interface JoueurResult {
 
 const TOUR_LABELS = ["Tour 1", "Tour 2", "Tour 3", "Tour 4"];
 
-function formatDivision(division: string): string {
-  return division.replace(/^(?:FED|[A-Z]\d+)_/, "");
+// Parse division to extract level code, age category and gender
+function parseDivision(raw: string): {
+  niveauOrder: number;
+  niveauLabel: string;
+  levelCode: string;
+  ageCategory: string;
+  ageOrder: number;
+  gender: string;
+  display: string;
+} {
+  const cleaned = raw
+    .replace(/^FED_/, "")
+    .replace(/^L\d+_/, "")
+    .replace(/^D\d+[-_]?/, "");
+
+  // Extract gender from end
+  const genderMatch = raw.match(/\(([MF,]+)\)\s*$/);
+  const gender = genderMatch ? genderMatch[1]! : "";
+
+  // Determine niveau
+  let niveauOrder = 3;
+  let niveauLabel = "Departemental";
+  let levelCode = "";
+
+  if (raw.startsWith("FED_") || raw.includes("N1") || raw.includes("N2")) {
+    niveauOrder = 1;
+    niveauLabel = "National";
+    const nMatch = raw.match(/N(\d)/);
+    levelCode = nMatch ? `N${nMatch[1]}` : "N1";
+  } else if (raw.startsWith("L") && raw.includes("_R")) {
+    niveauOrder = 2;
+    niveauLabel = "Regional";
+    const rMatch = raw.match(/R(\d)/);
+    levelCode = rMatch ? `R${rMatch[1]}` : "R1";
+  } else {
+    const dMatch = raw.match(/D(\d)/);
+    levelCode = dMatch ? `D${dMatch[1]}` : "D1";
+  }
+
+  // Extract age category - ordered: Elite, Seniors, Juniors, Cadets, Minimes, Benjamins, Poussins
+  let ageCategory = "Seniors";
+  let ageOrder = 2;
+
+  if (/[Ee]lite/i.test(raw)) { ageCategory = "Elite"; ageOrder = 1; }
+  else if (/[Ss]enior/i.test(raw)) { ageCategory = "Seniors"; ageOrder = 2; }
+  else if (/[Jj]unior/i.test(raw) || /-?\s*19\s*ans/i.test(raw)) { ageCategory = "Juniors (-19 ans)"; ageOrder = 3; }
+  else if (/[Cc]adet/i.test(raw) || /-?\s*15\s*ans/i.test(raw)) { ageCategory = "Cadets (-15 ans)"; ageOrder = 4; }
+  else if (/[Mm]inime/i.test(raw)) { ageCategory = "Minimes"; ageOrder = 5; }
+  else if (/-?\s*13\s*ans/i.test(raw)) { ageCategory = "Benjamins (-13 ans)"; ageOrder = 6; }
+  else if (/-?\s*11\s*ans/i.test(raw)) { ageCategory = "Poussins (-11 ans)"; ageOrder = 7; }
+
+  const genderLabel = gender.includes("F")
+    ? gender === "F" ? "Dames" : "Mixte"
+    : "Messieurs";
+
+  return {
+    niveauOrder,
+    niveauLabel,
+    levelCode,
+    ageCategory,
+    ageOrder,
+    gender: genderLabel,
+    display: cleaned.replace(/\s*\([MF,]+\)\s*$/, "").trim(),
+  };
 }
 
-function getBilanColor(value: number): string {
-  if (value > 0) return "text-success";
-  if (value < 0) return "text-error";
-  return "text-text-secondary";
+// Group players by niveau > ageCategory
+interface GroupedSection {
+  niveauOrder: number;
+  niveauLabel: string;
+  ageGroups: Array<{
+    ageCategory: string;
+    players: Array<JoueurResult & {
+      levelCode: string;
+      gender: string;
+    }>;
+  }>;
 }
 
-function getBestBilan(joueurs: JoueurResult[]): JoueurResult | null {
-  if (joueurs.length === 0) return null;
-  return joueurs.reduce((best, j) => {
-    const bilanJ = j.victoires - j.defaites;
-    const bilanBest = best.victoires - best.defaites;
-    return bilanJ > bilanBest ? j : best;
-  });
+function groupPlayers(joueurs: JoueurResult[]): GroupedSection[] {
+  const niveauMap = new Map<string, {
+    order: number;
+    label: string;
+    ageMap: Map<string, { order: number; players: Array<JoueurResult & { levelCode: string; gender: string }> }>;
+  }>();
+
+  for (const j of joueurs) {
+    const parsed = parseDivision(j.division);
+    const key = parsed.niveauLabel;
+
+    if (!niveauMap.has(key)) {
+      niveauMap.set(key, { order: parsed.niveauOrder, label: key, ageMap: new Map() });
+    }
+
+    const niveau = niveauMap.get(key)!;
+    const ageKey = `${parsed.ageCategory} ${parsed.gender}`;
+
+    if (!niveau.ageMap.has(ageKey)) {
+      niveau.ageMap.set(ageKey, { order: parsed.ageOrder, players: [] });
+    }
+
+    niveau.ageMap.get(ageKey)!.players.push({
+      ...j,
+      levelCode: parsed.levelCode,
+      gender: parsed.gender,
+    });
+  }
+
+  const sections: GroupedSection[] = [];
+
+  for (const [, niveau] of niveauMap) {
+    const ageGroups = Array.from(niveau.ageMap.entries())
+      .sort(([, a], [, b]) => a.order - b.order)
+      .map(([ageCategory, { players }]) => ({
+        ageCategory,
+        players: players.sort((a, b) => a.rang - b.rang),
+      }));
+
+    sections.push({
+      niveauOrder: niveau.order,
+      niveauLabel: niveau.label,
+      ageGroups,
+    });
+  }
+
+  return sections.sort((a, b) => a.niveauOrder - b.niveauOrder);
+}
+
+function getNiveauColor(niveau: string): string {
+  switch (niveau) {
+    case "National": return "text-blue-700 bg-blue-50 border-blue-200";
+    case "Regional": return "text-purple-700 bg-purple-50 border-purple-200";
+    default: return "text-amber-700 bg-amber-50 border-amber-200";
+  }
+}
+
+function getLevelBadgeColor(code: string): string {
+  if (code.startsWith("N")) return "bg-blue-100 text-blue-700";
+  if (code.startsWith("R")) return "bg-purple-100 text-purple-700";
+  return "bg-amber-100 text-amber-700";
 }
 
 function TourResultsTable({
@@ -61,20 +184,20 @@ function TourResultsTable({
   };
 
   if (isLoading) return <LoadingSkeleton lines={5} />;
-
-  if (isError) {
-    return <EmptyState message="Erreur lors du chargement des resultats" />;
-  }
+  if (isError) return <EmptyState message="Erreur lors du chargement des resultats" />;
 
   const joueurs = data ?? [];
-
-  if (joueurs.length === 0) {
-    return <EmptyState message="Aucun resultat pour ce tour" />;
-  }
+  if (joueurs.length === 0) return <EmptyState message="Aucun resultat pour ce tour" />;
 
   const totalVictoires = joueurs.reduce((s, j) => s + j.victoires, 0);
   const totalDefaites = joueurs.reduce((s, j) => s + j.defaites, 0);
-  const bestBilan = getBestBilan(joueurs);
+  const bestBilan = joueurs.reduce((best, j) => {
+    const bilanJ = j.victoires - j.defaites;
+    const bilanBest = best.victoires - best.defaites;
+    return bilanJ > bilanBest ? j : best;
+  });
+
+  const grouped = groupPlayers(joueurs);
 
   return (
     <div className="space-y-4">
@@ -82,7 +205,7 @@ function TourResultsTable({
         <p className="text-sm text-[#64748b]">Date : {tourDate}</p>
       )}
 
-      {/* Summary stat cards */}
+      {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 text-center">
           <p className="text-xs text-[#64748b] mb-1">Joueurs engages</p>
@@ -98,73 +221,78 @@ function TourResultsTable({
         </div>
         <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 text-center">
           <p className="text-xs text-[#64748b] mb-1">Meilleur bilan</p>
-          {bestBilan ? (
-            <>
-              <p className="text-sm font-bold text-[#0f172a] truncate">
-                {bestBilan.nom}
-              </p>
-              <p className="text-xs">
-                <span className="text-success">{bestBilan.victoires}V</span>
-                <span className="text-[#64748b] mx-0.5">-</span>
-                <span className="text-error">{bestBilan.defaites}D</span>
-              </p>
-            </>
-          ) : (
-            <p className="text-sm text-[#94a3b8]">-</p>
-          )}
+          <p className="text-sm font-bold text-[#0f172a] truncate">{bestBilan.nom}</p>
+          <p className="text-xs">
+            <span className="text-success">{bestBilan.victoires}V</span>
+            <span className="text-[#64748b] mx-0.5">-</span>
+            <span className="text-error">{bestBilan.defaites}D</span>
+          </p>
         </div>
       </div>
 
-      {/* Results table */}
-      <div className="bg-white border border-[#e2e8f0] rounded-lg p-5">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[#e2e8f0]">
-                <th className="text-left px-3 py-2 font-semibold text-[#64748b]">Joueur</th>
-                <th className="text-center px-3 py-2 font-semibold text-[#64748b]">Division</th>
-                <th className="text-center px-3 py-2 font-semibold text-[#64748b]">Classement</th>
-                <th className="text-center px-3 py-2 font-semibold text-[#64748b]">Bilan</th>
-                <th className="text-center px-3 py-2 font-semibold text-[#64748b]">Rang</th>
-                <th className="text-center px-3 py-2 font-semibold text-[#64748b]">Points</th>
-              </tr>
-            </thead>
-            <tbody>
-              {joueurs.map((j) => {
-                const bilan = j.victoires - j.defaites;
-                return (
-                  <tr
+      {/* Grouped results */}
+      {grouped.map((section) => (
+        <div key={section.niveauLabel} className={`border rounded-lg overflow-hidden ${getNiveauColor(section.niveauLabel)}`}>
+          {/* Niveau header */}
+          <div className="px-5 py-3 font-bold text-base">
+            {section.niveauLabel}
+          </div>
+
+          <div className="bg-white">
+            {section.ageGroups.map((group) => (
+              <div key={group.ageCategory}>
+                {/* Age category header */}
+                <div className="px-5 py-2 bg-[#f8fafc] border-t border-[#e2e8f0]">
+                  <span className="text-xs font-semibold text-[#64748b] uppercase tracking-wide">
+                    {group.ageCategory}
+                  </span>
+                </div>
+
+                {/* Players in this group */}
+                {group.players.map((j) => (
+                  <div
                     key={`${j.licence}-${j.division}`}
-                    className="border-b border-[#f1f5f9] hover:bg-[#f8fafc] cursor-pointer transition-colors"
+                    className="flex items-center px-5 py-2.5 border-t border-[#f1f5f9] hover:bg-[#f8fafc] cursor-pointer transition-colors"
                     onClick={() => j.licence && onRowClick(j.licence)}
                   >
-                    <td className="px-3 py-2 font-bold text-[#0f172a]">
+                    {/* Level badge */}
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${getLevelBadgeColor(j.levelCode)} mr-3 min-w-[28px] text-center`}>
+                      {j.levelCode}
+                    </span>
+
+                    {/* Name */}
+                    <span className="font-semibold text-[#0f172a] flex-1 text-sm">
                       {j.nom}
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      <DivisionBadge division={formatDivision(j.division)} />
-                    </td>
-                    <td className="px-3 py-2 text-center text-[#64748b]">
-                      {j.classement}
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      <span className="text-success">{j.victoires}V</span>
+                    </span>
+
+                    {/* Classement */}
+                    <span className="text-[#64748b] text-sm w-16 text-center">
+                      {j.classement || "-"}
+                    </span>
+
+                    {/* Bilan */}
+                    <span className="w-20 text-center text-sm">
+                      <span className="text-success font-medium">{j.victoires}V</span>
                       <span className="text-[#94a3b8] mx-0.5">-</span>
-                      <span className="text-error">{j.defaites}D</span>
-                    </td>
-                    <td className="px-3 py-2 text-center text-[#64748b]">
-                      {j.rang}
-                    </td>
-                    <td className={`px-3 py-2 text-center font-semibold ${getBilanColor(bilan)}`}>
+                      <span className="text-error font-medium">{j.defaites}D</span>
+                    </span>
+
+                    {/* Rang */}
+                    <span className="w-12 flex justify-center">
+                      <RankCircle rank={j.rang} />
+                    </span>
+
+                    {/* Points */}
+                    <span className="text-sm font-semibold text-[#0f172a] w-16 text-right">
                       {j.points}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      ))}
     </div>
   );
 }
@@ -190,20 +318,15 @@ export function CriteriumOverview() {
   const currentTourData = availableTours.find((t) => t.tour === currentTour);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-      {/* Title */}
+    <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
       <div>
         <h1 className="text-2xl font-extrabold text-[#0f172a]">
           Criterium Federal
         </h1>
       </div>
 
-      {/* Tour tabs */}
       {toursLoading && <LoadingSkeleton lines={1} />}
-
-      {toursError && (
-        <EmptyState message="Erreur lors du chargement des tours" />
-      )}
+      {toursError && <EmptyState message="Erreur lors du chargement des tours" />}
 
       {!toursLoading && !toursError && (
         <>
