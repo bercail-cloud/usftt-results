@@ -1,6 +1,6 @@
 import { getPartieMysql } from "../fftt/endpoints.js";
 import { joueurs, parties_individuelles } from "../db/schema.js";
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
 export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
@@ -47,28 +47,16 @@ export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<n
       journee: safeInt(partie.numjourn),
     }));
 
-    const upserted = await db
-      .insert(parties_individuelles)
-      .values(rows)
-      .onConflictDoUpdate({
-        target: [
-          parties_individuelles.licence,
-          parties_individuelles.adversaire_licence,
-          parties_individuelles.date_partie,
-          parties_individuelles.journee,
-        ],
-        set: {
-          adversaire_nom: sql`excluded.adversaire_nom`,
-          adversaire_classement: sql`excluded.adversaire_classement`,
-          victoire: sql`excluded.victoire`,
-          points_resultat: sql`excluded.points_resultat`,
-          coefficient: sql`excluded.coefficient`,
-          epreuve: sql`excluded.epreuve`,
-        },
-      })
-      .returning();
+    // Delete existing parties for this player, then re-insert all
+    await db
+      .delete(parties_individuelles)
+      .where(eq(parties_individuelles.licence, joueur.licence));
 
-    totalCount += upserted.length;
+    if (rows.length > 0) {
+      await db.insert(parties_individuelles).values(rows);
+    }
+
+    totalCount += rows.length;
   }
 
   return totalCount;

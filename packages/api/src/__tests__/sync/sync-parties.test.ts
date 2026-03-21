@@ -96,12 +96,9 @@ describe("syncParties", () => {
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
       }),
+      delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
       insert: vi.fn().mockReturnValue({
-        values: vi.fn().mockReturnValue({
-          onConflictDoUpdate: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue([]),
-          }),
-        }),
+        values: vi.fn().mockResolvedValue([]),
       }),
     };
 
@@ -114,11 +111,7 @@ describe("syncParties", () => {
     db.insert = vi.fn().mockReturnValue({
       values: vi.fn().mockImplementation((vals: unknown[]) => {
         insertedValues.push(...vals);
-        return {
-          onConflictDoUpdate: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue(insertedValues),
-          }),
-        };
+        return Promise.resolve(insertedValues);
       }),
     });
 
@@ -136,6 +129,7 @@ describe("syncParties", () => {
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
       }),
+      delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
       insert: vi.fn(),
     };
 
@@ -145,11 +139,7 @@ describe("syncParties", () => {
     db.insert = vi.fn().mockReturnValue({
       values: vi.fn().mockImplementation((vals: unknown[]) => {
         insertedValues.push(...vals);
-        return {
-          onConflictDoUpdate: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue(insertedValues),
-          }),
-        };
+        return Promise.resolve(insertedValues);
       }),
     });
 
@@ -174,6 +164,7 @@ describe("syncParties", () => {
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
       }),
+      delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
       insert: vi.fn(),
     };
 
@@ -185,11 +176,7 @@ describe("syncParties", () => {
     db.insert = vi.fn().mockReturnValue({
       values: vi.fn().mockImplementation((vals: unknown[]) => {
         insertedValues.push(...vals);
-        return {
-          onConflictDoUpdate: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue(insertedValues),
-          }),
-        };
+        return Promise.resolve(insertedValues);
       }),
     });
 
@@ -214,21 +201,10 @@ describe("syncParties", () => {
           { licence: "22222222" },
         ]),
       }),
-      insert: vi.fn()
-        .mockReturnValueOnce({
-          values: vi.fn().mockReturnValue({
-            onConflictDoUpdate: vi.fn().mockReturnValue({
-              returning: vi.fn().mockResolvedValue([{}, {}]),
-            }),
-          }),
-        })
-        .mockReturnValueOnce({
-          values: vi.fn().mockReturnValue({
-            onConflictDoUpdate: vi.fn().mockReturnValue({
-              returning: vi.fn().mockResolvedValue([{}]),
-            }),
-          }),
-        }),
+      delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockResolvedValue(undefined),
+      }),
     };
 
     mockGetPartieMysql
@@ -244,6 +220,7 @@ describe("syncParties", () => {
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockResolvedValue([{ licence: "11111111" }]),
       }),
+      delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
       insert: vi.fn(),
     };
 
