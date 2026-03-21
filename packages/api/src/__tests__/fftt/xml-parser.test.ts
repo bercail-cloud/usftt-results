@@ -11,6 +11,9 @@ import {
   parseEpreuves,
   parseDivisions,
   parseResCla,
+  parseResultIndivPoules,
+  parseResultIndivClassement,
+  parseResultIndivParties,
 } from "../../fftt/xml-parser.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -755,6 +758,92 @@ describe("parseResCla", () => {
   it("returns empty array when no classements", () => {
     const xml = `<?xml version="1.0"?><liste></liste>`;
     const result = parseResCla(xml);
+    expect(result).toEqual([]);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// parseResultIndivPoules
+// ─────────────────────────────────────────────────────────────────────────────
+describe("parseResultIndivPoules", () => {
+  it("returns array of poules from multiple items", () => {
+    const xml = `<?xml version="1.0"?>
+<liste>
+  <tour><libelle>T4 Gr1</libelle><lien>epr=15953&amp;res_division=196680&amp;cx_tableau=219834</lien><date>13/03/2026</date></tour>
+  <tour><libelle>T3 Gr1</libelle><lien>epr=15953&amp;res_division=196680&amp;cx_tableau=219835</lien><date>23/01/2026</date></tour>
+</liste>`;
+
+    const result = parseResultIndivPoules(xml);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({
+      libelle: "T4 Gr1",
+      lien: "epr=15953&res_division=196680&cx_tableau=219834",
+      date: "13/03/2026",
+    });
+    expect(result[1]!.libelle).toBe("T3 Gr1");
+  });
+
+  it("returns empty array when no tours", () => {
+    const xml = `<?xml version="1.0"?><liste></liste>`;
+    const result = parseResultIndivPoules(xml);
+    expect(result).toEqual([]);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// parseResultIndivClassement
+// ─────────────────────────────────────────────────────────────────────────────
+describe("parseResultIndivClassement", () => {
+  it("returns array of classements from multiple items", () => {
+    const xml = `<?xml version="1.0"?>
+<liste>
+  <classement><rang>7</rang><nom>BUO</nom><clt>N397 - 2324</clt><club>FONTENAYSIENNE</club><points>120A</points></classement>
+  <classement><rang>1</rang><nom>DUPONT</nom><clt>N100 - 3000</clt><club>OTHER CLUB</club><points>180A</points></classement>
+</liste>`;
+
+    const result = parseResultIndivClassement(xml);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({
+      rang: "7",
+      nom: "BUO",
+      clt: "N397 - 2324",
+      club: "FONTENAYSIENNE",
+      points: "120A",
+    });
+  });
+
+  it("returns empty array when no classements", () => {
+    const xml = `<?xml version="1.0"?><liste></liste>`;
+    const result = parseResultIndivClassement(xml);
+    expect(result).toEqual([]);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// parseResultIndivParties
+// ─────────────────────────────────────────────────────────────────────────────
+describe("parseResultIndivParties", () => {
+  it("returns array of parties from multiple items", () => {
+    const xml = `<?xml version="1.0"?>
+<liste>
+  <partie><libelle>Finale</libelle><vain>GREMILLON-BACHELET Mathys</vain><perd>BUO Quentin</perd><forfait/></partie>
+  <partie><libelle>1/2 Finale</libelle><vain>BUO Quentin</vain><perd>BAHUAUD Mathieu</perd><forfait/></partie>
+</liste>`;
+
+    const result = parseResultIndivParties(xml);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({
+      libelle: "Finale",
+      vain: "GREMILLON-BACHELET Mathys",
+      perd: "BUO Quentin",
+      forfait: true,
+    });
+    expect(result[1]!.vain).toBe("BUO Quentin");
+  });
+
+  it("returns empty array when no parties", () => {
+    const xml = `<?xml version="1.0"?><liste></liste>`;
+    const result = parseResultIndivParties(xml);
     expect(result).toEqual([]);
   });
 });

@@ -11,6 +11,9 @@ import {
   parseEpreuves,
   parseDivisions,
   parseResCla,
+  parseResultIndivPoules,
+  parseResultIndivClassement,
+  parseResultIndivParties,
 } from "./xml-parser.js";
 import type {
   Equipe,
@@ -24,9 +27,12 @@ import type {
   Epreuve,
   Division,
   ResCla,
+  ResultIndivPoule,
+  ResultIndivClassement,
+  ResultIndivPartie,
 } from "./xml-parser.js";
 
-export type { Equipe, MatchResult, ClassementEquipe, ChpRenc, Joueur, LicenceB, Partie, Historique, Epreuve, Division, ResCla };
+export type { Equipe, MatchResult, ClassementEquipe, ChpRenc, Joueur, LicenceB, Partie, Historique, Epreuve, Division, ResCla, ResultIndivPoule, ResultIndivClassement, ResultIndivPartie };
 
 export async function getEquipes(
   numclu: string,
@@ -205,4 +211,57 @@ export async function getResCla(
 ): Promise<ResCla[]> {
   const xml = await fetchFftt("xml_res_cla", resDivision, appId, serie, password);
   return parseResCla(xml);
+}
+
+export async function getResultIndivPoules(
+  epr: string,
+  resDivision: string,
+  appId: string,
+  serie: string,
+  password: string
+): Promise<ResultIndivPoule[]> {
+  const xml = await fetchFftt(
+    "xml_result_indiv",
+    { action: "poule", epr, res_division: resDivision },
+    appId,
+    serie,
+    password
+  );
+  return parseResultIndivPoules(xml);
+}
+
+export async function getResultIndivClassement(
+  epr: string,
+  resDivision: string,
+  cxTableau: string,
+  appId: string,
+  serie: string,
+  password: string
+): Promise<ResultIndivClassement[]> {
+  const xml = await fetchFftt(
+    "xml_result_indiv",
+    { action: "classement", epr, res_division: resDivision, cx_tableau: cxTableau },
+    appId,
+    serie,
+    password
+  );
+  return parseResultIndivClassement(xml);
+}
+
+export async function getResultIndivParties(
+  epr: string,
+  resDivision: string,
+  cxTableau: string,
+  appId: string,
+  serie: string,
+  password: string
+): Promise<ResultIndivPartie[]> {
+  const xml = await fetchFftt(
+    "xml_result_indiv",
+    { action: "partie", epr, res_division: resDivision, cx_tableau: cxTableau },
+    appId,
+    serie,
+    password
+  );
+  return parseResultIndivParties(xml);
 }

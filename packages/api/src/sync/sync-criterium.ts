@@ -1,5 +1,16 @@
-import { getEpreuves, getDivisions, getResCla } from "../fftt/endpoints.js";
-import { criterium_classement, joueurs } from "../db/schema.js";
+import {
+  getEpreuves,
+  getDivisions,
+  getResultIndivPoules,
+  getResultIndivClassement,
+  getResultIndivParties,
+} from "../fftt/endpoints.js";
+import {
+  criterium_tours,
+  criterium_classement,
+  criterium_parties,
+  joueurs,
+} from "../db/schema.js";
 import { sql } from "drizzle-orm";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
@@ -14,7 +25,7 @@ function si(v: unknown): number {
   return Number.isNaN(n) ? 0 : Math.floor(n);
 }
 
-function parseClassement(clt: string): number {
+function parseClassementFromClt(clt: string): number {
   if (!clt) return 0;
   const parts = clt.split(" - ");
   const numStr = parts.length > 1 ? parts[parts.length - 1] : clt;
@@ -22,9 +33,30 @@ function parseClassement(clt: string): number {
   return Number.isNaN(n) ? 0 : n;
 }
 
-function deriveTourFromLibelle(libelle: string): number {
-  const match = libelle.match(/[Tt]our\s*(\d+)/i);
-  return match && match[1] ? parseInt(match[1]!, 10) : 0;
+function parseTourAndGroupe(libelle: string): { tour: number; groupe: string } {
+  const tourMatch = libelle.match(/T(\d+)/i);
+  const groupeMatch = libelle.match(/(Gr\d+)/i);
+  return {
+    tour: tourMatch && tourMatch[1] ? parseInt(tourMatch[1], 10) : 0,
+    groupe: groupeMatch && groupeMatch[1] ? groupeMatch[1] : "Gr1",
+  };
+}
+
+function parseLienParams(lien: string): Record<string, string> {
+  const params: Record<string, string> = {};
+  for (const part of lien.split("&")) {
+    const [key, value] = part.split("=");
+    if (key && value) {
+      params[key] = value;
+    }
+  }
+  return params;
+}
+
+function niveauFromOrganisme(orgId: string): string {
+  if (orgId === "1") return "National";
+  if (orgId === "16") return "Regional";
+  return "Departemental";
 }
 
 // Organismes to search for criterium epreuves:
@@ -51,30 +83,28 @@ export async function syncCriterium(
   const organismeIds = getOrganismeIds(organismeId);
 
   // Fetch all joueurs for name matching
-  const joueursInDb: Array<{ licence: string; nom: string }> = await db
-    .select({ licence: joueurs.licence, nom: joueurs.nom })
-    .from(joueurs);
+  const joueursAll: Array<{ licence: string; nom: string; prenom: string }> =
+    await db
+      .select({
+        licence: joueurs.licence,
+        nom: joueurs.nom,
+        prenom: joueurs.prenom,
+      })
+      .from(joueurs);
 
-  // Build lookup by full name "NOM Prenom" (criterium API returns this format)
-  // Use full name to distinguish siblings (e.g., SOLARI Ilan vs SOLARI Eva)
   const joueursByFullName = new Map(
-    joueursInDb.map((j) => [j.nom.toUpperCase(), j.licence])
+    joueursAll.map((j) => [j.nom.toUpperCase(), j.licence])
   );
-  // Also build by "NOM Prenom" from joueurs table
-  const joueursAll: Array<{ licence: string; nom: string; prenom: string }> = await db
-    .select({ licence: joueurs.licence, nom: joueurs.nom, prenom: joueurs.prenom })
-    .from(joueurs);
   const joueursByNomPrenom = new Map(
     joueursAll.map((j) => [`${j.nom} ${j.prenom}`.toUpperCase(), j.licence])
   );
 
   function findLicence(fullName: string): string | null {
     const upper = fullName.toUpperCase().trim();
-    // Try "NOM Prenom" exact match first (handles siblings)
     if (joueursByNomPrenom.has(upper)) return joueursByNomPrenom.get(upper)!;
-    // Fallback: try last name only (less precise but catches accented names)
     const lastName = upper.split(" ")[0];
-    if (lastName && joueursByFullName.has(lastName)) return joueursByFullName.get(lastName)!;
+    if (lastName && joueursByFullName.has(lastName))
+      return joueursByFullName.get(lastName)!;
     return null;
   }
 
@@ -82,12 +112,16 @@ export async function syncCriterium(
 
   for (const orgId of organismeIds) {
     console.log(`Fetching criterium epreuves for organisme ${orgId}...`);
+    const niveau = niveauFromOrganisme(orgId);
 
     let allEpreuves;
     try {
       allEpreuves = await getEpreuves(orgId, "I", appId, serie, password);
     } catch (e) {
-      console.error(`Failed to fetch epreuves for organisme ${orgId}:`, e);
+      console.error(
+        `Failed to fetch epreuves for organisme ${orgId}:`,
+        e
+      );
       continue;
     }
 
@@ -95,11 +129,33 @@ export async function syncCriterium(
       (e) => e.typepreuve === "C"
     );
 
-    console.log(`  Found ${criteriumEpreuves.length} criterium epreuves`);
+    // Only keep the most recent criterium federal epreuve per organisme
+    // (highest idepreuve = most recent season)
+    // Also filter: only keep epreuves that look like "Criterium" (not "Challenge", etc.)
+    const federalCriteriums = criteriumEpreuves.filter(
+      (e) =>
+        e.libelle.toLowerCase().includes("crit") ||
+        e.libelle.toLowerCase().includes("fédéral") ||
+        e.libelle.toLowerCase().includes("federal")
+    );
 
-    for (const epreuve of criteriumEpreuves) {
-      const tour = deriveTourFromLibelle(epreuve.libelle);
+    // Take only the one with the highest idepreuve (most recent)
+    const currentSeason =
+      federalCriteriums.length > 0
+        ? [
+            federalCriteriums.reduce((best, e) =>
+              parseInt(e.idepreuve, 10) > parseInt(best.idepreuve, 10) ? e : best
+            ),
+          ]
+        : [];
 
+    console.log(
+      `  Found ${criteriumEpreuves.length} criterium epreuves, using ${currentSeason.length} (current season)`
+    );
+
+    const criteriumToSync = currentSeason;
+
+    for (const epreuve of criteriumToSync) {
       let divisions;
       try {
         divisions = await getDivisions(
@@ -111,77 +167,183 @@ export async function syncCriterium(
           password
         );
       } catch (e) {
-        console.error(`  Failed to fetch divisions for ${epreuve.libelle}:`, e);
+        console.error(
+          `  Failed to fetch divisions for ${epreuve.libelle}:`,
+          e
+        );
         continue;
       }
 
       for (const division of divisions) {
-        let standings;
+        let poules;
         try {
-          standings = await getResCla(
-            { res_division: division.iddivision },
+          poules = await getResultIndivPoules(
+            epreuve.idepreuve,
+            division.iddivision,
             appId,
             serie,
             password
           );
         } catch (e) {
-          console.error(`  Failed to fetch standings for ${division.libelle}:`, e);
+          console.error(
+            `  Failed to fetch poules for ${division.libelle}:`,
+            e
+          );
           continue;
         }
 
-        if (standings.length === 0) {
-          continue;
+        if (poules.length === 0) continue;
+
+        for (const poule of poules) {
+          const lienParams = parseLienParams(poule.lien);
+          const cxTableau = lienParams.cx_tableau ?? "";
+          const epr = lienParams.epr ?? epreuve.idepreuve;
+          const resDivision =
+            lienParams.res_division ?? division.iddivision;
+          const { tour, groupe } = parseTourAndGroupe(poule.libelle);
+
+          // Fetch classement for this poule
+          let standings;
+          try {
+            standings = await getResultIndivClassement(
+              epr,
+              resDivision,
+              cxTableau,
+              appId,
+              serie,
+              password
+            );
+          } catch (e) {
+            console.error(
+              `  Failed to fetch classement for ${poule.libelle}:`,
+              e
+            );
+            continue;
+          }
+
+          if (standings.length === 0) continue;
+
+          // Check if any USFTT player is in this group
+          const hasClubPlayer = standings.some(
+            (s) =>
+              findLicence(s.nom) !== null ||
+              (clubNom &&
+                s.club.toUpperCase().includes(clubNom.toUpperCase()))
+          );
+
+          if (!hasClubPlayer) continue;
+
+          // Upsert criterium_tours row
+          const tourRows = await db
+            .insert(criterium_tours)
+            .values({
+              epreuve_id: epreuve.idepreuve,
+              epreuve_libelle: epreuve.libelle,
+              division_id: division.iddivision,
+              division_libelle: division.libelle,
+              tour,
+              groupe,
+              cx_tableau: cxTableau,
+              date_tour: poule.date,
+              niveau,
+            })
+            .onConflictDoUpdate({
+              target: [
+                criterium_tours.division_id,
+                criterium_tours.cx_tableau,
+              ],
+              set: {
+                epreuve_id: sql`excluded.epreuve_id`,
+                epreuve_libelle: sql`excluded.epreuve_libelle`,
+                division_libelle: sql`excluded.division_libelle`,
+                tour: sql`excluded.tour`,
+                groupe: sql`excluded.groupe`,
+                date_tour: sql`excluded.date_tour`,
+                niveau: sql`excluded.niveau`,
+                updated_at: sql`now()`,
+              },
+            })
+            .returning();
+
+          const tourId = tourRows[0]!.id;
+
+          // Upsert classement rows (deduplicate by nom within same tour)
+          const seenNoms = new Set<string>();
+          const classementRows = standings
+            .filter((s) => {
+              if (seenNoms.has(s.nom)) return false;
+              seenNoms.add(s.nom);
+              return true;
+            })
+            .map((s) => ({
+              criterium_tour_id: tourId,
+              rang: si(s.rang),
+              licence: findLicence(s.nom),
+              nom: s.nom,
+              club: s.club,
+              classement: parseClassementFromClt(String(s.clt ?? "")),
+              points: s.points,
+            }));
+
+          const upserted = await db
+            .insert(criterium_classement)
+            .values(classementRows)
+            .onConflictDoUpdate({
+              target: [
+                criterium_classement.criterium_tour_id,
+                criterium_classement.nom,
+              ],
+              set: {
+                rang: sql`excluded.rang`,
+                licence: sql`excluded.licence`,
+                club: sql`excluded.club`,
+                classement: sql`excluded.classement`,
+                points: sql`excluded.points`,
+                updated_at: sql`now()`,
+              },
+            })
+            .returning();
+
+          totalCount += upserted.length;
+
+          // Fetch and store parties
+          let parties;
+          try {
+            parties = await getResultIndivParties(
+              epr,
+              resDivision,
+              cxTableau,
+              appId,
+              serie,
+              password
+            );
+          } catch (e) {
+            console.error(
+              `  Failed to fetch parties for ${poule.libelle}:`,
+              e
+            );
+            continue;
+          }
+
+          if (parties.length > 0) {
+            // Delete existing parties for this tour
+            await db
+              .delete(criterium_parties)
+              .where(
+                sql`${criterium_parties.criterium_tour_id} = ${tourId}`
+              );
+
+            const partieRows = parties.map((p) => ({
+              criterium_tour_id: tourId,
+              libelle: p.libelle,
+              vainqueur: p.vain,
+              perdant: p.perd,
+              forfait: p.forfait,
+            }));
+
+            await db.insert(criterium_parties).values(partieRows);
+          }
         }
-
-        // Check if any USFTT player is in this division
-        const hasClubPlayer = standings.some(
-          (s) =>
-            findLicence(s.nom) !== null ||
-            (clubNom && s.club.toUpperCase().includes(clubNom.toUpperCase()))
-        );
-
-        if (!hasClubPlayer) {
-          continue;
-        }
-
-        const rows = standings.map((s) => {
-          const licence = findLicence(s.nom);
-
-          return {
-            division_id: division.iddivision,
-            division_libelle: division.libelle,
-            rang: si(s.rang),
-            licence,
-            nom: s.nom,
-            club: s.club,
-            classement: parseClassement(String(s.clt ?? "")),
-            points: si(s.points),
-            tour,
-          };
-        });
-
-        const upserted = await db
-          .insert(criterium_classement)
-          .values(rows)
-          .onConflictDoUpdate({
-            target: [
-              criterium_classement.division_id,
-              criterium_classement.nom,
-              criterium_classement.tour,
-            ],
-            set: {
-              division_libelle: sql`excluded.division_libelle`,
-              rang: sql`excluded.rang`,
-              licence: sql`excluded.licence`,
-              club: sql`excluded.club`,
-              classement: sql`excluded.classement`,
-              points: sql`excluded.points`,
-              updated_at: sql`now()`,
-            },
-          })
-          .returning();
-
-        totalCount += upserted.length;
       }
     }
   }

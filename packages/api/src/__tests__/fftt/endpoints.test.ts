@@ -19,6 +19,9 @@ import {
   getEpreuves,
   getDivisions,
   getResCla,
+  getResultIndivPoules,
+  getResultIndivClassement,
+  getResultIndivParties,
 } from "../../fftt/endpoints.js";
 
 const mockFetch = vi.mocked(fetchFftt);
@@ -429,5 +432,74 @@ describe("getResCla", () => {
       PASSWORD
     );
     expect(result).toHaveLength(1);
+  });
+});
+
+const RESULT_INDIV_POULES_XML = `<?xml version="1.0"?>
+<liste>
+  <tour><libelle>T4 Gr1</libelle><lien>epr=15953&amp;res_division=196680&amp;cx_tableau=219834</lien><date>13/03/2026</date></tour>
+</liste>`;
+
+const RESULT_INDIV_CLASSEMENT_XML = `<?xml version="1.0"?>
+<liste>
+  <classement><rang>1</rang><nom>DUPONT</nom><clt>1500</clt><club>USFTT</club><points>120A</points></classement>
+</liste>`;
+
+const RESULT_INDIV_PARTIES_XML = `<?xml version="1.0"?>
+<liste>
+  <partie><libelle>Finale</libelle><vain>DUPONT</vain><perd>MARTIN</perd><forfait/></partie>
+</liste>`;
+
+describe("getResultIndivPoules", () => {
+  it("calls xml_result_indiv with action=poule", async () => {
+    mockFetch.mockResolvedValue(RESULT_INDIV_POULES_XML);
+
+    const result = await getResultIndivPoules("15953", "196680", APP_ID, SERIE, PASSWORD);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "xml_result_indiv",
+      expect.objectContaining({ action: "poule", epr: "15953", res_division: "196680" }),
+      APP_ID,
+      SERIE,
+      PASSWORD
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]!.libelle).toBe("T4 Gr1");
+  });
+});
+
+describe("getResultIndivClassement", () => {
+  it("calls xml_result_indiv with action=classement", async () => {
+    mockFetch.mockResolvedValue(RESULT_INDIV_CLASSEMENT_XML);
+
+    const result = await getResultIndivClassement("15953", "196680", "219834", APP_ID, SERIE, PASSWORD);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "xml_result_indiv",
+      expect.objectContaining({ action: "classement", epr: "15953", res_division: "196680", cx_tableau: "219834" }),
+      APP_ID,
+      SERIE,
+      PASSWORD
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]!.nom).toBe("DUPONT");
+  });
+});
+
+describe("getResultIndivParties", () => {
+  it("calls xml_result_indiv with action=partie", async () => {
+    mockFetch.mockResolvedValue(RESULT_INDIV_PARTIES_XML);
+
+    const result = await getResultIndivParties("15953", "196680", "219834", APP_ID, SERIE, PASSWORD);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "xml_result_indiv",
+      expect.objectContaining({ action: "partie", epr: "15953", res_division: "196680", cx_tableau: "219834" }),
+      APP_ID,
+      SERIE,
+      PASSWORD
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0]!.vain).toBe("DUPONT");
   });
 });

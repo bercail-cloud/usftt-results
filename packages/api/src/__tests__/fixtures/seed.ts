@@ -68,21 +68,52 @@ export function createMockPartieRencontre(
   };
 }
 
+export function createMockCriteriumTour(
+  overrides: Record<string, unknown> = {}
+) {
+  return {
+    id: 1,
+    epreuve_id: "EP1",
+    epreuve_libelle: "Criterium Federal",
+    division_id: "DIV1",
+    division_libelle: "Division 1",
+    tour: 1,
+    groupe: "Gr1",
+    cx_tableau: "CT1",
+    date_tour: "13/03/2026",
+    niveau: "National",
+    updated_at: new Date("2024-01-01T00:00:00Z"),
+    ...overrides,
+  };
+}
+
 export function createMockCriteriumClassement(
   overrides: Record<string, unknown> = {}
 ) {
   return {
     id: 1,
-    division_id: "DIV1",
-    division_libelle: "Division 1",
+    criterium_tour_id: 1,
     rang: 1,
     licence: "0940001",
     nom: "DUPONT Jean",
     club: "USFTT",
     classement: 1500,
-    points: 100,
-    tour: 1,
+    points: "100A",
     updated_at: new Date("2024-01-01T00:00:00Z"),
+    ...overrides,
+  };
+}
+
+export function createMockCriteriumPartie(
+  overrides: Record<string, unknown> = {}
+) {
+  return {
+    id: 1,
+    criterium_tour_id: 1,
+    libelle: "Finale",
+    vainqueur: "DUPONT Jean",
+    perdant: "MARTIN Paul",
+    forfait: false,
     ...overrides,
   };
 }

@@ -1,9 +1,10 @@
 import { Hono } from "hono";
-import { eq, and, like, asc } from "drizzle-orm";
+import { eq, and, like, asc, sql } from "drizzle-orm";
 import { db } from "../db/connection.js";
 import {
+  criterium_tours,
   criterium_classement,
-  parties_individuelles,
+  criterium_parties,
 } from "../db/schema.js";
 
 const USFTT_CLUB = "FONTENAY";
@@ -11,86 +12,72 @@ const USFTT_CLUB = "FONTENAY";
 const app = new Hono();
 
 app.get("/criterium/tours", async (c) => {
-  const distinctTours = await db
-    .selectDistinct({ tour: criterium_classement.tour })
-    .from(criterium_classement)
-    .orderBy(asc(criterium_classement.tour));
+  // Get distinct tour numbers with dates and player counts
+  const rows = await db
+    .select({
+      tour: criterium_tours.tour,
+      date_tour: criterium_tours.date_tour,
+      division_libelle: criterium_tours.division_libelle,
+      niveau: criterium_tours.niveau,
+      tourId: criterium_tours.id,
+    })
+    .from(criterium_tours)
+    .orderBy(asc(criterium_tours.tour));
 
-  if (distinctTours.length === 0) {
+  if (rows.length === 0) {
     return c.json([]);
   }
 
+  // Group by tour number
+  const tourMap = new Map<
+    number,
+    {
+      tour: number;
+      date: string;
+      divisions: Array<{ libelle: string; niveau: string }>;
+      tourIds: number[];
+    }
+  >();
+
+  for (const row of rows) {
+    const existing = tourMap.get(row.tour);
+    if (existing) {
+      existing.divisions.push({
+        libelle: row.division_libelle,
+        niveau: row.niveau,
+      });
+      existing.tourIds.push(row.tourId);
+    } else {
+      tourMap.set(row.tour, {
+        tour: row.tour,
+        date: row.date_tour,
+        divisions: [{ libelle: row.division_libelle, niveau: row.niveau }],
+        tourIds: [row.tourId],
+      });
+    }
+  }
+
+  // For each tour, count USFTT players
   const tourSummaries = await Promise.all(
-    distinctTours.map(async ({ tour }) => {
+    Array.from(tourMap.values()).map(async (tourData) => {
       const usfttPlayers = await db
-        .select()
+        .select({
+          nom: criterium_classement.nom,
+          licence: criterium_classement.licence,
+        })
         .from(criterium_classement)
         .where(
           and(
-            eq(criterium_classement.tour, tour),
+            sql`${criterium_classement.criterium_tour_id} IN (${sql.raw(tourData.tourIds.join(","))})`,
             like(criterium_classement.club, `%${USFTT_CLUB}%`)
           )
         );
 
-      const licences = usfttPlayers
-        .map((p) => p.licence)
-        .filter((l): l is string => l !== null);
-
-      let victoires = 0;
-      let defaites = 0;
-      let bestPerformer: string | null = null;
-      let bestVictoires = -1;
-
-      if (licences.length > 0) {
-        const allParties = await db
-          .select()
-          .from(parties_individuelles);
-
-        // Filter parties for criterium epreuve (contains "criterium" or "crit" case-insensitive)
-        const criteriumParties = allParties.filter((p) =>
-          /crit/i.test(p.epreuve)
-        );
-
-        // Compute per-player stats
-        const playerStats = new Map<string, { victoires: number; defaites: number; nom: string }>();
-
-        for (const player of usfttPlayers) {
-          if (player.licence) {
-            playerStats.set(player.licence, {
-              victoires: 0,
-              defaites: 0,
-              nom: player.nom,
-            });
-          }
-        }
-
-        for (const partie of criteriumParties) {
-          const stats = playerStats.get(partie.licence);
-          if (stats) {
-            if (partie.victoire) {
-              stats.victoires++;
-              victoires++;
-            } else {
-              stats.defaites++;
-              defaites++;
-            }
-          }
-        }
-
-        for (const [, stats] of playerStats) {
-          if (stats.victoires > bestVictoires) {
-            bestVictoires = stats.victoires;
-            bestPerformer = stats.nom;
-          }
-        }
-      }
-
       return {
-        tour,
+        tour: tourData.tour,
+        date: tourData.date,
         usfttCount: usfttPlayers.length,
-        victoires,
-        defaites,
-        bestPerformer,
+        divisions: tourData.divisions,
       };
     })
   );
@@ -101,12 +88,34 @@ app.get("/criterium/tours", async (c) => {
 app.get("/criterium/tours/:tour", async (c) => {
   const tour = parseInt(c.req.param("tour"), 10);
 
-  const players = await db
+  // Get all tour rows for this tour number
+  const tourRows = await db
     .select()
+    .from(criterium_tours)
+    .where(eq(criterium_tours.tour, tour));
+
+  if (tourRows.length === 0) {
+    return c.json([]);
+  }
+
+  const tourIds = tourRows.map((t) => t.id);
+
+  // Get USFTT players across all divisions for this tour
+  const players = await db
+    .select({
+      id: criterium_classement.id,
+      criterium_tour_id: criterium_classement.criterium_tour_id,
+      rang: criterium_classement.rang,
+      licence: criterium_classement.licence,
+      nom: criterium_classement.nom,
+      club: criterium_classement.club,
+      classement: criterium_classement.classement,
+      points: criterium_classement.points,
+    })
     .from(criterium_classement)
     .where(
       and(
-        eq(criterium_classement.tour, tour),
+        sql`${criterium_classement.criterium_tour_id} IN (${sql.raw(tourIds.join(","))})`,
         like(criterium_classement.club, `%${USFTT_CLUB}%`)
       )
     )
@@ -116,24 +125,37 @@ app.get("/criterium/tours/:tour", async (c) => {
     return c.json([]);
   }
 
+  // Build a lookup for tour info
+  const tourLookup = new Map(tourRows.map((t) => [t.id, t]));
+
+  // For each player, get their match results (V/D)
   const playerResults = await Promise.all(
     players.map(async (player) => {
-      const parties = await db
+      const tourInfo = tourLookup.get(player.criterium_tour_id);
+
+      // Count victories and defeats from criterium_parties
+      // Classement nom is typically just surname, parties have full name "SURNAME Firstname"
+      const allParties = await db
         .select()
-        .from(parties_individuelles)
-        .where(eq(parties_individuelles.licence, player.licence!));
+        .from(criterium_parties)
+        .where(
+          eq(criterium_parties.criterium_tour_id, player.criterium_tour_id)
+        );
 
-      const criteriumParties = parties.filter((p) => /crit/i.test(p.epreuve));
-
-      const victoires = criteriumParties.filter((p) => p.victoire).length;
-      const defaites = criteriumParties.filter((p) => !p.victoire).length;
+      const namePrefix = player.nom.toUpperCase();
+      const victoires = allParties.filter(
+        (p) => p.vainqueur.toUpperCase().startsWith(namePrefix)
+      ).length;
+      const defaites = allParties.filter(
+        (p) => p.perdant.toUpperCase().startsWith(namePrefix)
+      ).length;
 
       return {
         licence: player.licence,
         nom: player.nom,
         club: player.club,
         classement: player.classement,
-        division: player.division_libelle,
+        division: tourInfo?.division_libelle ?? "",
         rang: player.rang,
         points: player.points,
         victoires,
@@ -149,12 +171,25 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
   const tour = parseInt(c.req.param("tour"), 10);
   const licence = c.req.param("licence");
 
+  // Find tour rows for this tour number
+  const tourRows = await db
+    .select()
+    .from(criterium_tours)
+    .where(eq(criterium_tours.tour, tour));
+
+  if (tourRows.length === 0) {
+    return c.json({ error: "Tour not found" }, 404);
+  }
+
+  const tourIds = tourRows.map((t) => t.id);
+
+  // Find the player in any of these tours
   const playerRows = await db
     .select()
     .from(criterium_classement)
     .where(
       and(
-        eq(criterium_classement.tour, tour),
+        sql`${criterium_classement.criterium_tour_id} IN (${sql.raw(tourIds.join(","))})`,
         eq(criterium_classement.licence, licence)
       )
     )
@@ -165,24 +200,35 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
   }
 
   const player = playerRows[0]!;
+  const tourInfo = tourRows.find((t) => t.id === player.criterium_tour_id);
 
+  // Get full division standings
   const divisionStandings = await db
     .select()
     .from(criterium_classement)
     .where(
-      and(
-        eq(criterium_classement.tour, tour),
-        eq(criterium_classement.division_id, player.division_id)
+      eq(
+        criterium_classement.criterium_tour_id,
+        player.criterium_tour_id
       )
     )
     .orderBy(asc(criterium_classement.rang));
 
+  // Get match results for this group
   const matches = await db
     .select()
-    .from(parties_individuelles)
-    .where(eq(parties_individuelles.licence, licence));
+    .from(criterium_parties)
+    .where(
+      eq(criterium_parties.criterium_tour_id, player.criterium_tour_id)
+    );
 
-  const criteriumMatches = matches.filter((p) => /crit/i.test(p.epreuve));
+  // Filter to only the player's matches using prefix matching
+  const namePrefix = player.nom.toUpperCase();
+  const playerMatches = matches.filter(
+    (m) =>
+      m.vainqueur.toUpperCase().startsWith(namePrefix) ||
+      m.perdant.toUpperCase().startsWith(namePrefix)
+  );
 
   return c.json({
     player: {
@@ -190,12 +236,27 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
       nom: player.nom,
       club: player.club,
       classement: player.classement,
-      division: player.division_libelle,
+      division: tourInfo?.division_libelle ?? "",
       rang: player.rang,
       points: player.points,
     },
-    divisionStandings,
-    matches: criteriumMatches,
+    divisionStandings: divisionStandings.map((s) => ({
+      rang: s.rang,
+      licence: s.licence,
+      nom: s.nom,
+      club: s.club,
+      classement: s.classement,
+      points: s.points,
+    })),
+    matches: playerMatches.map((m) => {
+      const isWinner = m.vainqueur.toUpperCase().startsWith(namePrefix);
+      return {
+        libelle: m.libelle,
+        victoire: isWinner,
+        adversaire: isWinner ? m.perdant : m.vainqueur,
+        forfait: m.forfait,
+      };
+    }),
   });
 });
 

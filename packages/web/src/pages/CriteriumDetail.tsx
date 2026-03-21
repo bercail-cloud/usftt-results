@@ -11,37 +11,29 @@ interface Player {
   classement: number;
   division: string;
   rang: number;
-  points: number;
+  points: string;
 }
 
-// criterium_classement rows
 interface Standing {
   rang: number;
   licence: string | null;
   nom: string;
   club: string;
   classement: number;
-  points: number;
+  points: string;
 }
 
-// parties_individuelles rows
 interface Match {
-  adversaire_nom: string;
-  adversaire_classement: number;
+  libelle: string;
   victoire: boolean;
-  points_resultat: number;
+  adversaire: string;
+  forfait: boolean;
 }
 
 interface CriteriumDetailResponse {
   player: Player;
   divisionStandings: Standing[];
   matches: Match[];
-}
-
-function getPointsColor(points: number): string {
-  if (points > 0) return "text-success";
-  if (points < 0) return "text-error";
-  return "text-text-secondary";
 }
 
 export function CriteriumDetail() {
@@ -100,7 +92,6 @@ export function CriteriumDetail() {
 
   const victoires = matches.filter((m) => m.victoire).length;
   const defaites = matches.filter((m) => !m.victoire).length;
-  const totalPoints = matches.reduce((sum, m) => sum + m.points_resultat, 0);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -181,20 +172,20 @@ export function CriteriumDetail() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#e2e8f0] text-[#64748b]">
+                  <th className="text-left px-3 py-2 font-semibold">Phase</th>
                   <th className="text-left px-3 py-2 font-semibold">Adversaire</th>
-                  <th className="text-center px-3 py-2 font-semibold">Classement</th>
                   <th className="text-center px-3 py-2 font-semibold">Res.</th>
-                  <th className="text-center px-3 py-2 font-semibold">Points</th>
+                  <th className="text-center px-3 py-2 font-semibold">Forfait</th>
                 </tr>
               </thead>
               <tbody>
                 {matches.map((match, idx) => (
                   <tr key={idx} className="border-b border-[#f1f5f9]">
-                    <td className="px-3 py-2 text-[#0f172a]">
-                      {match.adversaire_nom}
+                    <td className="px-3 py-2 text-[#64748b]">
+                      {match.libelle}
                     </td>
-                    <td className="px-3 py-2 text-center text-[#64748b]">
-                      {match.adversaire_classement}
+                    <td className="px-3 py-2 text-[#0f172a]">
+                      {match.adversaire}
                     </td>
                     <td className="px-3 py-2 text-center">
                       <span
@@ -205,29 +196,13 @@ export function CriteriumDetail() {
                         {match.victoire ? "V" : "D"}
                       </span>
                     </td>
-                    <td
-                      className={`px-3 py-2 text-center font-semibold ${getPointsColor(match.points_resultat)}`}
-                    >
-                      {match.points_resultat > 0 ? `+${match.points_resultat}` : match.points_resultat}
+                    <td className="px-3 py-2 text-center text-[#64748b]">
+                      {match.forfait ? "Oui" : ""}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-
-          {/* Tour summary */}
-          <div className="mt-4 pt-3 border-t border-[#e2e8f0] flex justify-end">
-            <span className="text-sm text-[#64748b]">
-              Total points :{" "}
-              <span
-                className={`font-bold ${getPointsColor(totalPoints)}`}
-              >
-                {totalPoints > 0
-                  ? `+${totalPoints.toFixed(1)}`
-                  : totalPoints.toFixed(1)}
-              </span>
-            </span>
           </div>
         </div>
       )}
