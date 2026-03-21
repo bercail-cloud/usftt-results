@@ -1,0 +1,88 @@
+name: Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build -w @usftt/shared
+      - name: Typecheck
+        run: npx turbo run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm run test
+      - name: Build
+        run: npm run build
+
+  build-and-push:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v4
+      - name: Build and push API image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: api
+          push: true
+          tags: |
+            ghcr.io/dcuenot/usftt-results-api:latest
+            ghcr.io/dcuenot/usftt-results-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Build and push Web image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: web
+          push: true
+          tags: |
+            ghcr.io/dcuenot/usftt-results-web:latest
+            ghcr.io/dcuenot/usftt-results-web:${{ github.sha }}
+          build-args: VITE_API_URL=https://api.usftt-results.bercail.cloud
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Copy docker-compose.yml to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ vars.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: docker-compose.yml
+          target: /opt/usftt-results/
+          overwrite: true
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/usftt-results
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
