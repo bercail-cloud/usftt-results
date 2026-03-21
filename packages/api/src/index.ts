@@ -12,7 +12,7 @@ const app = new Hono();
 
 app.use("/*", cors());
 
-app.route("/", systemRoutes);
+app.route("/api", systemRoutes);
 app.route("/api", equipesRoutes);
 app.route("/api", criteriumRoutes);
 app.route("/api", joueursRoutes);
