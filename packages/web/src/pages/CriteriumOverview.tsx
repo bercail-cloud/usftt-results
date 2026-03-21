@@ -110,7 +110,7 @@ function groupPlayers(joueurs: JoueurResult[]): GroupedSection[] {
   const niveauMap = new Map<string, {
     order: number;
     label: string;
-    ageMap: Map<string, { order: number; players: Array<JoueurResult & { levelCode: string; gender: string }> }>;
+    ageMap: Map<string, { order: number; players: Array<JoueurResult & { levelCode: string; levelNum: number; gender: string }> }>;
   }>();
 
   for (const j of joueurs) {
@@ -128,9 +128,11 @@ function groupPlayers(joueurs: JoueurResult[]): GroupedSection[] {
       niveau.ageMap.set(ageKey, { order: parsed.ageOrder, players: [] });
     }
 
+    const levelNum = parseInt(parsed.levelCode.slice(1), 10) || 0;
     niveau.ageMap.get(ageKey)!.players.push({
       ...j,
       levelCode: parsed.levelCode,
+      levelNum,
       gender: parsed.gender,
     });
   }
@@ -142,7 +144,7 @@ function groupPlayers(joueurs: JoueurResult[]): GroupedSection[] {
       .sort(([, a], [, b]) => a.order - b.order)
       .map(([ageCategory, { players }]) => ({
         ageCategory,
-        players: players.sort((a, b) => a.rang - b.rang),
+        players: players.sort((a, b) => a.levelNum - b.levelNum || a.rang - b.rang),
       }));
 
     sections.push({
