@@ -79,8 +79,13 @@ export async function syncRencontres(
 
   const rows = matches.map((match) => {
     const is_domicile = match.equipeA.includes(equipe.lib_equipe);
-    const score_a = match.scoreA !== "" ? parseInt(match.scoreA, 10) : null;
-    const score_b = match.scoreB !== "" ? parseInt(match.scoreB, 10) : null;
+    const parseScore = (v: string): number | null => {
+      if (!v || v === "") return null;
+      const n = parseInt(v, 10);
+      return Number.isNaN(n) ? null : n;
+    };
+    const score_a = parseScore(match.scoreA);
+    const score_b = parseScore(match.scoreB);
     const lien_detail = match.lien !== "" ? match.lien : null;
 
     return {
