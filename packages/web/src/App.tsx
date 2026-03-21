@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router";
+import { NavBar } from "./components/NavBar";
 
 // Placeholder pages (will be replaced in later tasks)
 function Placeholder({ name }: { name: string }) {
@@ -12,17 +13,22 @@ function Placeholder({ name }: { name: string }) {
 
 export function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/equipes" replace />} />
-      <Route path="/equipes" element={<Placeholder name="Equipes" />} />
-      <Route path="/equipes/:id" element={<Placeholder name="Detail Equipe" />} />
-      <Route path="/criterium" element={<Placeholder name="Criterium" />} />
-      <Route
-        path="/criterium/tours/:tour/joueurs/:licence"
-        element={<Placeholder name="Detail Criterium" />}
-      />
-      <Route path="/progression" element={<Placeholder name="Progression" />} />
-      <Route path="*" element={<Navigate to="/equipes" replace />} />
-    </Routes>
+    <div className="min-h-screen bg-bg-page">
+      <NavBar />
+      <main>
+        <Routes>
+          <Route path="/" element={<Navigate to="/equipes" replace />} />
+          <Route path="/equipes" element={<Placeholder name="Equipes" />} />
+          <Route path="/equipes/:id" element={<Placeholder name="Detail Equipe" />} />
+          <Route path="/criterium" element={<Placeholder name="Criterium" />} />
+          <Route
+            path="/criterium/tours/:tour/joueurs/:licence"
+            element={<Placeholder name="Detail Criterium" />}
+          />
+          <Route path="/progression" element={<Placeholder name="Progression" />} />
+          <Route path="*" element={<Navigate to="/equipes" replace />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
