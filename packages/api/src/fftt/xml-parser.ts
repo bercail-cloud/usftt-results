@@ -165,7 +165,7 @@ export function parseEquipes(xml: string): Equipe[] {
   const data = parseXml(xml) as { liste?: { equipe?: unknown } };
   const items = toArray(data.liste?.equipe as Equipe | Equipe[] | undefined);
   return items.map((item) => {
-    const raw = item as Record<string, unknown>;
+    const raw = item as unknown as Record<string, unknown>;
     return {
       libEquipe: getString(raw.libequipe),
       libDivision: getString(raw.libdivision),

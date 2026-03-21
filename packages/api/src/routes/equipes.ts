@@ -37,7 +37,7 @@ function parseCompetitionLevel(libDivision: string): CompetitionLevel {
 
 function parseJourneeFromLibelle(libelle: string): number | null {
   const match = libelle.match(/J(\d+)/i);
-  return match ? parseInt(match[1], 10) : null;
+  return match ? parseInt(match[1]!, 10) : null;
 }
 
 const app = new Hono();
@@ -50,7 +50,7 @@ app.get("/equipes", async (c) => {
     equipesQuery = db
       .select()
       .from(equipes)
-      .where(eq(equipes.type_epreuve, typeFilter));
+      .where(eq(equipes.type_epreuve, typeFilter!));
   } else {
     equipesQuery = db.select().from(equipes);
   }
@@ -104,7 +104,7 @@ app.get("/equipes", async (c) => {
     .from(sync_status)
     .orderBy(desc(sync_status.last_run));
 
-  const lastSync = syncRows.length > 0 ? syncRows[0].last_run : null;
+  const lastSync = syncRows.length > 0 ? syncRows[0]!.last_run : null;
 
   return c.json({ groups, lastSync });
 });

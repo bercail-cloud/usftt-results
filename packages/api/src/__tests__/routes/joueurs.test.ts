@@ -19,17 +19,6 @@ const mockDb = vi.mocked(db);
 const app = new Hono();
 app.route("/api", joueursRoutes);
 
-function makeSelectChain(finalResult: unknown) {
-  return {
-    from: vi.fn().mockReturnValue({
-      orderBy: vi.fn().mockResolvedValue(finalResult),
-      where: vi.fn().mockReturnValue({
-        limit: vi.fn().mockResolvedValue(finalResult),
-        orderBy: vi.fn().mockResolvedValue(finalResult),
-      }),
-    }),
-  };
-}
 
 describe("GET /api/joueurs", () => {
   beforeEach(() => {

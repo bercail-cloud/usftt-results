@@ -33,7 +33,7 @@ export async function syncClassementsPoule(
     password
   );
 
-  await db.delete(classements_poule).where(eq(classements_poule.equipeId, equipe.id));
+  await db.delete(classements_poule).where(eq(classements_poule.equipe_id, equipe.id));
 
   if (standings.length === 0) {
     return;
@@ -99,15 +99,15 @@ export async function syncRencontres(
     .insert(rencontres)
     .values(rows)
     .onConflictDoUpdate({
-      target: [rencontres.equipeId, rencontres.libelle],
+      target: [rencontres.equipe_id, rencontres.libelle],
       set: {
-        equipeA: rows[0].equipeA,
-        equipeB: rows[0].equipeB,
-        scoreA: rows[0].scoreA,
-        scoreB: rows[0].scoreB,
-        dateReelle: rows[0].dateReelle,
-        lienDetail: rows[0].lienDetail,
-        isDomicile: rows[0].isDomicile,
+        equipe_a: rows[0]!.equipeA,
+        equipe_b: rows[0]!.equipeB,
+        score_a: rows[0]!.scoreA,
+        score_b: rows[0]!.scoreB,
+        date_reelle: rows[0]!.dateReelle,
+        lien_detail: rows[0]!.lienDetail,
+        is_domicile: rows[0]!.isDomicile,
       },
     })
     .returning();
@@ -127,8 +127,8 @@ export async function syncDetailsRencontres(
     .from(rencontres)
     .where(
       and(
-        eq(rencontres.equipeId, equipeId),
-        isNotNull(rencontres.lienDetail)
+        eq(rencontres.equipe_id, equipeId),
+        isNotNull(rencontres.lien_detail)
       )
     );
 
@@ -145,7 +145,7 @@ export async function syncDetailsRencontres(
 
     await db
       .delete(parties_rencontre)
-      .where(eq(parties_rencontre.rencontreId, rencontre.id));
+      .where(eq(parties_rencontre.rencontre_id, rencontre.id));
 
     if (chpRenc.parties.length === 0) {
       continue;

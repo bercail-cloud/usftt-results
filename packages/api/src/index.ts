@@ -35,6 +35,8 @@ if (hasEnvVars) {
     password: process.env.FFTT_PASSWORD!,
     serie: process.env.FFTT_SERIE!,
     clubNumero: process.env.CLUB_NUMERO ?? "08940073",
+    clubNom: process.env.CLUB_NOM ?? "",
+    organismeId: process.env.ORGANISME_ID ?? "",
   };
   startScheduler(db, ffttConfig);
 }

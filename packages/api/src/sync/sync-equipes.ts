@@ -41,7 +41,7 @@ export async function syncEquipes(
     .insert(equipes)
     .values(rows)
     .onConflictDoUpdate({
-      target: [equipes.libEquipe, equipes.idEpreuve],
+      target: [equipes.lib_equipe, equipes.id_epreuve],
       set: {
         libDivision: sql`excluded.lib_division`,
         idPoule: sql`excluded.id_poule`,

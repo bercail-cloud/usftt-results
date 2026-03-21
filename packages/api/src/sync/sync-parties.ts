@@ -42,8 +42,8 @@ export async function syncParties(db: any, ffttConfig: FfttConfig): Promise<numb
       .onConflictDoUpdate({
         target: [
           parties_individuelles.licence,
-          parties_individuelles.adversaireLicence,
-          parties_individuelles.datePartie,
+          parties_individuelles.adversaire_licence,
+          parties_individuelles.date_partie,
           parties_individuelles.journee,
         ],
         set: {
