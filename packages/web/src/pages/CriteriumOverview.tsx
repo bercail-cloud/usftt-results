@@ -5,48 +5,29 @@ import { LoadingSkeleton } from "../components/LoadingSkeleton.js";
 import { EmptyState } from "../components/EmptyState.js";
 import { DivisionBadge } from "../components/DivisionBadge.js";
 
+// /criterium/tours returns an array of TourSummary
+interface TourSummary {
+  tour: number;
+  usfttCount: number;
+  victoires: number;
+  defaites: number;
+  bestPerformer: string | null;
+}
+
+// /criterium/tours/:tour returns an array of JoueurResult
 interface JoueurResult {
   licence: string;
   nom: string;
-  prenom: string;
+  club: string;
   division: string;
-  classement: string;
+  classement: number;
   victoires: number;
   defaites: number;
   rang: number;
-  total_joueurs: number;
   points: number;
 }
 
-interface TourData {
-  tour: number;
-  saison: string;
-  lastSync: string | null;
-  joueurs: JoueurResult[];
-}
-
-interface ToursResponse {
-  tours: number[];
-  saison: string;
-  lastSync: string | null;
-}
-
 const TOUR_LABELS = ["Tour 1", "Tour 2", "Tour 3", "Tour 4"];
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "N/A";
-  try {
-    return new Date(dateStr).toLocaleDateString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return dateStr;
-  }
-}
 
 function getBilanColor(value: number): string {
   if (value > 0) return "text-success";
@@ -70,8 +51,9 @@ function TourResultsTable({
   tour: number;
   onRowClick: (licence: string) => void;
 }) {
+  // API returns array directly
   const { data, isLoading, isError } = useCriteriumTour(tour) as {
-    data: TourData | undefined;
+    data: JoueurResult[] | undefined;
     isLoading: boolean;
     isError: boolean;
   };
@@ -82,11 +64,12 @@ function TourResultsTable({
     return <EmptyState message="Erreur lors du chargement des resultats" />;
   }
 
-  if (!data || data.joueurs.length === 0) {
+  const joueurs = data ?? [];
+
+  if (joueurs.length === 0) {
     return <EmptyState message="Aucun resultat pour ce tour" />;
   }
 
-  const { joueurs } = data;
   const totalVictoires = joueurs.reduce((s, j) => s + j.victoires, 0);
   const totalDefaites = joueurs.reduce((s, j) => s + j.defaites, 0);
   const bestBilan = getBestBilan(joueurs);
@@ -112,7 +95,7 @@ function TourResultsTable({
           {bestBilan ? (
             <>
               <p className="text-sm font-bold text-[#0f172a] truncate">
-                {bestBilan.prenom} {bestBilan.nom}
+                {bestBilan.nom}
               </p>
               <p className="text-xs">
                 <span className="text-success">{bestBilan.victoires}V</span>
@@ -150,7 +133,7 @@ function TourResultsTable({
                     onClick={() => onRowClick(j.licence)}
                   >
                     <td className="px-3 py-2 font-bold text-[#0f172a]">
-                      {j.prenom} {j.nom}
+                      {j.nom}
                     </td>
                     <td className="px-3 py-2 text-center">
                       <DivisionBadge division={j.division} />
@@ -164,7 +147,7 @@ function TourResultsTable({
                       <span className="text-error">{j.defaites}D</span>
                     </td>
                     <td className="px-3 py-2 text-center text-[#64748b]">
-                      {j.rang}/{j.total_joueurs}
+                      {j.rang}
                     </td>
                     <td className={`px-3 py-2 text-center font-semibold ${getBilanColor(bilan)}`}>
                       {bilan > 0 ? `+${bilan}` : bilan}
@@ -182,14 +165,15 @@ function TourResultsTable({
 
 export function CriteriumOverview() {
   const navigate = useNavigate();
+  // API returns TourSummary[] directly
   const { data: toursData, isLoading: toursLoading, isError: toursError } =
     useCriteriumTours() as {
-      data: ToursResponse | undefined;
+      data: TourSummary[] | undefined;
       isLoading: boolean;
       isError: boolean;
     };
 
-  const availableTours = toursData?.tours ?? [1, 2, 3, 4];
+  const availableTours = toursData?.map((t) => t.tour) ?? [1, 2, 3, 4];
   const latestTour = availableTours[availableTours.length - 1] ?? 1;
   const [activeTour, setActiveTour] = useState<number | null>(null);
 
@@ -201,17 +185,7 @@ export function CriteriumOverview() {
       <div>
         <h1 className="text-2xl font-extrabold text-[#0f172a]">
           Criterium Federal
-          {toursData?.saison && (
-            <span className="text-[#64748b] font-normal ml-2 text-lg">
-              {toursData.saison}
-            </span>
-          )}
         </h1>
-        {toursData?.lastSync && (
-          <p className="text-xs text-[#94a3b8] mt-1">
-            Derniere mise a jour : {formatDate(toursData.lastSync)}
-          </p>
-        )}
       </div>
 
       {/* Tour tabs */}
