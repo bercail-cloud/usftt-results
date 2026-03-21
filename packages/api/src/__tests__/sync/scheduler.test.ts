@@ -186,8 +186,8 @@ describe("syncFull", () => {
 
   it("iterates equipes from DB for classements/rencontres/details sync", async () => {
     const fakeEquipes = [
-      { id: 1, libEquipe: "USFTT 1", idDivision: "DIV1", idPoule: "P1" },
-      { id: 2, libEquipe: "USFTT 2", idDivision: "DIV2", idPoule: "P2" },
+      { id: 1, lib_equipe: "USFTT 1", id_division: "DIV1", id_poule: "P1" },
+      { id: 2, lib_equipe: "USFTT 2", id_division: "DIV2", id_poule: "P2" },
     ];
     const db = makeDb(fakeEquipes);
     mockSyncEquipes.mockResolvedValue([]);
@@ -213,7 +213,7 @@ describe("syncMatchDay", () => {
 
   it("runs equipes, classements, rencontres and details", async () => {
     const fakeEquipes = [
-      { id: 1, libEquipe: "USFTT 1", idDivision: "DIV1", idPoule: "P1" },
+      { id: 1, lib_equipe: "USFTT 1", id_division: "DIV1", id_poule: "P1" },
     ];
     const db = makeDb(fakeEquipes);
     mockSyncEquipes.mockResolvedValue([]);

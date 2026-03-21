@@ -26,17 +26,17 @@ export async function syncEquipes(
 
   const rows = equipesFromApi.map((equipe) => {
     const params = new URLSearchParams(equipe.lienDivision);
-    const idPoule = params.get("cx_poule") ?? "";
-    const idDivision = params.get("D1") ?? "";
+    const id_poule = params.get("cx_poule") ?? "";
+    const id_division = params.get("D1") ?? "";
 
     return {
-      libEquipe: equipe.libEquipe,
-      libDivision: equipe.libDivision,
-      idPoule,
-      idDivision,
-      idEpreuve: equipe.idEpreuve,
-      libEpreuve: equipe.libEpreuve,
-      typeEpreuve: "equipe",
+      lib_equipe: equipe.libEquipe,
+      lib_division: equipe.libDivision,
+      id_poule,
+      id_division,
+      id_epreuve: equipe.idEpreuve,
+      lib_epreuve: equipe.libEpreuve,
+      type_epreuve: "equipe",
     };
   });
 
@@ -46,12 +46,12 @@ export async function syncEquipes(
     .onConflictDoUpdate({
       target: [equipes.lib_equipe, equipes.id_epreuve],
       set: {
-        libDivision: sql`excluded.lib_division`,
-        idPoule: sql`excluded.id_poule`,
-        idDivision: sql`excluded.id_division`,
-        libEpreuve: sql`excluded.lib_epreuve`,
-        typeEpreuve: sql`excluded.type_epreuve`,
-        updatedAt: sql`now()`,
+        lib_division: sql`excluded.lib_division`,
+        id_poule: sql`excluded.id_poule`,
+        id_division: sql`excluded.id_division`,
+        lib_epreuve: sql`excluded.lib_epreuve`,
+        type_epreuve: sql`excluded.type_epreuve`,
+        updated_at: sql`now()`,
       },
     }).returning();
 

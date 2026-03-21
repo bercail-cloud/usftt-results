@@ -13,9 +13,9 @@ import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
 export interface EquipeRow {
   id: number;
-  libEquipe: string;
-  idDivision: string;
-  idPoule: string;
+  lib_equipe: string;
+  id_division: string;
+  id_poule: string;
 }
 
 export async function syncClassementsPoule(
@@ -26,8 +26,8 @@ export async function syncClassementsPoule(
   const { appId, serie, password } = ffttConfig;
 
   const standings = await getResultEquClassement(
-    equipe.idDivision,
-    equipe.idPoule,
+    equipe.id_division,
+    equipe.id_poule,
     appId,
     serie,
     password
@@ -40,17 +40,17 @@ export async function syncClassementsPoule(
   }
 
   const rows = standings.map((s) => ({
-    equipeId: equipe.id,
-    clubNumero: s.idclub,
-    nomEquipe: s.equipe,
+    equipe_id: equipe.id,
+    club_numero: s.idclub,
+    nom_equipe: s.equipe,
     position: parseInt(s.clt, 10),
     points: parseInt(s.pts, 10),
     joue: parseInt(s.joue, 10),
     victoires: parseInt(s.vic, 10),
     defaites: parseInt(s.def, 10),
     nuls: parseInt(s.nul, 10),
-    partiesGagnees: parseInt(s.pg, 10),
-    partiesPerdues: parseInt(s.pp, 10),
+    parties_gagnees: parseInt(s.pg, 10),
+    parties_perdues: parseInt(s.pp, 10),
   }));
 
   await db.insert(classements_poule).values(rows);
@@ -64,8 +64,8 @@ export async function syncRencontres(
   const { appId, serie, password } = ffttConfig;
 
   const matches = await getResultEquMatches(
-    equipe.idDivision,
-    equipe.idPoule,
+    equipe.id_division,
+    equipe.id_poule,
     appId,
     serie,
     password
@@ -76,22 +76,22 @@ export async function syncRencontres(
   }
 
   const rows = matches.map((match) => {
-    const isDomicile = match.equipeA.includes(equipe.libEquipe);
-    const scoreA = match.scoreA !== "" ? parseInt(match.scoreA, 10) : null;
-    const scoreB = match.scoreB !== "" ? parseInt(match.scoreB, 10) : null;
-    const lienDetail = match.lien !== "" ? match.lien : null;
+    const is_domicile = match.equipeA.includes(equipe.lib_equipe);
+    const score_a = match.scoreA !== "" ? parseInt(match.scoreA, 10) : null;
+    const score_b = match.scoreB !== "" ? parseInt(match.scoreB, 10) : null;
+    const lien_detail = match.lien !== "" ? match.lien : null;
 
     return {
-      equipeId: equipe.id,
+      equipe_id: equipe.id,
       libelle: match.libelle,
-      equipeA: match.equipeA,
-      equipeB: match.equipeB,
-      scoreA,
-      scoreB,
-      datePrevue: match.datePrevue,
-      dateReelle: match.dateReelle,
-      lienDetail,
-      isDomicile,
+      equipe_a: match.equipeA,
+      equipe_b: match.equipeB,
+      score_a,
+      score_b,
+      date_prevue: match.datePrevue,
+      date_reelle: match.dateReelle,
+      lien_detail,
+      is_domicile,
     };
   });
 
@@ -101,13 +101,13 @@ export async function syncRencontres(
     .onConflictDoUpdate({
       target: [rencontres.equipe_id, rencontres.libelle],
       set: {
-        equipe_a: rows[0]!.equipeA,
-        equipe_b: rows[0]!.equipeB,
-        score_a: rows[0]!.scoreA,
-        score_b: rows[0]!.scoreB,
-        date_reelle: rows[0]!.dateReelle,
-        lien_detail: rows[0]!.lienDetail,
-        is_domicile: rows[0]!.isDomicile,
+        equipe_a: rows[0]!.equipe_a,
+        equipe_b: rows[0]!.equipe_b,
+        score_a: rows[0]!.score_a,
+        score_b: rows[0]!.score_b,
+        date_reelle: rows[0]!.date_reelle,
+        lien_detail: rows[0]!.lien_detail,
+        is_domicile: rows[0]!.is_domicile,
       },
     })
     .returning();
@@ -133,12 +133,12 @@ export async function syncDetailsRencontres(
     );
 
   for (const rencontre of rencontresList) {
-    if (!rencontre.lienDetail) {
+    if (!rencontre.lien_detail) {
       continue;
     }
 
     const params = Object.fromEntries(
-      new URLSearchParams(rencontre.lienDetail).entries()
+      new URLSearchParams(rencontre.lien_detail).entries()
     );
 
     const chpRenc = await getChpRenc(params, appId, serie, password);
@@ -152,20 +152,20 @@ export async function syncDetailsRencontres(
     }
 
     const joueurMap = new Map(
-      chpRenc.joueurs.map((j) => [j.xja, { classementA: j.xca, classementB: j.xcb }])
+      chpRenc.joueurs.map((j) => [j.xja, { classement_a: j.xca, classement_b: j.xcb }])
     );
 
     const partyRows = chpRenc.parties.map((partie) => {
       const joueurInfo = joueurMap.get(partie.ja);
       return {
-        rencontreId: rencontre.id,
-        joueurA: partie.ja,
-        classementA: joueurInfo?.classementA ?? "",
-        joueurB: partie.jb,
-        classementB: joueurInfo?.classementB ?? "",
-        scoreA: parseInt(partie.scorea, 10),
-        scoreB: parseInt(partie.scoreb, 10),
-        detailSets: partie.detail,
+        rencontre_id: rencontre.id,
+        joueur_a: partie.ja,
+        classement_a: joueurInfo?.classement_a ?? "",
+        joueur_b: partie.jb,
+        classement_b: joueurInfo?.classement_b ?? "",
+        score_a: parseInt(partie.scorea, 10),
+        score_b: parseInt(partie.scoreb, 10),
+        detail_sets: partie.detail,
       };
     });
 

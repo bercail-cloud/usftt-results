@@ -32,9 +32,9 @@ const FFTT_CONFIG = {
 
 const EQUIPE = {
   id: 1,
-  libEquipe: "USFTT 1",
-  idDivision: "456",
-  idPoule: "123",
+  lib_equipe: "USFTT 1",
+  id_division: "456",
+  id_poule: "123",
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -61,8 +61,8 @@ describe("syncClassementsPoule", () => {
     await syncClassementsPoule(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(mockGetClassement).toHaveBeenCalledWith(
-      EQUIPE.idDivision,
-      EQUIPE.idPoule,
+      EQUIPE.id_division,
+      EQUIPE.id_poule,
       FFTT_CONFIG.appId,
       FFTT_CONFIG.serie,
       FFTT_CONFIG.password
@@ -125,15 +125,15 @@ describe("syncClassementsPoule", () => {
 
     expect(insertedValues).toHaveLength(1);
     const row = insertedValues[0] as Record<string, unknown>;
-    expect(row.equipeId).toBe(EQUIPE.id);
+    expect(row.equipe_id).toBe(EQUIPE.id);
     expect(row.position).toBe(1);
     expect(row.points).toBe(8);
     expect(row.joue).toBe(5);
     expect(row.victoires).toBe(4);
     expect(row.defaites).toBe(1);
     expect(row.nuls).toBe(0);
-    expect(row.partiesGagnees).toBe(20);
-    expect(row.partiesPerdues).toBe(5);
+    expect(row.parties_gagnees).toBe(20);
+    expect(row.parties_perdues).toBe(5);
   });
 
   it("does not call insert when no standings returned", async () => {
@@ -177,8 +177,8 @@ describe("syncRencontres", () => {
     await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(mockGetMatches).toHaveBeenCalledWith(
-      EQUIPE.idDivision,
-      EQUIPE.idPoule,
+      EQUIPE.id_division,
+      EQUIPE.id_poule,
       FFTT_CONFIG.appId,
       FFTT_CONFIG.serie,
       FFTT_CONFIG.password
@@ -217,7 +217,7 @@ describe("syncRencontres", () => {
 
     expect(insertedValues).toHaveLength(1);
     const row = insertedValues[0] as Record<string, unknown>;
-    expect(row.isDomicile).toBe(true);
+    expect(row.is_domicile).toBe(true);
   });
 
   it("sets isDomicile=false when equipeA does not contain USFTT team name", async () => {
@@ -251,7 +251,7 @@ describe("syncRencontres", () => {
     await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     const row = insertedValues[0] as Record<string, unknown>;
-    expect(row.isDomicile).toBe(false);
+    expect(row.is_domicile).toBe(false);
   });
 
   it("stores null scores when scoreA/scoreB are empty strings", async () => {
@@ -285,8 +285,8 @@ describe("syncRencontres", () => {
     await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     const row = insertedValues[0] as Record<string, unknown>;
-    expect(row.scoreA).toBeNull();
-    expect(row.scoreB).toBeNull();
+    expect(row.score_a).toBeNull();
+    expect(row.score_b).toBeNull();
   });
 
   it("stores lienDetail as null when lien is empty", async () => {
@@ -320,7 +320,7 @@ describe("syncRencontres", () => {
     await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     const row = insertedValues[0] as Record<string, unknown>;
-    expect(row.lienDetail).toBeNull();
+    expect(row.lien_detail).toBeNull();
   });
 
   it("returns empty array when no matches found", async () => {
@@ -367,10 +367,10 @@ describe("syncDetailsRencontres", () => {
           where: vi.fn().mockResolvedValue([
             {
               id: 10,
-              equipeId: 1,
-              lienDetail,
-              scoreA: 5,
-              scoreB: 4,
+              equipe_id: 1,
+              lien_detail: lienDetail,
+              score_a: 5,
+              score_b: 4,
             },
           ]),
         }),
@@ -406,7 +406,7 @@ describe("syncDetailsRencontres", () => {
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([
-            { id: 10, equipeId: 1, lienDetail: "renc_id=12345&is_retour=0", scoreA: 5, scoreB: 4 },
+            { id: 10, equipe_id: 1, lien_detail: "renc_id=12345&is_retour=0", score_a: 5, score_b: 4 },
           ]),
         }),
       }),
@@ -438,7 +438,7 @@ describe("syncDetailsRencontres", () => {
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([
-            { id: 10, equipeId: 1, lienDetail: "renc_id=12345&is_retour=0", scoreA: 5, scoreB: 4 },
+            { id: 10, equipe_id: 1, lien_detail: "renc_id=12345&is_retour=0", score_a: 5, score_b: 4 },
           ]),
         }),
       }),
@@ -457,12 +457,12 @@ describe("syncDetailsRencontres", () => {
 
     expect(insertedValues).toHaveLength(1);
     const row = insertedValues[0] as Record<string, unknown>;
-    expect(row.rencontreId).toBe(10);
-    expect(row.joueurA).toBe("Joueur A");
-    expect(row.joueurB).toBe("Joueur B");
-    expect(row.scoreA).toBe(3);
-    expect(row.scoreB).toBe(0);
-    expect(row.detailSets).toBe("11-5 11-3 11-4");
+    expect(row.rencontre_id).toBe(10);
+    expect(row.joueur_a).toBe("Joueur A");
+    expect(row.joueur_b).toBe("Joueur B");
+    expect(row.score_a).toBe(3);
+    expect(row.score_b).toBe(0);
+    expect(row.detail_sets).toBe("11-5 11-3 11-4");
   });
 
   it("skips rencontres with null lienDetail", async () => {
@@ -470,7 +470,7 @@ describe("syncDetailsRencontres", () => {
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([
-            { id: 11, equipeId: 1, lienDetail: null, scoreA: null, scoreB: null },
+            { id: 11, equipe_id: 1, lien_detail: null, score_a: null, score_b: null },
           ]),
         }),
       }),

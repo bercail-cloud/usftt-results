@@ -25,13 +25,13 @@ export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<n
 
     const rows = parties.map((partie) => ({
       licence: partie.licence,
-      adversaireLicence: partie.advlic,
-      adversaireNom: partie.advnompre,
-      adversaireClassement: parseInt(partie.advclaof, 10),
+      adversaire_licence: partie.advlic,
+      adversaire_nom: partie.advnompre,
+      adversaire_classement: parseInt(partie.advclaof, 10),
       victoire: partie.vd === "V",
-      pointsResultat: parseFloat(partie.pointres),
+      points_resultat: parseFloat(partie.pointres),
       coefficient: parseFloat(partie.coefchamp),
-      datePartie: partie.date,
+      date_partie: partie.date,
       epreuve: partie.codechamp,
       journee: parseInt(partie.numjourn, 10),
     }));
@@ -47,10 +47,10 @@ export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<n
           parties_individuelles.journee,
         ],
         set: {
-          adversaireNom: sql`excluded.adversaire_nom`,
-          adversaireClassement: sql`excluded.adversaire_classement`,
+          adversaire_nom: sql`excluded.adversaire_nom`,
+          adversaire_classement: sql`excluded.adversaire_classement`,
           victoire: sql`excluded.victoire`,
-          pointsResultat: sql`excluded.points_resultat`,
+          points_resultat: sql`excluded.points_resultat`,
           coefficient: sql`excluded.coefficient`,
           epreuve: sql`excluded.epreuve`,
         },
