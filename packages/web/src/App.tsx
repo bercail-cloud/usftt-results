@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from "react-router";
 import { NavBar } from "./components/NavBar";
+import { EquipesOverview } from "./pages/EquipesOverview";
+import { EquipeDetail } from "./pages/EquipeDetail";
 
 // Placeholder pages (will be replaced in later tasks)
 function Placeholder({ name }: { name: string }) {
@@ -18,8 +20,8 @@ export function App() {
       <main>
         <Routes>
           <Route path="/" element={<Navigate to="/equipes" replace />} />
-          <Route path="/equipes" element={<Placeholder name="Equipes" />} />
-          <Route path="/equipes/:id" element={<Placeholder name="Detail Equipe" />} />
+          <Route path="/equipes" element={<EquipesOverview />} />
+          <Route path="/equipes/:id" element={<EquipeDetail />} />
           <Route path="/criterium" element={<Placeholder name="Criterium" />} />
           <Route
             path="/criterium/tours/:tour/joueurs/:licence"
