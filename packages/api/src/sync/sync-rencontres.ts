@@ -39,18 +39,20 @@ export async function syncClassementsPoule(
     return;
   }
 
+  const si = (v: string): number => { const n = parseInt(v, 10); return Number.isNaN(n) ? 0 : n; };
+
   const rows = standings.map((s) => ({
     equipe_id: equipe.id,
-    club_numero: s.idclub,
-    nom_equipe: s.equipe,
-    position: parseInt(s.clt, 10),
-    points: parseInt(s.pts, 10),
-    joue: parseInt(s.joue, 10),
-    victoires: parseInt(s.vic, 10),
-    defaites: parseInt(s.def, 10),
-    nuls: parseInt(s.nul, 10),
-    parties_gagnees: parseInt(s.pg, 10),
-    parties_perdues: parseInt(s.pp, 10),
+    club_numero: s.idclub || "",
+    nom_equipe: s.equipe || "",
+    position: si(s.clt),
+    points: si(s.pts),
+    joue: si(s.joue),
+    victoires: si(s.vic),
+    defaites: si(s.def),
+    nuls: si(s.nul),
+    parties_gagnees: si(s.pg),
+    parties_perdues: si(s.pp),
   }));
 
   await db.insert(classements_poule).values(rows);
