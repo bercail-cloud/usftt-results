@@ -1,0 +1,1 @@
+ALTER TABLE "criterium_classement" ADD CONSTRAINT "criterium_classement_division_id_nom_tour_unique" UNIQUE("division_id","nom","tour");

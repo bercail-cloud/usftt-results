@@ -6,6 +6,7 @@ import { syncClassementsPoule, syncRencontres } from "../src/sync/sync-rencontre
 import { syncJoueurs } from "../src/sync/sync-joueurs.js";
 import { syncParties } from "../src/sync/sync-parties.js";
 import { syncHistorique } from "../src/sync/sync-historique.js";
+import { syncCriterium } from "../src/sync/sync-criterium.js";
 
 const client = postgres(process.env.DATABASE_URL!);
 const db = drizzle(client, { schema });
@@ -15,8 +16,8 @@ const config = {
   password: process.env.FFTT_PASSWORD!,
   serie: process.env.FFTT_SERIE!,
   clubNumero: process.env.CLUB_NUMERO ?? "08940073",
-  clubNom: "",
-  organismeId: "",
+  clubNom: process.env.CLUB_NOM ?? "FONTENAY",
+  organismeId: process.env.ORGANISME_ID ?? "",
 };
 
 const arg = process.argv[2];
@@ -45,6 +46,12 @@ async function run() {
       console.log("Syncing parties (715 joueurs, takes a while)...");
       const p = await syncParties(db, config);
       console.log(`Parties synced: ${p}`);
+    }
+
+    if (!arg || arg === "all" || arg === "criterium") {
+      console.log("Syncing criterium...");
+      const c = await syncCriterium(db, config);
+      console.log(`Criterium synced: ${c}`);
     }
   } catch (e) {
     console.error("ERROR:", e);

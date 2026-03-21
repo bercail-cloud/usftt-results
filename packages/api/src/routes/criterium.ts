@@ -1,10 +1,12 @@
 import { Hono } from "hono";
-import { eq, and, isNotNull, asc } from "drizzle-orm";
+import { eq, and, like, asc } from "drizzle-orm";
 import { db } from "../db/connection.js";
 import {
   criterium_classement,
   parties_individuelles,
 } from "../db/schema.js";
+
+const USFTT_CLUB = "FONTENAY";
 
 const app = new Hono();
 
@@ -26,7 +28,7 @@ app.get("/criterium/tours", async (c) => {
         .where(
           and(
             eq(criterium_classement.tour, tour),
-            isNotNull(criterium_classement.licence)
+            like(criterium_classement.club, `%${USFTT_CLUB}%`)
           )
         );
 
@@ -42,12 +44,7 @@ app.get("/criterium/tours", async (c) => {
       if (licences.length > 0) {
         const allParties = await db
           .select()
-          .from(parties_individuelles)
-          .where(
-            and(
-              isNotNull(parties_individuelles.licence)
-            )
-          );
+          .from(parties_individuelles);
 
         // Filter parties for criterium epreuve (contains "criterium" or "crit" case-insensitive)
         const criteriumParties = allParties.filter((p) =>
@@ -110,7 +107,7 @@ app.get("/criterium/tours/:tour", async (c) => {
     .where(
       and(
         eq(criterium_classement.tour, tour),
-        isNotNull(criterium_classement.licence)
+        like(criterium_classement.club, `%${USFTT_CLUB}%`)
       )
     )
     .orderBy(asc(criterium_classement.rang));

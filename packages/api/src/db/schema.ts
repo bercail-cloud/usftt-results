@@ -130,7 +130,9 @@ export const criterium_classement = pgTable("criterium_classement", {
   points: integer("points").notNull(),
   tour: integer("tour").notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  unique().on(table.division_id, table.nom, table.tour),
+]);
 
 export const sync_status = pgTable("sync_status", {
   id: serial("id").primaryKey(),
