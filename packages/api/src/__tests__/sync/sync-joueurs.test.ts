@@ -6,6 +6,7 @@ vi.mock("../../fftt/endpoints.js", () => ({
 
 import { getLicenceB } from "../../fftt/endpoints.js";
 import { syncJoueurs } from "../../sync/sync-joueurs.js";
+import type { SyncDb } from "../../sync/sync-equipes.js";
 
 const mockGetLicenceB = vi.mocked(getLicenceB);
 
@@ -56,7 +57,7 @@ describe("syncJoueurs", () => {
   it("calls getLicenceB with club from config", async () => {
     mockGetLicenceB.mockResolvedValue([]);
     const db = makeInsertMock();
-    await syncJoueurs(db as any, FFTT_CONFIG);
+    await syncJoueurs(db as SyncDb, FFTT_CONFIG);
     expect(mockGetLicenceB).toHaveBeenCalledWith(
       { club: FFTT_CONFIG.clubNumero },
       FFTT_CONFIG.appId,
@@ -68,7 +69,7 @@ describe("syncJoueurs", () => {
   it("returns 0 when no players returned from API", async () => {
     mockGetLicenceB.mockResolvedValue([]);
     const db = makeInsertMock();
-    const count = await syncJoueurs(db as any, FFTT_CONFIG);
+    const count = await syncJoueurs(db as SyncDb, FFTT_CONFIG);
     expect(count).toBe(0);
     expect(db.insert).not.toHaveBeenCalled();
   });
@@ -90,7 +91,7 @@ describe("syncJoueurs", () => {
       }),
     };
 
-    await syncJoueurs(db as any, FFTT_CONFIG);
+    await syncJoueurs(db as SyncDb, FFTT_CONFIG);
 
     expect(insertedValues).toHaveLength(1);
     const row = insertedValues[0] as Record<string, unknown>;
@@ -121,7 +122,7 @@ describe("syncJoueurs", () => {
       }),
     };
 
-    await syncJoueurs(db as any, FFTT_CONFIG);
+    await syncJoueurs(db as SyncDb, FFTT_CONFIG);
 
     const row = insertedValues[0] as Record<string, unknown>;
     expect(row.pointsOfficiels).toBe(1750);
@@ -147,7 +148,7 @@ describe("syncJoueurs", () => {
       }),
     };
 
-    const count = await syncJoueurs(db as any, FFTT_CONFIG);
+    const count = await syncJoueurs(db as SyncDb, FFTT_CONFIG);
     expect(count).toBe(3);
   });
 
@@ -168,7 +169,7 @@ describe("syncJoueurs", () => {
       }),
     };
 
-    await syncJoueurs(db as any, FFTT_CONFIG);
+    await syncJoueurs(db as SyncDb, FFTT_CONFIG);
     expect(conflictSetArg).toHaveProperty("updatedAt");
   });
 });

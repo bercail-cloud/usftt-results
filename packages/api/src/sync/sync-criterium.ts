@@ -1,7 +1,7 @@
 import { getEpreuves, getDivisions, getResCla } from "../fftt/endpoints.js";
 import { criterium_classement, joueurs } from "../db/schema.js";
 import { sql } from "drizzle-orm";
-import type { FfttConfig } from "./sync-equipes.js";
+import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
 export interface CriteriumFfttConfig extends FfttConfig {
   clubNom: string;
@@ -14,7 +14,7 @@ function deriveTourFromLibelle(libelle: string): number {
 }
 
 export async function syncCriterium(
-  db: any,
+  db: SyncDb,
   ffttConfig: CriteriumFfttConfig
 ): Promise<number> {
   const { appId, serie, password, organismeId } = ffttConfig;

@@ -134,9 +134,7 @@ describe("GET /api/equipes/:id", () => {
   });
 
   it("returns 404 when equipe not found", async () => {
-    let callCount = 0;
     (mockDb.select as ReturnType<typeof vi.fn>).mockImplementation(() => {
-      callCount++;
       return {
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([]),

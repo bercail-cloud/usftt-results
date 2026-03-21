@@ -6,6 +6,7 @@ vi.mock("../../fftt/endpoints.js", () => ({
 
 import { getEquipes } from "../../fftt/endpoints.js";
 import { syncEquipes } from "../../sync/sync-equipes.js";
+import type { SyncDb } from "../../sync/sync-equipes.js";
 
 const mockGetEquipes = vi.mocked(getEquipes);
 
@@ -37,7 +38,7 @@ describe("syncEquipes", () => {
   it("calls getEquipes with the club numero from config", async () => {
     mockGetEquipes.mockResolvedValue([]);
     const db = makeMockDb();
-    await syncEquipes(db as any, FFTT_CONFIG);
+    await syncEquipes(db as SyncDb, FFTT_CONFIG);
     expect(mockGetEquipes).toHaveBeenCalledWith(
       FFTT_CONFIG.clubNumero,
       FFTT_CONFIG.appId,
@@ -71,10 +72,10 @@ describe("syncEquipes", () => {
       }),
     };
 
-    await syncEquipes(db as any, FFTT_CONFIG);
+    await syncEquipes(db as SyncDb, FFTT_CONFIG);
 
     expect(insertedValues).toHaveLength(1);
-    const inserted = insertedValues[0] as any;
+    const inserted = insertedValues[0] as Record<string, unknown>;
     expect(inserted.idPoule).toBe("123");
     expect(inserted.idDivision).toBe("456");
   });
@@ -104,9 +105,9 @@ describe("syncEquipes", () => {
       }),
     };
 
-    await syncEquipes(db as any, FFTT_CONFIG);
+    await syncEquipes(db as SyncDb, FFTT_CONFIG);
 
-    const inserted = insertedValues[0] as any;
+    const inserted = insertedValues[0] as Record<string, unknown>;
     expect(inserted.libEquipe).toBe("USFTT 2");
     expect(inserted.libDivision).toBe("D1 Departementale");
     expect(inserted.idEpreuve).toBe("EP2");
@@ -125,7 +126,7 @@ describe("syncEquipes", () => {
       }),
     };
 
-    const result = await syncEquipes(db as any, FFTT_CONFIG);
+    const result = await syncEquipes(db as SyncDb, FFTT_CONFIG);
     expect(result).toEqual([]);
     expect(db.insert).not.toHaveBeenCalled();
   });
@@ -163,7 +164,7 @@ describe("syncEquipes", () => {
       }),
     };
 
-    const result = await syncEquipes(db as any, FFTT_CONFIG);
+    const result = await syncEquipes(db as SyncDb, FFTT_CONFIG);
     expect(result).toEqual(fakeUpserted);
   });
 });

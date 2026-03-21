@@ -1,9 +1,9 @@
 import { getPartieMysql } from "../fftt/endpoints.js";
 import { joueurs, parties_individuelles } from "../db/schema.js";
 import { sql } from "drizzle-orm";
-import type { FfttConfig } from "./sync-equipes.js";
+import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
-export async function syncParties(db: any, ffttConfig: FfttConfig): Promise<number> {
+export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
   const { appId, serie, password } = ffttConfig;
 
   const joueursInDb: Array<{ licence: string }> = await db

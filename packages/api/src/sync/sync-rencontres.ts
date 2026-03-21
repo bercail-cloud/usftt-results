@@ -9,9 +9,9 @@ import {
   rencontres,
   parties_rencontre,
 } from "../db/schema.js";
-import type { FfttConfig } from "./sync-equipes.js";
+import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
-interface EquipeRow {
+export interface EquipeRow {
   id: number;
   libEquipe: string;
   idDivision: string;
@@ -19,7 +19,7 @@ interface EquipeRow {
 }
 
 export async function syncClassementsPoule(
-  db: any,
+  db: SyncDb,
   equipe: EquipeRow,
   ffttConfig: FfttConfig
 ): Promise<void> {
@@ -57,7 +57,7 @@ export async function syncClassementsPoule(
 }
 
 export async function syncRencontres(
-  db: any,
+  db: SyncDb,
   equipe: EquipeRow,
   ffttConfig: FfttConfig
 ): Promise<unknown[]> {
@@ -116,7 +116,7 @@ export async function syncRencontres(
 }
 
 export async function syncDetailsRencontres(
-  db: any,
+  db: SyncDb,
   equipeId: number,
   ffttConfig: FfttConfig
 ): Promise<void> {

@@ -8,6 +8,7 @@ vi.mock("../../fftt/endpoints.js", () => ({
 
 import { getEpreuves, getDivisions, getResCla } from "../../fftt/endpoints.js";
 import { syncCriterium } from "../../sync/sync-criterium.js";
+import type { SyncDb } from "../../sync/sync-equipes.js";
 
 const mockGetEpreuves = vi.mocked(getEpreuves);
 const mockGetDivisions = vi.mocked(getDivisions);
@@ -94,7 +95,7 @@ describe("syncCriterium", () => {
     mockGetEpreuves.mockResolvedValue([]);
     const db = makeDbWithJoueurs();
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     expect(mockGetEpreuves).toHaveBeenCalledWith(
       FFTT_CONFIG.organismeId,
@@ -114,7 +115,7 @@ describe("syncCriterium", () => {
     mockGetDivisions.mockResolvedValue([]);
     const db = makeDbWithJoueurs();
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     expect(mockGetDivisions).toHaveBeenCalledTimes(2);
     expect(mockGetDivisions).toHaveBeenCalledWith(
@@ -140,7 +141,7 @@ describe("syncCriterium", () => {
     mockGetDivisions.mockResolvedValue([]);
     const db = makeDbWithJoueurs();
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     expect(mockGetDivisions).toHaveBeenCalledWith(
       FFTT_CONFIG.organismeId,
@@ -161,7 +162,7 @@ describe("syncCriterium", () => {
     mockGetResCla.mockResolvedValue([]);
     const db = makeDbWithJoueurs();
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     expect(mockGetResCla).toHaveBeenCalledTimes(2);
     expect(mockGetResCla).toHaveBeenCalledWith(
@@ -183,7 +184,7 @@ describe("syncCriterium", () => {
     mockGetDivisions.mockResolvedValue([]);
     const db = makeDbWithJoueurs();
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     expect(mockGetResCla).not.toHaveBeenCalled();
     expect(db.insert).not.toHaveBeenCalled();
@@ -195,7 +196,7 @@ describe("syncCriterium", () => {
     mockGetResCla.mockResolvedValue([]);
     const db = makeDbWithJoueurs();
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     expect(db.insert).not.toHaveBeenCalled();
   });
@@ -208,7 +209,7 @@ describe("syncCriterium", () => {
     mockGetResCla.mockResolvedValue([makeResCla()]);
     const db = makeDbWithJoueurs([]);
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     const inserted = db._inserted[0]! as Array<Record<string, unknown>>;
     expect(inserted[0]!.tour).toBe(3);
@@ -222,7 +223,7 @@ describe("syncCriterium", () => {
     mockGetResCla.mockResolvedValue([makeResCla()]);
     const db = makeDbWithJoueurs([]);
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     const inserted = db._inserted[0]! as Array<Record<string, unknown>>;
     expect(inserted[0]!.tour).toBe(0);
@@ -236,7 +237,7 @@ describe("syncCriterium", () => {
     ]);
     const db = makeDbWithJoueurs([{ licence: "12345678", nom: "DUPONT" }]);
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     const inserted = db._inserted[0]! as Array<Record<string, unknown>>;
     expect(inserted[0]!.licence).toBe("12345678");
@@ -250,7 +251,7 @@ describe("syncCriterium", () => {
     ]);
     const db = makeDbWithJoueurs([{ licence: "12345678", nom: "DUPONT" }]);
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     const inserted = db._inserted[0]! as Array<Record<string, unknown>>;
     expect(inserted[0]!.licence).toBeNull();
@@ -268,7 +269,7 @@ describe("syncCriterium", () => {
     ]);
     const db = makeDbWithJoueurs([{ licence: "12345678", nom: "DUPONT" }]);
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     const inserted = db._inserted[0]! as Array<Record<string, unknown>>;
     expect(inserted).toHaveLength(1);
@@ -289,7 +290,7 @@ describe("syncCriterium", () => {
     mockGetResCla.mockResolvedValue([makeResCla()]);
     const db = makeDbWithJoueurs([]);
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     expect(db._mocks.onConflictMock).toHaveBeenCalled();
     const conflictCall = db._mocks.onConflictMock.mock.calls[0]![0] as Record<string, unknown>;
@@ -321,7 +322,7 @@ describe("syncCriterium", () => {
       select: selectMock,
     };
 
-    const count = await syncCriterium(db as any, FFTT_CONFIG);
+    const count = await syncCriterium(db as SyncDb, FFTT_CONFIG);
     expect(count).toBe(3);
   });
 
@@ -329,7 +330,7 @@ describe("syncCriterium", () => {
     mockGetEpreuves.mockResolvedValue([]);
     const db = makeDbWithJoueurs();
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     expect(mockGetDivisions).not.toHaveBeenCalled();
   });
@@ -342,7 +343,7 @@ describe("syncCriterium", () => {
     ]);
     const db = makeDbWithJoueurs([{ licence: "12345678", nom: "DUPONT" }]);
 
-    await syncCriterium(db as any, FFTT_CONFIG);
+    await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     const inserted = db._inserted[0]! as Array<Record<string, unknown>>;
     expect(inserted[0]!.licence).toBe("12345678");
