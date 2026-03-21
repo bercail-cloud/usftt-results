@@ -1,0 +1,24 @@
+{
+  "name": "usftt-results",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.56.1"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "npm@10.9.2"
+}
