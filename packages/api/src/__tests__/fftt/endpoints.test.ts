@@ -205,7 +205,7 @@ describe("getEquipes", () => {
       PASSWORD
     );
     expect(result).toHaveLength(1);
-    expect(result[0].libEquipe).toBe("USFTT 1");
+    expect(result[0]!.libEquipe).toBe("USFTT 1");
   });
 
   it("passes optional type param", async () => {

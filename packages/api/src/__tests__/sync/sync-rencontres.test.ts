@@ -382,7 +382,7 @@ describe("syncDetailsRencontres", () => {
     await syncDetailsRencontres(db as any, 1, FFTT_CONFIG);
 
     expect(mockGetChpRenc).toHaveBeenCalledTimes(1);
-    const [calledParams] = mockGetChpRenc.mock.calls[0];
+    const [calledParams] = mockGetChpRenc.mock.calls[0]!;
     expect(calledParams).toMatchObject({
       renc_id: "12345",
       is_retour: "0",

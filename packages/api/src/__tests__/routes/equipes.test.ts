@@ -22,29 +22,6 @@ import { equipesRoutes } from "../../routes/equipes.js";
 
 const mockDb = vi.mocked(db);
 
-function makeSelectChain(result: unknown[]) {
-  const chain: Record<string, ReturnType<typeof vi.fn>> = {};
-  const terminal = vi.fn().mockResolvedValue(result);
-  const methods = ["from", "where", "orderBy", "limit", "innerJoin", "leftJoin"];
-  for (const m of methods) {
-    chain[m] = vi.fn().mockReturnValue(chain);
-  }
-  // Make the last method awaitable
-  chain["from"].mockReturnValue({
-    ...chain,
-    where: vi.fn().mockReturnValue({
-      ...chain,
-      orderBy: terminal,
-    }),
-    orderBy: terminal,
-    innerJoin: vi.fn().mockReturnValue({
-      ...chain,
-      where: terminal,
-    }),
-  });
-  const selectMock = vi.fn().mockReturnValue(chain["from"]);
-  return { selectMock, chain, terminal };
-}
 
 const app = new Hono();
 app.route("/api", equipesRoutes);

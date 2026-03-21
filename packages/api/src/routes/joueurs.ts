@@ -21,7 +21,7 @@ app.get("/joueurs", async (c) => {
     .from(sync_status)
     .orderBy(desc(sync_status.last_run));
 
-  const lastSync = syncRows.length > 0 ? syncRows[0].last_run : null;
+  const lastSync = syncRows.length > 0 ? syncRows[0]!.last_run : null;
 
   return c.json({ data: allJoueurs, lastSync });
 });

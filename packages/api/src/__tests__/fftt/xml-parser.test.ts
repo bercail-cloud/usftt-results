@@ -45,7 +45,7 @@ describe("parseEquipes", () => {
       idEpreuve: "EP001",
       libEpreuve: "Championnat par équipes",
     });
-    expect(result[1].libEquipe).toBe("USFTT 2");
+    expect(result[1]!.libEquipe).toBe("USFTT 2");
   });
 
   it("normalizes single item to array", () => {

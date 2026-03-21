@@ -33,12 +33,6 @@ function makeApiPartie(overrides: Record<string, string> = {}) {
   };
 }
 
-function makeSelectMock(licences: string[]) {
-  const rows = licences.map((licence) => ({ licence }));
-  const fromMock = vi.fn().mockResolvedValue(rows);
-  const selectMock = vi.fn().mockReturnValue({ from: fromMock });
-  return { select: selectMock, _rows: rows };
-}
 
 describe("syncParties", () => {
   beforeEach(() => {

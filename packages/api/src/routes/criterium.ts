@@ -167,7 +167,7 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
     return c.json({ error: "Player not found in this tour" }, 404);
   }
 
-  const player = playerRows[0];
+  const player = playerRows[0]!;
 
   const divisionStandings = await db
     .select()
