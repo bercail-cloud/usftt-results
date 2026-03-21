@@ -36,6 +36,13 @@
       "when": 1774120464421,
       "tag": "0004_grey_wither",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1774120830680,
+      "tag": "0005_living_vermin",
+      "breakpoints": true
     }
   ]
 }

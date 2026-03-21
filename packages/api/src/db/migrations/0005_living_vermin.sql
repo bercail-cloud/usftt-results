@@ -1,0 +1,2 @@
+ALTER TABLE "parties_individuelles" DROP CONSTRAINT "parties_individuelles_licence_adversaire_licence_date_partie_journee_unique";--> statement-breakpoint
+ALTER TABLE "rencontres" DROP CONSTRAINT "rencontres_equipe_id_libelle_unique";
