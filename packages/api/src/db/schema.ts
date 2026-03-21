@@ -102,7 +102,9 @@ export const parties_individuelles = pgTable("parties_individuelles", {
   date_partie: varchar("date_partie").notNull(),
   epreuve: varchar("epreuve").notNull(),
   journee: integer("journee").notNull(),
-});
+}, (table) => [
+  unique().on(table.licence, table.adversaire_licence, table.date_partie, table.journee),
+]);
 
 export const historique_classement = pgTable(
   "historique_classement",

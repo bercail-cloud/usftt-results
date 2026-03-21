@@ -1,0 +1,1 @@
+ALTER TABLE "parties_individuelles" ADD CONSTRAINT "parties_individuelles_licence_adversaire_licence_date_partie_journee_unique" UNIQUE("licence","adversaire_licence","date_partie","journee");
