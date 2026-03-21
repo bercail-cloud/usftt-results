@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink } from "react-router";
+import { SyncButton } from "./SyncButton.js";
 
 const NAV_LINKS = [
   { to: "/equipes", label: "Equipes" },
@@ -22,12 +23,13 @@ export function NavBar() {
         <span className="font-bold text-primary text-lg">USFTT Resultats</span>
 
         {/* Desktop links */}
-        <div className="hidden sm:flex gap-6">
+        <div className="hidden sm:flex items-center gap-6">
           {NAV_LINKS.map(({ to, label }) => (
             <NavLink key={to} to={to} className={navLinkClass}>
               {label}
             </NavLink>
           ))}
+          <SyncButton />
         </div>
 
         {/* Mobile hamburger */}
@@ -55,6 +57,9 @@ export function NavBar() {
               {label}
             </NavLink>
           ))}
+          <div className="pt-1">
+            <SyncButton />
+          </div>
         </div>
       )}
     </nav>
