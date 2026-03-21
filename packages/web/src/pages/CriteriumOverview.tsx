@@ -54,7 +54,11 @@ function parseDivision(raw: string): {
     niveauOrder = 1;
     niveauLabel = "National";
     const nMatch = raw.match(/N(\d)/);
-    levelCode = nMatch ? `N${nMatch[1]}` : "N1";
+    const nLevel = nMatch ? nMatch[1] : "1";
+    // FED_N1_Seniors xxx A (F) → N1a, FED_N1_Seniors xxx B (M) → N1b
+    const subGroupMatch = raw.match(/\b([AB])\s*\(/);
+    const subGroup = subGroupMatch ? subGroupMatch[1]!.toLowerCase() : "";
+    levelCode = `N${nLevel}${subGroup}`;
   } else if (raw.startsWith("L") && raw.includes("_R")) {
     niveauOrder = 2;
     niveauLabel = "Regional";
@@ -128,7 +132,10 @@ function groupPlayers(joueurs: JoueurResult[]): GroupedSection[] {
       niveau.ageMap.set(ageKey, { order: parsed.ageOrder, players: [] });
     }
 
-    const levelNum = parseInt(parsed.levelCode.slice(1), 10) || 0;
+    // Parse levelCode for sorting: N1a=10, N1b=11, N2=20, R1=10, R2=20, D1=10, D2=20...
+    const levelDigit = parseInt(parsed.levelCode.replace(/[^0-9]/g, ""), 10) || 0;
+    const subLetter = parsed.levelCode.match(/[a-z]$/)?.[0] ?? "";
+    const levelNum = levelDigit * 10 + (subLetter === "a" ? 0 : subLetter === "b" ? 1 : 0);
     niveau.ageMap.get(ageKey)!.players.push({
       ...j,
       levelCode: parsed.levelCode,
