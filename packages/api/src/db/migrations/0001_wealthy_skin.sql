@@ -1,0 +1,1 @@
+ALTER TABLE "sync_status" ADD CONSTRAINT "sync_status_job_name_unique" UNIQUE("job_name");

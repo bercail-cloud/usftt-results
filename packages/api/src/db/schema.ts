@@ -132,7 +132,7 @@ export const criterium_classement = pgTable("criterium_classement", {
 
 export const sync_status = pgTable("sync_status", {
   id: serial("id").primaryKey(),
-  job_name: varchar("job_name").notNull(),
+  job_name: varchar("job_name").notNull().unique(),
   last_run: timestamp("last_run").notNull(),
   status: varchar("status").notNull(),
   error_message: text("error_message"),
