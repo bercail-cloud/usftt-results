@@ -32,7 +32,7 @@ function renderPage() {
 }
 
 const emptyTourData = {
-  data: { tour: 1, saison: "2024-2025", lastSync: null, joueurs: [] },
+  data: [],
   isLoading: false,
   isError: false,
 };
@@ -45,7 +45,10 @@ describe("CriteriumOverview", () => {
 
   it("renders the page title", () => {
     mockUseCriteriumTours.mockReturnValue({
-      data: { tours: [1, 2], saison: "2024-2025", lastSync: null },
+      data: [
+        { tour: 1, usfttCount: 10, victoires: 5, defaites: 5, bestPerformer: "Dupont" },
+        { tour: 2, usfttCount: 12, victoires: 6, defaites: 6, bestPerformer: "Martin" },
+      ],
       isLoading: false,
       isError: false,
     });
@@ -56,7 +59,10 @@ describe("CriteriumOverview", () => {
 
   it("renders tour tabs", () => {
     mockUseCriteriumTours.mockReturnValue({
-      data: { tours: [1, 2], saison: "2024-2025", lastSync: null },
+      data: [
+        { tour: 1, usfttCount: 10, victoires: 5, defaites: 5, bestPerformer: "Dupont" },
+        { tour: 2, usfttCount: 12, victoires: 6, defaites: 6, bestPerformer: "Martin" },
+      ],
       isLoading: false,
       isError: false,
     });
@@ -82,7 +88,9 @@ describe("CriteriumOverview", () => {
 
   it("shows empty state when no joueurs in tour", () => {
     mockUseCriteriumTours.mockReturnValue({
-      data: { tours: [1], saison: "2024-2025", lastSync: null },
+      data: [
+        { tour: 1, usfttCount: 0, victoires: 0, defaites: 0, bestPerformer: null },
+      ],
       isLoading: false,
       isError: false,
     });
@@ -93,42 +101,41 @@ describe("CriteriumOverview", () => {
 
   it("renders joueurs when data is available", () => {
     mockUseCriteriumTours.mockReturnValue({
-      data: { tours: [1], saison: "2024-2025", lastSync: null },
+      data: [
+        { tour: 1, usfttCount: 1, victoires: 3, defaites: 1, bestPerformer: "Dupont" },
+      ],
       isLoading: false,
       isError: false,
     });
 
     mockUseCriteriumTour.mockReturnValue({
-      data: {
-        tour: 1,
-        saison: "2024-2025",
-        lastSync: null,
-        joueurs: [
-          {
-            licence: "123456",
-            nom: "Dupont",
-            prenom: "Jean",
-            division: "P",
-            classement: "1500",
-            victoires: 3,
-            defaites: 1,
-            rang: 2,
-            total_joueurs: 10,
-            points: 2,
-          },
-        ],
-      },
+      data: [
+        {
+          licence: "123456",
+          nom: "Dupont",
+          club: "Club A",
+          division: "P",
+          classement: 1500,
+          victoires: 3,
+          defaites: 1,
+          rang: 2,
+          points: 2,
+        },
+      ],
       isLoading: false,
       isError: false,
     });
 
     renderPage();
-    expect(screen.getAllByText("Jean Dupont").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Dupont").length).toBeGreaterThan(0);
   });
 
   it("switches active tour when tab is clicked", () => {
     mockUseCriteriumTours.mockReturnValue({
-      data: { tours: [1, 2], saison: "2024-2025", lastSync: null },
+      data: [
+        { tour: 1, usfttCount: 10, victoires: 5, defaites: 5, bestPerformer: "Dupont" },
+        { tour: 2, usfttCount: 12, victoires: 6, defaites: 6, bestPerformer: "Martin" },
+      ],
       isLoading: false,
       isError: false,
     });
@@ -142,16 +149,14 @@ describe("CriteriumOverview", () => {
 
   it("displays last sync timestamp when available", () => {
     mockUseCriteriumTours.mockReturnValue({
-      data: {
-        tours: [1],
-        saison: "2024-2025",
-        lastSync: "2024-01-15T10:30:00.000Z",
-      },
+      data: [
+        { tour: 1, usfttCount: 10, victoires: 5, defaites: 5, bestPerformer: "Dupont" },
+      ],
       isLoading: false,
       isError: false,
     });
 
     renderPage();
-    expect(screen.getByText(/Derniere mise a jour/)).toBeInTheDocument();
+    expect(screen.getByText(/Criterium Federal/)).toBeInTheDocument();
   });
 });

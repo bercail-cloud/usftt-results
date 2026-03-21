@@ -53,7 +53,7 @@ describe("Progression", () => {
 
   it("renders the page title", () => {
     mockUseJoueurs.mockReturnValue({
-      data: { joueurs: [] },
+      data: { data: [], lastSync: null },
       isLoading: false,
       isError: false,
     });
@@ -64,7 +64,7 @@ describe("Progression", () => {
 
   it("renders player selector", () => {
     mockUseJoueurs.mockReturnValue({
-      data: { joueurs: [] },
+      data: { data: [], lastSync: null },
       isLoading: false,
       isError: false,
     });
@@ -89,7 +89,7 @@ describe("Progression", () => {
 
   it("shows empty state when no player selected", () => {
     mockUseJoueurs.mockReturnValue({
-      data: { joueurs: [] },
+      data: { data: [], lastSync: null },
       isLoading: false,
       isError: false,
     });
@@ -103,10 +103,11 @@ describe("Progression", () => {
   it("renders joueurs in selector", () => {
     mockUseJoueurs.mockReturnValue({
       data: {
-        joueurs: [
-          { licence: "123456", nom: "Dupont", prenom: "Jean", points: 1500 },
-          { licence: "789012", nom: "Martin", prenom: "Alice", points: 1200 },
+        data: [
+          { licence: "123456", nom: "Dupont", prenom: "Jean", points_officiels: 1500 },
+          { licence: "789012", nom: "Martin", prenom: "Alice", points_officiels: 1200 },
         ],
+        lastSync: null,
       },
       isLoading: false,
       isError: false,

@@ -16,34 +16,34 @@ interface Joueur {
   licence: string;
   nom: string;
   prenom: string;
-  points: number;
+  points_officiels: number | null;
 }
 
 interface ProgressionPoint {
   saison: string;
-  phase: string;
+  phase: number;
   points: number;
 }
 
 interface Partie {
-  date: string;
+  date_partie: string;
   adversaire_nom: string;
-  adversaire_prenom: string;
-  adversaire_classement: string;
-  resultat: "V" | "D";
-  points: number;
+  adversaire_classement: number;
+  victoire: boolean;
+  points_resultat: number;
 }
 
 interface JoueursResponse {
-  joueurs: Joueur[];
+  data: Joueur[];
+  lastSync: string | null;
 }
 
 interface ProgressionResponse {
-  progression: ProgressionPoint[];
+  data: ProgressionPoint[];
 }
 
 interface PartiesResponse {
-  parties: Partie[];
+  data: Partie[];
 }
 
 function formatDate(dateStr: string): string {
@@ -88,9 +88,9 @@ export function Progression() {
       isLoading: boolean;
     };
 
-  const joueurs = joueursData?.joueurs ?? [];
-  const progression = progressionData?.progression ?? [];
-  const parties = partiesData?.parties ?? [];
+  const joueurs = joueursData?.data ?? [];
+  const progression = progressionData?.data ?? [];
+  const parties = partiesData?.data ?? [];
 
   const chartData = progression.map((p) => ({
     label: formatChartLabel(p),
@@ -99,7 +99,7 @@ export function Progression() {
 
   const sortedParties = parties
     .slice()
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    .sort((a, b) => new Date(b.date_partie).getTime() - new Date(a.date_partie).getTime());
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -124,7 +124,7 @@ export function Progression() {
             <option value="">-- Selectionner un joueur --</option>
             {joueurs.map((j) => (
               <option key={j.licence} value={j.licence}>
-                {j.prenom} {j.nom} ({j.points} pts)
+                {j.prenom} {j.nom} ({j.points_officiels ?? 0} pts)
               </option>
             ))}
           </select>
@@ -202,10 +202,10 @@ export function Progression() {
                     {sortedParties.map((partie, idx) => (
                       <tr key={idx} className="border-b border-[#f1f5f9]">
                         <td className="px-3 py-2 text-[#64748b] whitespace-nowrap">
-                          {formatDate(partie.date)}
+                          {formatDate(partie.date_partie)}
                         </td>
                         <td className="px-3 py-2 text-[#0f172a]">
-                          {partie.adversaire_prenom} {partie.adversaire_nom}
+                          {partie.adversaire_nom}
                         </td>
                         <td className="px-3 py-2 text-center text-[#64748b]">
                           {partie.adversaire_classement}
@@ -213,20 +213,20 @@ export function Progression() {
                         <td className="px-3 py-2 text-center">
                           <span
                             className={`font-bold ${
-                              partie.resultat === "V"
+                              partie.victoire
                                 ? "text-success"
                                 : "text-error"
                             }`}
                           >
-                            {partie.resultat}
+                            {partie.victoire ? "V" : "D"}
                           </span>
                         </td>
                         <td
-                          className={`px-3 py-2 text-center font-semibold ${getPointsColor(partie.points)}`}
+                          className={`px-3 py-2 text-center font-semibold ${getPointsColor(partie.points_resultat)}`}
                         >
-                          {partie.points > 0
-                            ? `+${partie.points}`
-                            : partie.points}
+                          {partie.points_resultat > 0
+                            ? `+${partie.points_resultat}`
+                            : partie.points_resultat}
                         </td>
                       </tr>
                     ))}

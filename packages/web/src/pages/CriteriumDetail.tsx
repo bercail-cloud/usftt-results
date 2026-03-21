@@ -4,34 +4,37 @@ import { LoadingSkeleton } from "../components/LoadingSkeleton.js";
 import { EmptyState } from "../components/EmptyState.js";
 import { DivisionBadge } from "../components/DivisionBadge.js";
 
+interface Player {
+  licence: string;
+  nom: string;
+  club: string;
+  classement: number;
+  division: string;
+  rang: number;
+  points: number;
+}
+
+// criterium_classement rows
 interface Standing {
   rang: number;
-  licence: string;
+  licence: string | null;
   nom: string;
-  prenom: string;
   club: string;
-  classement: string;
+  classement: number;
   points: number;
 }
 
+// parties_individuelles rows
 interface Match {
   adversaire_nom: string;
-  adversaire_prenom: string;
-  adversaire_classement: string;
-  resultat: "V" | "D";
-  points: number;
+  adversaire_classement: number;
+  victoire: boolean;
+  points_resultat: number;
 }
 
-interface PlayerDetail {
-  licence: string;
-  nom: string;
-  prenom: string;
-  division: string;
-  classement: string;
-  victoires: number;
-  defaites: number;
-  total_points: number;
-  standings: Standing[];
+interface CriteriumDetailResponse {
+  player: Player;
+  divisionStandings: Standing[];
   matches: Match[];
 }
 
@@ -51,7 +54,7 @@ export function CriteriumDetail() {
     tourNum,
     licence ?? ""
   ) as {
-    data: PlayerDetail | undefined;
+    data: CriteriumDetailResponse | undefined;
     isLoading: boolean;
     isError: boolean;
     error: Error | null;
@@ -93,6 +96,12 @@ export function CriteriumDetail() {
     );
   }
 
+  const { player, divisionStandings, matches } = data;
+
+  const victoires = matches.filter((m) => m.victoire).length;
+  const defaites = matches.filter((m) => !m.victoire).length;
+  const totalPoints = matches.reduce((sum, m) => sum + m.points_resultat, 0);
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
       {/* Breadcrumb */}
@@ -106,21 +115,21 @@ export function CriteriumDetail() {
       {/* Player header */}
       <div>
         <h1 className="text-xl font-bold text-[#0f172a]">
-          {data.prenom} {data.nom}
+          {player.nom}
         </h1>
         <div className="flex items-center gap-2 mt-1">
-          <DivisionBadge division={data.division} />
-          <span className="text-sm text-[#64748b]">{data.classement}</span>
+          <DivisionBadge division={player.division} />
+          <span className="text-sm text-[#64748b]">{player.classement}</span>
         </div>
         <p className="text-2xl font-bold mt-2">
-          <span className="text-success">{data.victoires}V</span>
+          <span className="text-success">{victoires}V</span>
           <span className="text-[#94a3b8] mx-1">/</span>
-          <span className="text-error">{data.defaites}D</span>
+          <span className="text-error">{defaites}D</span>
         </p>
       </div>
 
       {/* Division standings */}
-      {data.standings && data.standings.length > 0 && (
+      {divisionStandings && divisionStandings.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded-lg p-5">
           <h2 className="font-bold text-[#0f172a] mb-3">Classement division</h2>
           <div className="overflow-x-auto">
@@ -135,11 +144,11 @@ export function CriteriumDetail() {
                 </tr>
               </thead>
               <tbody>
-                {data.standings.map((row) => {
-                  const isPlayer = row.licence === data.licence;
+                {divisionStandings.map((row, idx) => {
+                  const isPlayer = row.licence === player.licence;
                   return (
                     <tr
-                      key={row.licence}
+                      key={row.licence ?? idx}
                       className={`border-b border-[#f1f5f9] ${
                         isPlayer
                           ? "bg-[#eff6ff] text-primary font-semibold"
@@ -147,9 +156,7 @@ export function CriteriumDetail() {
                       }`}
                     >
                       <td className="px-3 py-2 text-center">{row.rang}</td>
-                      <td className="px-3 py-2">
-                        {row.prenom} {row.nom}
-                      </td>
+                      <td className="px-3 py-2">{row.nom}</td>
                       <td className="px-3 py-2 text-[#64748b]">{row.club}</td>
                       <td className="px-3 py-2 text-center text-[#64748b]">
                         {row.classement}
@@ -167,7 +174,7 @@ export function CriteriumDetail() {
       )}
 
       {/* Matches */}
-      {data.matches && data.matches.length > 0 && (
+      {matches && matches.length > 0 && (
         <div className="bg-white border border-[#e2e8f0] rounded-lg p-5">
           <h2 className="font-bold text-[#0f172a] mb-3">Parties</h2>
           <div className="overflow-x-auto">
@@ -181,10 +188,10 @@ export function CriteriumDetail() {
                 </tr>
               </thead>
               <tbody>
-                {data.matches.map((match, idx) => (
+                {matches.map((match, idx) => (
                   <tr key={idx} className="border-b border-[#f1f5f9]">
                     <td className="px-3 py-2 text-[#0f172a]">
-                      {match.adversaire_prenom} {match.adversaire_nom}
+                      {match.adversaire_nom}
                     </td>
                     <td className="px-3 py-2 text-center text-[#64748b]">
                       {match.adversaire_classement}
@@ -192,16 +199,16 @@ export function CriteriumDetail() {
                     <td className="px-3 py-2 text-center">
                       <span
                         className={`font-bold ${
-                          match.resultat === "V" ? "text-success" : "text-error"
+                          match.victoire ? "text-success" : "text-error"
                         }`}
                       >
-                        {match.resultat}
+                        {match.victoire ? "V" : "D"}
                       </span>
                     </td>
                     <td
-                      className={`px-3 py-2 text-center font-semibold ${getPointsColor(match.points)}`}
+                      className={`px-3 py-2 text-center font-semibold ${getPointsColor(match.points_resultat)}`}
                     >
-                      {match.points > 0 ? `+${match.points}` : match.points}
+                      {match.points_resultat > 0 ? `+${match.points_resultat}` : match.points_resultat}
                     </td>
                   </tr>
                 ))}
@@ -214,19 +221,19 @@ export function CriteriumDetail() {
             <span className="text-sm text-[#64748b]">
               Total points :{" "}
               <span
-                className={`font-bold ${getPointsColor(data.total_points)}`}
+                className={`font-bold ${getPointsColor(totalPoints)}`}
               >
-                {data.total_points > 0
-                  ? `+${data.total_points}`
-                  : data.total_points}
+                {totalPoints > 0
+                  ? `+${totalPoints.toFixed(1)}`
+                  : totalPoints.toFixed(1)}
               </span>
             </span>
           </div>
         </div>
       )}
 
-      {(!data.standings || data.standings.length === 0) &&
-        (!data.matches || data.matches.length === 0) && (
+      {(!divisionStandings || divisionStandings.length === 0) &&
+        (!matches || matches.length === 0) && (
           <EmptyState message="Aucune donnee disponible pour ce joueur" />
         )}
     </div>
