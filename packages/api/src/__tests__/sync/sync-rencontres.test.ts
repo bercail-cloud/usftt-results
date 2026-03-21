@@ -201,14 +201,18 @@ describe("syncRencontres", () => {
 
     const insertedValues: unknown[] = [];
     const db = {
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(undefined),
+      }),
       insert: vi.fn().mockReturnValue({
         values: vi.fn().mockImplementation((vals) => {
           insertedValues.push(...(Array.isArray(vals) ? vals : [vals]));
-          return {
-            onConflictDoUpdate: vi.fn().mockReturnValue({
-              returning: vi.fn().mockResolvedValue([]),
-            }),
-          };
+          return Promise.resolve(undefined);
         }),
       }),
     };
@@ -236,14 +240,18 @@ describe("syncRencontres", () => {
 
     const insertedValues: unknown[] = [];
     const db = {
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(undefined),
+      }),
       insert: vi.fn().mockReturnValue({
         values: vi.fn().mockImplementation((vals) => {
           insertedValues.push(...(Array.isArray(vals) ? vals : [vals]));
-          return {
-            onConflictDoUpdate: vi.fn().mockReturnValue({
-              returning: vi.fn().mockResolvedValue([]),
-            }),
-          };
+          return Promise.resolve(undefined);
         }),
       }),
     };
@@ -270,14 +278,18 @@ describe("syncRencontres", () => {
 
     const insertedValues: unknown[] = [];
     const db = {
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(undefined),
+      }),
       insert: vi.fn().mockReturnValue({
         values: vi.fn().mockImplementation((vals) => {
           insertedValues.push(...(Array.isArray(vals) ? vals : [vals]));
-          return {
-            onConflictDoUpdate: vi.fn().mockReturnValue({
-              returning: vi.fn().mockResolvedValue([]),
-            }),
-          };
+          return Promise.resolve(undefined);
         }),
       }),
     };
@@ -305,14 +317,18 @@ describe("syncRencontres", () => {
 
     const insertedValues: unknown[] = [];
     const db = {
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(undefined),
+      }),
       insert: vi.fn().mockReturnValue({
         values: vi.fn().mockImplementation((vals) => {
           insertedValues.push(...(Array.isArray(vals) ? vals : [vals]));
-          return {
-            onConflictDoUpdate: vi.fn().mockReturnValue({
-              returning: vi.fn().mockResolvedValue([]),
-            }),
-          };
+          return Promise.resolve(undefined);
         }),
       }),
     };

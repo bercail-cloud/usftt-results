@@ -97,24 +97,15 @@ export async function syncRencontres(
     };
   });
 
-  const upserted = await db
-    .insert(rencontres)
-    .values(rows)
-    .onConflictDoUpdate({
-      target: [rencontres.equipe_id, rencontres.libelle],
-      set: {
-        equipe_a: rows[0]!.equipe_a,
-        equipe_b: rows[0]!.equipe_b,
-        score_a: rows[0]!.score_a,
-        score_b: rows[0]!.score_b,
-        date_reelle: rows[0]!.date_reelle,
-        lien_detail: rows[0]!.lien_detail,
-        is_domicile: rows[0]!.is_domicile,
-      },
-    })
-    .returning();
+  // Delete existing parties_rencontre + rencontres for this equipe, then re-insert
+  const existingRencontres = await db.select({ id: rencontres.id }).from(rencontres).where(eq(rencontres.equipe_id, equipe.id));
+  for (const r of existingRencontres) {
+    await db.delete(parties_rencontre).where(eq(parties_rencontre.rencontre_id, r.id));
+  }
+  await db.delete(rencontres).where(eq(rencontres.equipe_id, equipe.id));
+  await db.insert(rencontres).values(rows);
 
-  return upserted;
+  return rows;
 }
 
 export async function syncDetailsRencontres(
