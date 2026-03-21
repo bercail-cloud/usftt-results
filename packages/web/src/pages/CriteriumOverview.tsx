@@ -5,16 +5,13 @@ import { LoadingSkeleton } from "../components/LoadingSkeleton.js";
 import { EmptyState } from "../components/EmptyState.js";
 import { DivisionBadge } from "../components/DivisionBadge.js";
 
-// /criterium/tours returns an array of TourSummary
 interface TourSummary {
   tour: number;
+  date: string;
   usfttCount: number;
-  victoires: number;
-  defaites: number;
-  bestPerformer: string | null;
+  divisions: Array<{ libelle: string; niveau: string }>;
 }
 
-// /criterium/tours/:tour returns an array of JoueurResult
 interface JoueurResult {
   licence: string;
   nom: string;
@@ -24,13 +21,12 @@ interface JoueurResult {
   victoires: number;
   defaites: number;
   rang: number;
-  points: number;
+  points: string;
 }
 
 const TOUR_LABELS = ["Tour 1", "Tour 2", "Tour 3", "Tour 4"];
 
 function formatDivision(division: string): string {
-  // Strip known federation/league prefixes like "FED_", "L08_", "D75_", "N1_", etc.
   return division.replace(/^(?:FED|[A-Z]\d+)_/, "");
 }
 
@@ -51,12 +47,13 @@ function getBestBilan(joueurs: JoueurResult[]): JoueurResult | null {
 
 function TourResultsTable({
   tour,
+  tourDate,
   onRowClick,
 }: {
   tour: number;
+  tourDate?: string;
   onRowClick: (licence: string) => void;
 }) {
-  // API returns array directly
   const { data, isLoading, isError } = useCriteriumTour(tour) as {
     data: JoueurResult[] | undefined;
     isLoading: boolean;
@@ -81,6 +78,10 @@ function TourResultsTable({
 
   return (
     <div className="space-y-4">
+      {tourDate && (
+        <p className="text-sm text-[#64748b]">Date : {tourDate}</p>
+      )}
+
       {/* Summary stat cards */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 text-center">
@@ -133,9 +134,9 @@ function TourResultsTable({
                 const bilan = j.victoires - j.defaites;
                 return (
                   <tr
-                    key={j.licence}
+                    key={`${j.licence}-${j.division}`}
                     className="border-b border-[#f1f5f9] hover:bg-[#f8fafc] cursor-pointer transition-colors"
-                    onClick={() => onRowClick(j.licence)}
+                    onClick={() => j.licence && onRowClick(j.licence)}
                   >
                     <td className="px-3 py-2 font-bold text-[#0f172a]">
                       {j.nom}
@@ -155,7 +156,7 @@ function TourResultsTable({
                       {j.rang}
                     </td>
                     <td className={`px-3 py-2 text-center font-semibold ${getBilanColor(bilan)}`}>
-                      {bilan > 0 ? `+${bilan}` : bilan}
+                      {j.points}
                     </td>
                   </tr>
                 );
@@ -170,7 +171,6 @@ function TourResultsTable({
 
 export function CriteriumOverview() {
   const navigate = useNavigate();
-  // API returns TourSummary[] directly
   const { data: toursData, isLoading: toursLoading, isError: toursError } =
     useCriteriumTours() as {
       data: TourSummary[] | undefined;
@@ -178,15 +178,16 @@ export function CriteriumOverview() {
       isError: boolean;
     };
 
-  const availableTours = toursData?.map((t) => t.tour) ?? [];
-  // If only tour 0 exists (no real tour numbering), don't show tabs
-  const hasRealTours = availableTours.some((t) => t > 0);
+  const availableTours = toursData ?? [];
+  const tourNumbers = availableTours.map((t) => t.tour);
+  const hasRealTours = tourNumbers.some((t) => t > 0);
   const latestTour = hasRealTours
-    ? (availableTours.filter((t) => t > 0).at(-1) ?? 1)
-    : (availableTours[0] ?? 0);
+    ? (tourNumbers.filter((t) => t > 0).at(-1) ?? 1)
+    : (tourNumbers[0] ?? 0);
   const [activeTour, setActiveTour] = useState<number | null>(null);
 
   const currentTour = activeTour ?? latestTour;
+  const currentTourData = availableTours.find((t) => t.tour === currentTour);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
@@ -209,22 +210,23 @@ export function CriteriumOverview() {
           {hasRealTours && (
             <div className="flex gap-2 flex-wrap" role="tablist">
               {availableTours
-                .filter((t) => t > 0)
+                .filter((t) => t.tour > 0)
                 .map((t) => {
-                  const isActive = currentTour === t;
+                  const isActive = currentTour === t.tour;
                   return (
                     <button
-                      key={t}
+                      key={t.tour}
                       role="tab"
                       aria-selected={isActive}
-                      onClick={() => setActiveTour(t)}
+                      onClick={() => setActiveTour(t.tour)}
                       className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
                         isActive
                           ? "bg-[#0f172a] text-white"
                           : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0]"
                       }`}
                     >
-                      {TOUR_LABELS[t - 1]}
+                      {TOUR_LABELS[t.tour - 1] ?? `Tour ${t.tour}`}
+                      {t.date ? ` (${t.date})` : ""}
                     </button>
                   );
                 })}
@@ -233,6 +235,7 @@ export function CriteriumOverview() {
 
           <TourResultsTable
             tour={currentTour}
+            tourDate={currentTourData?.date}
             onRowClick={(licence) =>
               navigate(`/criterium/tours/${currentTour}/joueurs/${licence}`)
             }

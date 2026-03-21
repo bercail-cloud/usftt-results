@@ -118,21 +118,48 @@ export const historique_classement = pgTable(
   (table) => [unique().on(table.licence, table.saison, table.phase)],
 );
 
-export const criterium_classement = pgTable("criterium_classement", {
+export const criterium_tours = pgTable("criterium_tours", {
   id: serial("id").primaryKey(),
+  epreuve_id: varchar("epreuve_id").notNull(),
+  epreuve_libelle: varchar("epreuve_libelle").notNull(),
   division_id: varchar("division_id").notNull(),
   division_libelle: varchar("division_libelle").notNull(),
+  tour: integer("tour").notNull(),
+  groupe: varchar("groupe").notNull(),
+  cx_tableau: varchar("cx_tableau").notNull(),
+  date_tour: varchar("date_tour").notNull(),
+  niveau: varchar("niveau").notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  unique().on(table.division_id, table.cx_tableau),
+]);
+
+export const criterium_classement = pgTable("criterium_classement", {
+  id: serial("id").primaryKey(),
+  criterium_tour_id: integer("criterium_tour_id")
+    .notNull()
+    .references(() => criterium_tours.id),
   rang: integer("rang").notNull(),
   licence: varchar("licence").references(() => joueurs.licence),
   nom: varchar("nom").notNull(),
   club: varchar("club").notNull(),
   classement: integer("classement").notNull(),
-  points: integer("points").notNull(),
-  tour: integer("tour").notNull(),
+  points: varchar("points").notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
-  unique().on(table.division_id, table.nom, table.tour),
+  unique().on(table.criterium_tour_id, table.nom),
 ]);
+
+export const criterium_parties = pgTable("criterium_parties", {
+  id: serial("id").primaryKey(),
+  criterium_tour_id: integer("criterium_tour_id")
+    .notNull()
+    .references(() => criterium_tours.id),
+  libelle: varchar("libelle").notNull(),
+  vainqueur: varchar("vainqueur").notNull(),
+  perdant: varchar("perdant").notNull(),
+  forfait: boolean("forfait").notNull().default(false),
+});
 
 export const sync_status = pgTable("sync_status", {
   id: serial("id").primaryKey(),

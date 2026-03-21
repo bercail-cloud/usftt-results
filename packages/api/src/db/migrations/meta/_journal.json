@@ -50,6 +50,13 @@
       "when": 1774130396585,
       "tag": "0006_tiresome_trish_tilby",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1774159200000,
+      "tag": "0007_criterium_result_indiv",
+      "breakpoints": true
     }
   ]
 }

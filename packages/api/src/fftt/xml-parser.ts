@@ -358,3 +358,61 @@ export function parseResCla(xml: string): ResCla[] {
     points: getString(raw.points),
   }));
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// xml_result_indiv parsers
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ResultIndivPoule {
+  libelle: string;
+  lien: string;
+  date: string;
+}
+
+export interface ResultIndivClassement {
+  rang: string;
+  nom: string;
+  clt: string;
+  club: string;
+  points: string;
+}
+
+export interface ResultIndivPartie {
+  libelle: string;
+  vain: string;
+  perd: string;
+  forfait: boolean;
+}
+
+export function parseResultIndivPoules(xml: string): ResultIndivPoule[] {
+  const data = parseXml(xml) as { liste?: { tour?: unknown } };
+  const items = toArray(data.liste?.tour as Record<string, unknown> | Record<string, unknown>[] | undefined);
+  return items.map((raw) => ({
+    libelle: getString(raw.libelle),
+    lien: getString(raw.lien),
+    date: getString(raw.date),
+  }));
+}
+
+export function parseResultIndivClassement(xml: string): ResultIndivClassement[] {
+  const data = parseXml(xml) as { liste?: { classement?: unknown } };
+  const items = toArray(data.liste?.classement as Record<string, unknown> | Record<string, unknown>[] | undefined);
+  return items.map((raw) => ({
+    rang: getString(raw.rang),
+    nom: getString(raw.nom),
+    clt: getString(raw.clt),
+    club: getString(raw.club),
+    points: getString(raw.points),
+  }));
+}
+
+export function parseResultIndivParties(xml: string): ResultIndivPartie[] {
+  const data = parseXml(xml) as { liste?: { partie?: unknown } };
+  const items = toArray(data.liste?.partie as Record<string, unknown> | Record<string, unknown>[] | undefined);
+  return items.map((raw) => ({
+    libelle: getString(raw.libelle),
+    vain: getString(raw.vain),
+    perd: getString(raw.perd),
+    forfait: raw.forfait !== undefined && raw.forfait !== null,
+  }));
+}
