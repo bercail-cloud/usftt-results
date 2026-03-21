@@ -19,6 +19,11 @@ export async function syncCriterium(
 ): Promise<number> {
   const { appId, serie, password, organismeId } = ffttConfig;
 
+  if (!organismeId) {
+    console.log("Skipping criterium sync: organismeId not configured");
+    return 0;
+  }
+
   const allEpreuves = await getEpreuves(organismeId, "I", appId, serie, password);
 
   const criteriumEpreuves = allEpreuves.filter(
