@@ -34,7 +34,9 @@ export const equipes = pgTable("equipes", {
   lib_epreuve: varchar("lib_epreuve").notNull(),
   type_epreuve: varchar("type_epreuve").notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  unique().on(table.lib_equipe, table.id_epreuve),
+]);
 
 export const classements_poule = pgTable("classements_poule", {
   id: serial("id").primaryKey(),

@@ -15,6 +15,13 @@
       "when": 1774118454994,
       "tag": "0001_wealthy_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774119547711,
+      "tag": "0002_mean_lord_hawal",
+      "breakpoints": true
     }
   ]
 }

@@ -12,15 +12,21 @@ export async function syncJoueurs(db: SyncDb, ffttConfig: FfttConfig): Promise<n
     return 0;
   }
 
+  const safeInt = (val: string | undefined): number | null => {
+    if (!val) return null;
+    const n = parseInt(val, 10);
+    return Number.isNaN(n) ? null : n;
+  };
+
   const rows = players.map((player) => ({
     licence: player.licence,
     nom: player.nom,
     prenom: player.prenom,
     club_numero: player.numclub,
-    points_officiels: parseInt(player.point, 10),
-    points_mensuels: parseInt(player.pointm, 10),
-    categorie: player.cat,
-    sexe: player.sexe,
+    points_officiels: safeInt(player.point),
+    points_mensuels: safeInt(player.pointm),
+    categorie: player.cat || null,
+    sexe: player.sexe || "M",
     rang_departemental: null,
     rang_regional: null,
   }));

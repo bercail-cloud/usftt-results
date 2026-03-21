@@ -1,0 +1,1 @@
+ALTER TABLE "equipes" ADD CONSTRAINT "equipes_lib_equipe_id_epreuve_unique" UNIQUE("lib_equipe","id_epreuve");
