@@ -11,9 +11,10 @@ import { syncHistorique } from "./sync-historique.js";
 import { syncCriterium } from "./sync-criterium.js";
 import { sync_status, equipes as equipesTable } from "../db/schema.js";
 import type { CriteriumFfttConfig } from "./sync-criterium.js";
+import type { SyncDb } from "./sync-equipes.js";
 
 async function logSyncStatus(
-  db: any,
+  db: SyncDb,
   jobName: string,
   status: "success" | "error",
   errorMessage?: string
@@ -38,7 +39,7 @@ async function logSyncStatus(
 }
 
 async function runJob(
-  db: any,
+  db: SyncDb,
   name: string,
   fn: () => Promise<unknown>
 ): Promise<void> {
@@ -52,7 +53,7 @@ async function runJob(
 }
 
 async function syncAllClassements(
-  db: any,
+  db: SyncDb,
   ffttConfig: CriteriumFfttConfig
 ): Promise<void> {
   const equipesRows = await db.select().from(equipesTable);
@@ -64,7 +65,7 @@ async function syncAllClassements(
 }
 
 export async function syncFull(
-  db: any,
+  db: SyncDb,
   ffttConfig: CriteriumFfttConfig
 ): Promise<void> {
   await runJob(db, "sync-equipes", () => syncEquipes(db, ffttConfig));
@@ -75,7 +76,7 @@ export async function syncFull(
 }
 
 export async function syncMatchDay(
-  db: any,
+  db: SyncDb,
   ffttConfig: CriteriumFfttConfig
 ): Promise<void> {
   await runJob(db, "sync-equipes", () => syncEquipes(db, ffttConfig));
@@ -83,14 +84,14 @@ export async function syncMatchDay(
 }
 
 async function syncHistoriqueJob(
-  db: any,
+  db: SyncDb,
   ffttConfig: CriteriumFfttConfig
 ): Promise<void> {
   await runJob(db, "sync-historique", () => syncHistorique(db, ffttConfig));
 }
 
 export function startScheduler(
-  db: any,
+  db: SyncDb,
   ffttConfig: CriteriumFfttConfig
 ): void {
   cron.schedule("0 8,20 * * *", () => syncFull(db, ffttConfig));

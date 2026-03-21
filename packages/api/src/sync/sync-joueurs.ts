@@ -1,9 +1,9 @@
 import { getLicenceB } from "../fftt/endpoints.js";
 import { joueurs } from "../db/schema.js";
 import { sql } from "drizzle-orm";
-import type { FfttConfig } from "./sync-equipes.js";
+import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
-export async function syncJoueurs(db: any, ffttConfig: FfttConfig): Promise<number> {
+export async function syncJoueurs(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
   const { appId, serie, password, clubNumero } = ffttConfig;
 
   const players = await getLicenceB({ club: clubNumero }, appId, serie, password);

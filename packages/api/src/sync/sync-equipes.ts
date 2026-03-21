@@ -9,8 +9,11 @@ export interface FfttConfig {
   clubNumero: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SyncDb = any;
+
 export async function syncEquipes(
-  db: any,
+  db: SyncDb,
   ffttConfig: FfttConfig
 ): Promise<unknown[]> {
   const { appId, serie, password, clubNumero } = ffttConfig;

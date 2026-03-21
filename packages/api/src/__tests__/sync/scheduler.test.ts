@@ -34,6 +34,7 @@ import { syncHistorique } from "../../sync/sync-historique.js";
 import { syncCriterium } from "../../sync/sync-criterium.js";
 import cron from "node-cron";
 import { syncFull, syncMatchDay, startScheduler } from "../../sync/scheduler.js";
+import type { SyncDb } from "../../sync/sync-equipes.js";
 
 const mockSyncEquipes = vi.mocked(syncEquipes);
 const mockSyncJoueurs = vi.mocked(syncJoueurs);
@@ -81,7 +82,7 @@ describe("syncFull", () => {
     mockSyncParties.mockResolvedValue(0);
     mockSyncCriterium.mockResolvedValue(0);
 
-    await syncFull(db as any, FFTT_CONFIG);
+    await syncFull(db as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncEquipes).toHaveBeenCalledWith(db, FFTT_CONFIG);
     expect(mockSyncJoueurs).toHaveBeenCalledWith(db, FFTT_CONFIG);
@@ -96,7 +97,7 @@ describe("syncFull", () => {
     mockSyncParties.mockResolvedValue(0);
     mockSyncCriterium.mockResolvedValue(0);
 
-    await syncFull(db as any, FFTT_CONFIG);
+    await syncFull(db as SyncDb, FFTT_CONFIG);
 
     expect(db.insert).toHaveBeenCalled();
     const insertedStatuses = (db.insert as ReturnType<typeof vi.fn>).mock.calls.map(
@@ -112,7 +113,7 @@ describe("syncFull", () => {
     mockSyncParties.mockResolvedValue(0);
     mockSyncCriterium.mockResolvedValue(0);
 
-    await expect(syncFull(db as any, FFTT_CONFIG)).resolves.not.toThrow();
+    await expect(syncFull(db as SyncDb, FFTT_CONFIG)).resolves.not.toThrow();
 
     expect(mockSyncJoueurs).toHaveBeenCalled();
     expect(mockSyncParties).toHaveBeenCalled();
@@ -127,7 +128,7 @@ describe("syncFull", () => {
     mockSyncParties.mockResolvedValue(0);
     mockSyncCriterium.mockResolvedValue(0);
 
-    await syncFull(db as any, FFTT_CONFIG);
+    await syncFull(db as SyncDb, FFTT_CONFIG);
 
     expect(db.insert).toHaveBeenCalled();
     const valuesCalls = (db.select as ReturnType<typeof vi.fn>).mock.calls;
@@ -141,7 +142,7 @@ describe("syncFull", () => {
     mockSyncParties.mockResolvedValue(0);
     mockSyncCriterium.mockResolvedValue(0);
 
-    await syncFull(db as any, FFTT_CONFIG);
+    await syncFull(db as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncJoueurs).toHaveBeenCalledTimes(1);
   });
@@ -153,7 +154,7 @@ describe("syncFull", () => {
     mockSyncParties.mockResolvedValue(3);
     mockSyncCriterium.mockResolvedValue(0);
 
-    await syncFull(db as any, FFTT_CONFIG);
+    await syncFull(db as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncParties).toHaveBeenCalledTimes(1);
   });
@@ -165,7 +166,7 @@ describe("syncFull", () => {
     mockSyncParties.mockRejectedValue(new Error("parties API down"));
     mockSyncCriterium.mockResolvedValue(7);
 
-    await syncFull(db as any, FFTT_CONFIG);
+    await syncFull(db as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncCriterium).toHaveBeenCalledTimes(1);
   });
@@ -177,7 +178,7 @@ describe("syncFull", () => {
     mockSyncParties.mockResolvedValue(0);
     mockSyncCriterium.mockResolvedValue(0);
 
-    await expect(syncFull(db as any, FFTT_CONFIG)).resolves.not.toThrow();
+    await expect(syncFull(db as SyncDb, FFTT_CONFIG)).resolves.not.toThrow();
 
     expect(mockSyncParties).toHaveBeenCalled();
     expect(mockSyncCriterium).toHaveBeenCalled();
@@ -197,7 +198,7 @@ describe("syncFull", () => {
     mockSyncParties.mockResolvedValue(0);
     mockSyncCriterium.mockResolvedValue(0);
 
-    await syncFull(db as any, FFTT_CONFIG);
+    await syncFull(db as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncClassementsPoule).toHaveBeenCalledTimes(2);
     expect(mockSyncRencontres).toHaveBeenCalledTimes(2);
@@ -220,7 +221,7 @@ describe("syncMatchDay", () => {
     mockSyncRencontres.mockResolvedValue([]);
     mockSyncDetailsRencontres.mockResolvedValue(undefined);
 
-    await syncMatchDay(db as any, FFTT_CONFIG);
+    await syncMatchDay(db as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncEquipes).toHaveBeenCalled();
     expect(mockSyncClassementsPoule).toHaveBeenCalled();
@@ -232,7 +233,7 @@ describe("syncMatchDay", () => {
     const db = makeDb([]);
     mockSyncEquipes.mockResolvedValue([]);
 
-    await syncMatchDay(db as any, FFTT_CONFIG);
+    await syncMatchDay(db as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncCriterium).not.toHaveBeenCalled();
     expect(mockSyncJoueurs).not.toHaveBeenCalled();
@@ -242,7 +243,7 @@ describe("syncMatchDay", () => {
     const db = makeDb([]);
     mockSyncEquipes.mockRejectedValue(new Error("equipes failed"));
 
-    await expect(syncMatchDay(db as any, FFTT_CONFIG)).resolves.not.toThrow();
+    await expect(syncMatchDay(db as SyncDb, FFTT_CONFIG)).resolves.not.toThrow();
   });
 });
 
@@ -253,14 +254,14 @@ describe("startScheduler", () => {
 
   it("registers cron jobs for full sync, match day, and historique", () => {
     const db = makeDb([]);
-    startScheduler(db as any, FFTT_CONFIG);
+    startScheduler(db as SyncDb, FFTT_CONFIG);
 
     expect(mockCronSchedule).toHaveBeenCalledTimes(4);
   });
 
   it("registers full sync at 8:00 and 20:00 daily", () => {
     const db = makeDb([]);
-    startScheduler(db as any, FFTT_CONFIG);
+    startScheduler(db as SyncDb, FFTT_CONFIG);
 
     const schedules = mockCronSchedule.mock.calls.map((call) => call[0]);
     expect(schedules).toContain("0 8,20 * * *");
@@ -268,7 +269,7 @@ describe("startScheduler", () => {
 
   it("registers match day sync on Friday evenings", () => {
     const db = makeDb([]);
-    startScheduler(db as any, FFTT_CONFIG);
+    startScheduler(db as SyncDb, FFTT_CONFIG);
 
     const schedules = mockCronSchedule.mock.calls.map((call) => call[0]);
     expect(schedules).toContain("0 18-23 * * 5");
@@ -276,7 +277,7 @@ describe("startScheduler", () => {
 
   it("registers match day sync on Saturday daytime", () => {
     const db = makeDb([]);
-    startScheduler(db as any, FFTT_CONFIG);
+    startScheduler(db as SyncDb, FFTT_CONFIG);
 
     const schedules = mockCronSchedule.mock.calls.map((call) => call[0]);
     expect(schedules).toContain("0 9-20 * * 6");
@@ -284,7 +285,7 @@ describe("startScheduler", () => {
 
   it("registers weekly historique sync on Monday mornings", () => {
     const db = makeDb([]);
-    startScheduler(db as any, FFTT_CONFIG);
+    startScheduler(db as SyncDb, FFTT_CONFIG);
 
     const schedules = mockCronSchedule.mock.calls.map((call) => call[0]);
     expect(schedules).toContain("0 6 * * 1");

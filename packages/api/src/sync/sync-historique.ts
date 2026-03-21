@@ -1,8 +1,8 @@
 import { getHistoClassement } from "../fftt/endpoints.js";
 import { joueurs, historique_classement } from "../db/schema.js";
-import type { FfttConfig } from "./sync-equipes.js";
+import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
-export async function syncHistorique(db: any, ffttConfig: FfttConfig): Promise<number> {
+export async function syncHistorique(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
   const { appId, serie, password } = ffttConfig;
 
   const joueursInDb: Array<{ licence: string }> = await db

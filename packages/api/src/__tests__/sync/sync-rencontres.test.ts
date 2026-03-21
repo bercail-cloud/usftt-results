@@ -16,6 +16,8 @@ import {
   syncRencontres,
   syncDetailsRencontres,
 } from "../../sync/sync-rencontres.js";
+import type { EquipeRow } from "../../sync/sync-rencontres.js";
+import type { SyncDb } from "../../sync/sync-equipes.js";
 
 const mockGetClassement = vi.mocked(getResultEquClassement);
 const mockGetMatches = vi.mocked(getResultEquMatches);
@@ -56,7 +58,7 @@ describe("syncClassementsPoule", () => {
       }),
     };
 
-    await syncClassementsPoule(db as any, EQUIPE as any, FFTT_CONFIG);
+    await syncClassementsPoule(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(mockGetClassement).toHaveBeenCalledWith(
       EQUIPE.idDivision,
@@ -78,7 +80,7 @@ describe("syncClassementsPoule", () => {
       }),
     };
 
-    await syncClassementsPoule(db as any, EQUIPE as any, FFTT_CONFIG);
+    await syncClassementsPoule(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(db.delete).toHaveBeenCalledTimes(1);
     expect(whereMock).toHaveBeenCalledTimes(1);
@@ -119,10 +121,10 @@ describe("syncClassementsPoule", () => {
       }),
     };
 
-    await syncClassementsPoule(db as any, EQUIPE as any, FFTT_CONFIG);
+    await syncClassementsPoule(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(insertedValues).toHaveLength(1);
-    const row = insertedValues[0] as any;
+    const row = insertedValues[0] as Record<string, unknown>;
     expect(row.equipeId).toBe(EQUIPE.id);
     expect(row.position).toBe(1);
     expect(row.points).toBe(8);
@@ -144,7 +146,7 @@ describe("syncClassementsPoule", () => {
       insert: vi.fn(),
     };
 
-    await syncClassementsPoule(db as any, EQUIPE as any, FFTT_CONFIG);
+    await syncClassementsPoule(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(db.insert).not.toHaveBeenCalled();
   });
@@ -172,7 +174,7 @@ describe("syncRencontres", () => {
       }),
     };
 
-    await syncRencontres(db as any, EQUIPE as any, FFTT_CONFIG);
+    await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(mockGetMatches).toHaveBeenCalledWith(
       EQUIPE.idDivision,
@@ -211,10 +213,10 @@ describe("syncRencontres", () => {
       }),
     };
 
-    await syncRencontres(db as any, EQUIPE as any, FFTT_CONFIG);
+    await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(insertedValues).toHaveLength(1);
-    const row = insertedValues[0] as any;
+    const row = insertedValues[0] as Record<string, unknown>;
     expect(row.isDomicile).toBe(true);
   });
 
@@ -246,9 +248,9 @@ describe("syncRencontres", () => {
       }),
     };
 
-    await syncRencontres(db as any, EQUIPE as any, FFTT_CONFIG);
+    await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
-    const row = insertedValues[0] as any;
+    const row = insertedValues[0] as Record<string, unknown>;
     expect(row.isDomicile).toBe(false);
   });
 
@@ -280,9 +282,9 @@ describe("syncRencontres", () => {
       }),
     };
 
-    await syncRencontres(db as any, EQUIPE as any, FFTT_CONFIG);
+    await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
-    const row = insertedValues[0] as any;
+    const row = insertedValues[0] as Record<string, unknown>;
     expect(row.scoreA).toBeNull();
     expect(row.scoreB).toBeNull();
   });
@@ -315,9 +317,9 @@ describe("syncRencontres", () => {
       }),
     };
 
-    await syncRencontres(db as any, EQUIPE as any, FFTT_CONFIG);
+    await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
-    const row = insertedValues[0] as any;
+    const row = insertedValues[0] as Record<string, unknown>;
     expect(row.lienDetail).toBeNull();
   });
 
@@ -334,7 +336,7 @@ describe("syncRencontres", () => {
       }),
     };
 
-    const result = await syncRencontres(db as any, EQUIPE as any, FFTT_CONFIG);
+    const result = await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
     expect(result).toEqual([]);
     expect(db.insert).not.toHaveBeenCalled();
   });
@@ -379,7 +381,7 @@ describe("syncDetailsRencontres", () => {
       }),
     };
 
-    await syncDetailsRencontres(db as any, 1, FFTT_CONFIG);
+    await syncDetailsRencontres(db as SyncDb, 1, FFTT_CONFIG);
 
     expect(mockGetChpRenc).toHaveBeenCalledTimes(1);
     const [calledParams] = mockGetChpRenc.mock.calls[0]!;
@@ -414,7 +416,7 @@ describe("syncDetailsRencontres", () => {
       }),
     };
 
-    await syncDetailsRencontres(db as any, 1, FFTT_CONFIG);
+    await syncDetailsRencontres(db as SyncDb, 1, FFTT_CONFIG);
 
     expect(db.delete).toHaveBeenCalledTimes(1);
     expect(whereMock).toHaveBeenCalledTimes(1);
@@ -451,10 +453,10 @@ describe("syncDetailsRencontres", () => {
       }),
     };
 
-    await syncDetailsRencontres(db as any, 1, FFTT_CONFIG);
+    await syncDetailsRencontres(db as SyncDb, 1, FFTT_CONFIG);
 
     expect(insertedValues).toHaveLength(1);
-    const row = insertedValues[0] as any;
+    const row = insertedValues[0] as Record<string, unknown>;
     expect(row.rencontreId).toBe(10);
     expect(row.joueurA).toBe("Joueur A");
     expect(row.joueurB).toBe("Joueur B");
@@ -476,7 +478,7 @@ describe("syncDetailsRencontres", () => {
       insert: vi.fn(),
     };
 
-    await syncDetailsRencontres(db as any, 1, FFTT_CONFIG);
+    await syncDetailsRencontres(db as SyncDb, 1, FFTT_CONFIG);
 
     expect(mockGetChpRenc).not.toHaveBeenCalled();
     expect(db.delete).not.toHaveBeenCalled();
