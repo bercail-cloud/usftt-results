@@ -61,7 +61,8 @@ function parseDivision(raw: string): {
     const rMatch = raw.match(/R(\d)/);
     levelCode = rMatch ? `R${rMatch[1]}` : "R1";
   } else {
-    const dMatch = raw.match(/D(\d)/);
+    // Match "_D2", "-D1", etc. (the division level, not the department code D94)
+    const dMatch = raw.match(/[_-]D(\d)/);
     levelCode = dMatch ? `D${dMatch[1]}` : "D1";
   }
 
