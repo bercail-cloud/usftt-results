@@ -7,7 +7,7 @@ import {
   criterium_parties,
 } from "../db/schema.js";
 
-const USFTT_CLUB = "FONTENAY";
+const USFTT_CLUB = "FONTENAYSIENNE";
 
 const app = new Hono();
 
