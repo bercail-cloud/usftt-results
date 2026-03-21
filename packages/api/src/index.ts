@@ -36,7 +36,7 @@ app.route("/api", equipesRoutes);
 app.route("/api", criteriumRoutes);
 app.route("/api", joueursRoutes);
 
-const port = 3000;
+const port = parseInt(process.env.PORT ?? "3010", 10);
 serve({ fetch: app.fetch, port }, () => {
   console.log(`API server running on port ${port}`);
 });
