@@ -41,14 +41,17 @@ describe("GET /api/criterium/tours", () => {
 
     (mockDb.select as ReturnType<typeof vi.fn>).mockImplementation(() => {
       callCount++;
-      // alternating: usfttPlayers then parties per tour
+      // odd calls = usfttPlayers (filtered by club), even calls = parties (no where clause)
       const isOdd = callCount % 2 === 1;
-      return {
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue(isOdd ? usfttPlayers : parties),
-          orderBy: vi.fn().mockResolvedValue(isOdd ? usfttPlayers : parties),
-        }),
-      };
+      const data = isOdd ? usfttPlayers : parties;
+      const fromMock = vi.fn().mockResolvedValue(data);
+      fromMock.mockReturnValue(
+        Object.assign(Promise.resolve(data), {
+          where: vi.fn().mockResolvedValue(data),
+          orderBy: vi.fn().mockResolvedValue(data),
+        })
+      );
+      return { from: fromMock };
     });
 
     const res = await app.request("/api/criterium/tours");

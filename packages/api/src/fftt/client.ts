@@ -27,5 +27,7 @@ export async function fetchFftt(
   if (!response.ok) {
     throw new Error(`FFTT API error: ${response.status} ${response.statusText}`);
   }
-  return response.text();
+  const buffer = await response.arrayBuffer();
+  const decoder = new TextDecoder("iso-8859-1");
+  return decoder.decode(buffer);
 }

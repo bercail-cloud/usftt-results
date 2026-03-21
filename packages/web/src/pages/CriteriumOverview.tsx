@@ -29,6 +29,11 @@ interface JoueurResult {
 
 const TOUR_LABELS = ["Tour 1", "Tour 2", "Tour 3", "Tour 4"];
 
+function formatDivision(division: string): string {
+  // Strip known federation/league prefixes like "FED_", "L08_", "D75_", "N1_", etc.
+  return division.replace(/^(?:FED|[A-Z]\d+)_/, "");
+}
+
 function getBilanColor(value: number): string {
   if (value > 0) return "text-success";
   if (value < 0) return "text-error";
@@ -136,7 +141,7 @@ function TourResultsTable({
                       {j.nom}
                     </td>
                     <td className="px-3 py-2 text-center">
-                      <DivisionBadge division={j.division} />
+                      <DivisionBadge division={formatDivision(j.division)} />
                     </td>
                     <td className="px-3 py-2 text-center text-[#64748b]">
                       {j.classement}
@@ -173,8 +178,12 @@ export function CriteriumOverview() {
       isError: boolean;
     };
 
-  const availableTours = toursData?.map((t) => t.tour) ?? [1, 2, 3, 4];
-  const latestTour = availableTours[availableTours.length - 1] ?? 1;
+  const availableTours = toursData?.map((t) => t.tour) ?? [];
+  // If only tour 0 exists (no real tour numbering), don't show tabs
+  const hasRealTours = availableTours.some((t) => t > 0);
+  const latestTour = hasRealTours
+    ? (availableTours.filter((t) => t > 0).at(-1) ?? 1)
+    : (availableTours[0] ?? 0);
   const [activeTour, setActiveTour] = useState<number | null>(null);
 
   const currentTour = activeTour ?? latestTour;
@@ -197,26 +206,30 @@ export function CriteriumOverview() {
 
       {!toursLoading && !toursError && (
         <>
-          <div className="flex gap-2 flex-wrap" role="tablist">
-            {[1, 2, 3, 4].map((t) => {
-              const isActive = currentTour === t;
-              return (
-                <button
-                  key={t}
-                  role="tab"
-                  aria-selected={isActive}
-                  onClick={() => setActiveTour(t)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-[#0f172a] text-white"
-                      : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0]"
-                  }`}
-                >
-                  {TOUR_LABELS[t - 1]}
-                </button>
-              );
-            })}
-          </div>
+          {hasRealTours && (
+            <div className="flex gap-2 flex-wrap" role="tablist">
+              {availableTours
+                .filter((t) => t > 0)
+                .map((t) => {
+                  const isActive = currentTour === t;
+                  return (
+                    <button
+                      key={t}
+                      role="tab"
+                      aria-selected={isActive}
+                      onClick={() => setActiveTour(t)}
+                      className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                        isActive
+                          ? "bg-[#0f172a] text-white"
+                          : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0]"
+                      }`}
+                    >
+                      {TOUR_LABELS[t - 1]}
+                    </button>
+                  );
+                })}
+            </div>
+          )}
 
           <TourResultsTable
             tour={currentTour}

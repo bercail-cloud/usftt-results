@@ -57,7 +57,7 @@ describe("CriteriumOverview", () => {
     expect(screen.getByText(/Criterium Federal/)).toBeInTheDocument();
   });
 
-  it("renders tour tabs", () => {
+  it("renders tour tabs only for available tours", () => {
     mockUseCriteriumTours.mockReturnValue({
       data: [
         { tour: 1, usfttCount: 10, victoires: 5, defaites: 5, bestPerformer: "Dupont" },
@@ -70,8 +70,8 @@ describe("CriteriumOverview", () => {
     renderPage();
     expect(screen.getByText("Tour 1")).toBeInTheDocument();
     expect(screen.getByText("Tour 2")).toBeInTheDocument();
-    expect(screen.getByText("Tour 3")).toBeInTheDocument();
-    expect(screen.getByText("Tour 4")).toBeInTheDocument();
+    expect(screen.queryByText("Tour 3")).not.toBeInTheDocument();
+    expect(screen.queryByText("Tour 4")).not.toBeInTheDocument();
   });
 
   it("shows loading skeleton when tours are loading", () => {

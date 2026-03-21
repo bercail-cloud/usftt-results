@@ -117,7 +117,8 @@ describe("syncCriterium", () => {
 
     await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
-    expect(mockGetDivisions).toHaveBeenCalledTimes(2);
+    // Sync iterates over 3 organismes (federal "1", ligue "16", dept "D94"), each with 2 C epreuves
+    expect(mockGetDivisions).toHaveBeenCalledTimes(6);
     expect(mockGetDivisions).toHaveBeenCalledWith(
       FFTT_CONFIG.organismeId,
       "EP1",
@@ -164,7 +165,8 @@ describe("syncCriterium", () => {
 
     await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
-    expect(mockGetResCla).toHaveBeenCalledTimes(2);
+    // Sync iterates over 3 organismes, each with 2 divisions = 6 getResCla calls
+    expect(mockGetResCla).toHaveBeenCalledTimes(6);
     expect(mockGetResCla).toHaveBeenCalledWith(
       { res_division: "DIV1" },
       FFTT_CONFIG.appId,
@@ -243,16 +245,19 @@ describe("syncCriterium", () => {
     expect(inserted[0]!.licence).toBe("12345678");
   });
 
-  it("sets licence to null when player not found in joueurs table", async () => {
+  it("sets licence to null when player not found in joueurs table but club matches", async () => {
     mockGetEpreuves.mockResolvedValue([makeEpreuve()]);
     mockGetDivisions.mockResolvedValue([makeDivision({ iddivision: "DIV1" })]);
+    // Player with club matching USFTT but no licence found in joueurs
     mockGetResCla.mockResolvedValue([
-      makeResCla({ nom: "MARTIN", club: "OTHER CLUB" }),
+      makeResCla({ nom: "UNKNOWN PLAYER", club: "FONTENAY USTT" }),
     ]);
     const db = makeDbWithJoueurs([{ licence: "12345678", nom: "DUPONT" }]);
 
     await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
+    // Division has a USFTT club player, so insert is called
+    expect(db.insert).toHaveBeenCalled();
     const inserted = db._inserted[0]! as Array<Record<string, unknown>>;
     expect(inserted[0]!.licence).toBeNull();
   });
@@ -298,18 +303,20 @@ describe("syncCriterium", () => {
   });
 
   it("returns total count of upserted rows across all divisions", async () => {
+    // Each organisme gets the same epreuve and 2 divisions (3 organismes × 2 divisions = 6 calls)
     mockGetEpreuves.mockResolvedValue([makeEpreuve()]);
     mockGetDivisions.mockResolvedValue([
       makeDivision({ iddivision: "DIV1" }),
       makeDivision({ iddivision: "DIV2" }),
     ]);
-    mockGetResCla
-      .mockResolvedValueOnce([makeResCla(), makeResCla({ rang: "2", nom: "MARTIN" })])
-      .mockResolvedValueOnce([makeResCla({ rang: "1", nom: "LEROY" })]);
+    // All 6 ResCla calls return the same 2 players with FONTENAY club
+    mockGetResCla.mockResolvedValue([
+      makeResCla({ rang: "1", nom: "DUPONT", club: "FONTENAY USTT" }),
+      makeResCla({ rang: "2", nom: "MARTIN", club: "FONTENAY USTT" }),
+    ]);
 
-    const returningMock = vi.fn()
-      .mockResolvedValueOnce([{}, {}])
-      .mockResolvedValueOnce([{}]);
+    // returning() resolves with the same 2 upserted rows each time
+    const returningMock = vi.fn().mockResolvedValue([{}, {}]);
     const onConflictMock = vi.fn().mockReturnValue({ returning: returningMock });
     const valuesMock = vi.fn().mockReturnValue({ onConflictDoUpdate: onConflictMock });
     const insertMock = vi.fn().mockReturnValue({ values: valuesMock });
@@ -323,7 +330,8 @@ describe("syncCriterium", () => {
     };
 
     const count = await syncCriterium(db as SyncDb, FFTT_CONFIG);
-    expect(count).toBe(3);
+    // 3 organismes × 2 divisions × 2 rows = 12
+    expect(count).toBe(12);
   });
 
   it("does not call getEpreuves when no epreuves returned", async () => {
