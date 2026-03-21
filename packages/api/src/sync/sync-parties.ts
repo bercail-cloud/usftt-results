@@ -14,6 +14,17 @@ export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<n
     return 0;
   }
 
+  const safeInt = (val: string | undefined): number => {
+    if (!val) return 0;
+    const n = parseInt(val, 10);
+    return Number.isNaN(n) ? 0 : n;
+  };
+  const safeFloat = (val: string | undefined): number => {
+    if (!val) return 0;
+    const n = parseFloat(val);
+    return Number.isNaN(n) ? 0 : n;
+  };
+
   let totalCount = 0;
 
   for (const joueur of joueursInDb) {
@@ -25,15 +36,15 @@ export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<n
 
     const rows = parties.map((partie) => ({
       licence: partie.licence,
-      adversaire_licence: partie.advlic,
-      adversaire_nom: partie.advnompre,
-      adversaire_classement: parseInt(partie.advclaof, 10),
+      adversaire_licence: partie.advlic || "",
+      adversaire_nom: partie.advnompre || "",
+      adversaire_classement: safeInt(partie.advclaof),
       victoire: partie.vd === "V",
-      points_resultat: parseFloat(partie.pointres),
-      coefficient: parseFloat(partie.coefchamp),
-      date_partie: partie.date,
-      epreuve: partie.codechamp,
-      journee: parseInt(partie.numjourn, 10),
+      points_resultat: safeFloat(partie.pointres),
+      coefficient: safeFloat(partie.coefchamp),
+      date_partie: partie.date || "",
+      epreuve: partie.codechamp || "",
+      journee: safeInt(partie.numjourn),
     }));
 
     const upserted = await db

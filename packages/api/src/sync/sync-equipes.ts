@@ -24,7 +24,16 @@ export async function syncEquipes(
     return [];
   }
 
-  const rows = equipesFromApi.map((equipe) => {
+  // Deduplicate by lib_equipe + id_epreuve (API can return duplicates for Phase 1/2)
+  const seen = new Set<string>();
+  const dedupedEquipes = equipesFromApi.filter((equipe) => {
+    const key = `${equipe.libEquipe}|${equipe.idEpreuve}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const rows = dedupedEquipes.map((equipe) => {
     const params = new URLSearchParams(equipe.lienDivision);
     const id_poule = params.get("cx_poule") ?? "";
     const id_division = params.get("D1") ?? "";
