@@ -129,13 +129,16 @@ app.get("/criterium/tours/:tour", async (c) => {
   // Build a lookup for tour info
   const tourLookup = new Map(tourRows.map((t) => [t.id, t]));
 
-  // For each player, get their match results (V/D)
+  // Collect all tour dates for pool match lookup
+  const tourDates = [...new Set(tourRows.map((t) => t.date_tour).filter(Boolean))];
+
+  // For each player, get their match results (V/D) from both sources
   const playerResults = await Promise.all(
     players.map(async (player) => {
       const tourInfo = tourLookup.get(player.criterium_tour_id);
+      const namePrefix = player.nom.toUpperCase();
 
-      // Count victories and defeats from criterium_parties
-      // Classement nom is typically just surname, parties have full name "SURNAME Firstname"
+      // 1. Count from criterium_parties (elimination phases)
       const allParties = await db
         .select()
         .from(criterium_parties)
@@ -143,13 +146,50 @@ app.get("/criterium/tours/:tour", async (c) => {
           eq(criterium_parties.criterium_tour_id, player.criterium_tour_id)
         );
 
-      const namePrefix = player.nom.toUpperCase();
-      const victoires = allParties.filter(
+      const elimVictoires = allParties.filter(
         (p) => p.vainqueur.toUpperCase().startsWith(namePrefix)
       ).length;
-      const defaites = allParties.filter(
+      const elimDefaites = allParties.filter(
         (p) => p.perdant.toUpperCase().startsWith(namePrefix)
       ).length;
+
+      // Build set of elimination adversary last names for dedup
+      const elimAdversaries = new Set(
+        allParties
+          .filter(
+            (p) =>
+              p.vainqueur.toUpperCase().startsWith(namePrefix) ||
+              p.perdant.toUpperCase().startsWith(namePrefix)
+          )
+          .map((p) => {
+            const isWinner = p.vainqueur.toUpperCase().startsWith(namePrefix);
+            return (isWinner ? p.perdant : p.vainqueur).toUpperCase().split(" ")[0];
+          })
+      );
+
+      // 2. Count from parties_individuelles (pool matches, deduplicated)
+      let poolVictoires = 0;
+      let poolDefaites = 0;
+
+      if (player.licence && tourDates.length > 0) {
+        const poolParties = await db
+          .select()
+          .from(parties_individuelles)
+          .where(
+            and(
+              eq(parties_individuelles.licence, player.licence),
+              sql`${parties_individuelles.date_partie} IN (${sql.raw(tourDates.map((d) => `'${d}'`).join(","))})`
+            )
+          );
+
+        const dedupedPool = poolParties.filter((p) => {
+          const advLastName = p.adversaire_nom.toUpperCase().split(" ")[0];
+          return !elimAdversaries.has(advLastName);
+        });
+
+        poolVictoires = dedupedPool.filter((p) => p.victoire).length;
+        poolDefaites = dedupedPool.filter((p) => !p.victoire).length;
+      }
 
       return {
         licence: player.licence,
@@ -159,8 +199,8 @@ app.get("/criterium/tours/:tour", async (c) => {
         division: tourInfo?.division_libelle ?? "",
         rang: player.rang,
         points: player.points,
-        victoires,
-        defaites,
+        victoires: elimVictoires + poolVictoires,
+        defaites: elimDefaites + poolDefaites,
       };
     })
   );
