@@ -307,7 +307,56 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
     .limit(1);
 
   if (playerRows.length === 0) {
-    return c.json({ error: "Player not found in this tour" }, 404);
+    // Fallback: player not in criterium standings, build from parties_individuelles
+    const tourDates = [...new Set(tourRows.map((t) => t.date_tour).filter(Boolean))];
+    if (tourDates.length === 0) {
+      return c.json({ error: "Player not found in this tour" }, 404);
+    }
+
+    const dateList = tourDates.map((d) => `'${d}'`).join(",");
+    const fallbackParties = await db
+      .select()
+      .from(parties_individuelles)
+      .where(
+        and(
+          eq(parties_individuelles.licence, licence),
+          sql`${parties_individuelles.date_partie} IN (${sql.raw(dateList)})`
+        )
+      );
+
+    if (fallbackParties.length === 0) {
+      return c.json({ error: "Player not found in this tour" }, 404);
+    }
+
+    // Get joueur info
+    const joueurRows = await db
+      .select()
+      .from(joueurs)
+      .where(eq(joueurs.licence, licence))
+      .limit(1);
+
+    const joueurInfo = joueurRows[0];
+
+    return c.json({
+      player: {
+        licence,
+        nom: joueurInfo ? joueurInfo.nom : licence,
+        club: joueurInfo?.club_numero ?? "",
+        classement: joueurInfo?.points_officiels ?? 0,
+        division: "Resultats non trouves sur la FFTT",
+        rang: 0,
+        points: "",
+      },
+      divisionStandings: [],
+      matches: fallbackParties.map((p) => ({
+        libelle: "Poule",
+        victoire: p.victoire,
+        adversaire: p.adversaire_nom,
+        adversaireClassement: p.adversaire_classement,
+        pointsResultat: p.points_resultat,
+        forfait: false,
+      })),
+    });
   }
 
   const player = playerRows[0]!;
