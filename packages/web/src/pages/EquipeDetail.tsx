@@ -246,68 +246,117 @@ export function EquipeDetail() {
         </div>
       )}
 
-      {/* Matches list */}
-      {rencontres.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-lg p-5">
-          <h2 className="font-bold text-[#0f172a] mb-3">Rencontres</h2>
-          <div className="space-y-2">
-            {rencontres.map((renc) => {
-              const played =
-                renc.score_a !== null && renc.score_b !== null;
-              const isExpanded = expandedRencId === renc.id;
-              const scoreA = renc.is_domicile ? renc.score_a : renc.score_b;
-              const scoreB = renc.is_domicile ? renc.score_b : renc.score_a;
-              const isVictory = played
-                ? (scoreA ?? 0) > (scoreB ?? 0)
-                : false;
+      {/* Matches grouped by journee */}
+      {rencontres.length > 0 && (() => {
+        // Extract journee from libelle (e.g., "Poule 4 - tour n°1 du 06/02/2026" → "tour 1")
+        function extractJournee(libelle: string): string {
+          const match = libelle.match(/tour\s*n?°?\s*(\d+)/i);
+          return match ? `Journee ${match[1]}` : libelle.split(" du ")[0] ?? libelle;
+        }
+        function extractDate(libelle: string): string {
+          const match = libelle.match(/(\d{2}\/\d{2}\/\d{4})/);
+          return match ? match[1]! : "";
+        }
+        function isFontenayMatch(renc: Rencontre): boolean {
+          return renc.equipe_a.toUpperCase().includes("FONTENAY") || renc.equipe_b.toUpperCase().includes("FONTENAY");
+        }
+
+        // Group by journee
+        const journeeMap = new Map<string, { date: string; matches: Rencontre[] }>();
+        for (const renc of rencontres) {
+          const key = extractJournee(renc.libelle);
+          if (!journeeMap.has(key)) {
+            journeeMap.set(key, { date: extractDate(renc.libelle), matches: [] });
+          }
+          journeeMap.get(key)!.matches.push(renc);
+        }
+
+        // Sort journees by date
+        const journees = Array.from(journeeMap.entries()).sort((a, b) => {
+          const da = a[1].date.split("/").reverse().join("") || "0";
+          const db = b[1].date.split("/").reverse().join("") || "0";
+          return da.localeCompare(db);
+        });
+
+        return (
+          <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="px-6 py-4 border-b border-[rgba(67,70,85,0.08)]">
+              <h2 className="font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>Rencontres</h2>
+            </div>
+
+            {journees.map(([journee, { date, matches }]) => {
+              // Sort: FONTENAY match first
+              const sorted = matches.slice().sort((a, b) => {
+                const aF = isFontenayMatch(a) ? 0 : 1;
+                const bF = isFontenayMatch(b) ? 0 : 1;
+                return aF - bF;
+              });
 
               return (
-                <div
-                  key={renc.id}
-                  className="border border-[#e2e8f0] rounded-lg p-3"
-                >
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <span className="text-xs text-[#94a3b8] min-w-[40px]">
-                      {renc.libelle}
+                <div key={journee}>
+                  {/* Journee header */}
+                  <div className="px-6 py-2 bg-[#f2f4f6]">
+                    <span className="text-[11px] font-semibold text-[#737686] uppercase tracking-widest">
+                      {journee}
                     </span>
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <span className="font-medium text-[#0f172a] truncate">
-                        {renc.equipe_a}
-                      </span>
-                      {played ? (
-                        <ScoreBadge
-                          scoreA={renc.score_a!}
-                          scoreB={renc.score_b!}
-                          isVictory={isVictory}
-                        />
-                      ) : (
-                        <span className="text-[#94a3b8] text-sm">vs</span>
-                      )}
-                      <span className="font-medium text-[#0f172a] truncate">
-                        {renc.equipe_b}
-                      </span>
-                    </div>
-                    {played && (
-                      <button
-                        onClick={() =>
-                          setExpandedRencId(isExpanded ? null : renc.id)
-                        }
-                        className="text-xs text-primary hover:underline whitespace-nowrap cursor-pointer"
-                      >
-                        {isExpanded ? "Masquer" : "Detail →"}
-                      </button>
-                    )}
+                    {date && <span className="text-[11px] text-[#94a3b8] ml-2">{date}</span>}
                   </div>
 
-                  {isExpanded && id && (
-                    <MatchDetail equipeId={id} rencId={String(renc.id)} />
-                  )}
+                  {sorted.map((renc, idx) => {
+                    const played = renc.score_a !== null && renc.score_b !== null;
+                    const isExpanded = expandedRencId === renc.id;
+                    const isFontenay = isFontenayMatch(renc);
+                    const isVictory = played
+                      ? (renc.equipe_a.toUpperCase().includes("FONTENAY")
+                          ? (renc.score_a ?? 0) > (renc.score_b ?? 0)
+                          : (renc.score_b ?? 0) > (renc.score_a ?? 0))
+                      : false;
+
+                    return (
+                      <div
+                        key={renc.id}
+                        className={`px-6 py-3 ${idx % 2 === 0 ? "bg-white" : "bg-[#f7f9fb]"} ${isFontenay ? "border-l-[3px] border-l-[#2563eb]" : ""}`}
+                      >
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <span className={`font-medium truncate ${isFontenay && renc.equipe_a.toUpperCase().includes("FONTENAY") ? "text-[#2563eb] font-semibold" : "text-[#191c1e]"}`}>
+                              {renc.equipe_a}
+                            </span>
+                            {played ? (
+                              <ScoreBadge
+                                scoreA={renc.score_a!}
+                                scoreB={renc.score_b!}
+                                isVictory={isVictory}
+                              />
+                            ) : (
+                              <span className="text-[#94a3b8] text-sm">vs</span>
+                            )}
+                            <span className={`font-medium truncate ${isFontenay && renc.equipe_b.toUpperCase().includes("FONTENAY") ? "text-[#2563eb] font-semibold" : "text-[#191c1e]"}`}>
+                              {renc.equipe_b}
+                            </span>
+                          </div>
+                          {played && (
+                            <button
+                              onClick={() => setExpandedRencId(isExpanded ? null : renc.id)}
+                              className="text-xs text-primary hover:underline whitespace-nowrap cursor-pointer"
+                            >
+                              {isExpanded ? "Masquer" : "Detail →"}
+                            </button>
+                          )}
+                        </div>
+
+                        {isExpanded && id && (
+                          <MatchDetail equipeId={id} rencId={String(renc.id)} />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {rencontres.length === 0 && classement.length === 0 && (
         <EmptyState message="Aucune donnee disponible pour cette equipe" />
