@@ -108,11 +108,22 @@ export async function syncCriterium(
 
   function findLicence(fullName: string, classement?: number): string | null {
     const upper = fullName.toUpperCase().trim();
-    // Try "NOM Prenom" exact match
+    // Try "NOM Prenom" exact match (e.g., "VINCI Alessio")
     if (joueursByNomPrenom.has(upper)) return joueursByNomPrenom.get(upper)!;
-    // Fallback: match by last name
+    // Try exact last name match (handles compound names like "NGUYEN LE BEULZ")
+    const exactCandidates = joueursByLastName.get(upper);
+    if (exactCandidates) {
+      if (classement && classement > 0) {
+        const byClassement = exactCandidates.find(
+          (c) => c.points_officiels !== null && Math.abs(c.points_officiels - classement) < 100
+        );
+        if (byClassement) return byClassement.licence;
+      }
+      if (exactCandidates.length === 1) return exactCandidates[0]!.licence;
+    }
+    // Fallback: split first word as last name (e.g., "BUO" from "BUO Quentin")
     const lastName = upper.split(" ")[0];
-    if (!lastName) return null;
+    if (!lastName || lastName === upper) return null;
     const candidates = joueursByLastName.get(lastName);
     if (!candidates) return null;
     // Use classement to verify match (avoids homonyms from other clubs)
