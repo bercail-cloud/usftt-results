@@ -71,10 +71,14 @@ function MatchDetail({
   equipeId,
   rencId,
   fontenayIsSideA,
+  equipeAName,
+  equipeBName,
 }: {
   equipeId: string;
   rencId: string;
   fontenayIsSideA: boolean;
+  equipeAName: string;
+  equipeBName: string;
 }) {
   const { data, isLoading, isError } = useRencontreDetail(
     equipeId,
@@ -94,9 +98,9 @@ function MatchDetail({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[#e2e8f0] text-[#64748b]">
-            <th className="text-left py-1 px-2">Joueur A</th>
+            <th className="text-left py-1 px-2">{equipeAName}</th>
             <th className="text-center py-1 px-2">Score</th>
-            <th className="text-left py-1 px-2">Joueur B</th>
+            <th className="text-left py-1 px-2">{equipeBName}</th>
             <th className="text-right py-1 px-2">Sets</th>
           </tr>
         </thead>
@@ -357,7 +361,13 @@ export function EquipeDetail() {
                         </div>
 
                         {isExpanded && id && (
-                          <MatchDetail equipeId={id} rencId={String(renc.id)} fontenayIsSideA={renc.equipe_a.toUpperCase().includes("FONTENAY")} />
+                          <MatchDetail
+                            equipeId={id}
+                            rencId={String(renc.id)}
+                            fontenayIsSideA={renc.equipe_a.toUpperCase().includes("FONTENAY")}
+                            equipeAName={renc.equipe_a}
+                            equipeBName={renc.equipe_b}
+                          />
                         )}
                       </div>
                     );
