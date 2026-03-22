@@ -5,6 +5,7 @@ import {
   criterium_tours,
   criterium_classement,
   criterium_parties,
+  parties_individuelles,
 } from "../db/schema.js";
 
 const USFTT_CLUB = "FONTENAYSIENNE";
@@ -230,6 +231,53 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
       m.perdant.toUpperCase().startsWith(namePrefix)
   );
 
+  // Get pool matches from parties_individuelles (epreuve = "I", matching tour date)
+  // Tour dates can vary slightly across groups, collect all dates for this tour
+  const tourDates = [...new Set(tourRows.map((t) => t.date_tour).filter(Boolean))];
+
+  let poolMatches: Array<{
+    libelle: string;
+    victoire: boolean;
+    adversaire: string;
+    adversaireClassement: number;
+    pointsResultat: number;
+    forfait: boolean;
+  }> = [];
+
+  if (tourDates.length > 0) {
+    const allPoolParties = await db
+      .select()
+      .from(parties_individuelles)
+      .where(
+        and(
+          eq(parties_individuelles.licence, licence),
+          sql`${parties_individuelles.date_partie} IN (${sql.raw(tourDates.map((d) => `'${d}'`).join(","))})`
+        )
+      );
+
+    poolMatches = allPoolParties.map((p) => ({
+      libelle: "Poule",
+      victoire: p.victoire,
+      adversaire: p.adversaire_nom,
+      adversaireClassement: p.adversaire_classement,
+      pointsResultat: p.points_resultat,
+      forfait: false,
+    }));
+  }
+
+  // Combine: pool matches first, then elimination phase matches
+  const eliminationMatches = playerMatches.map((m) => {
+    const isWinner = m.vainqueur.toUpperCase().startsWith(namePrefix);
+    return {
+      libelle: m.libelle,
+      victoire: isWinner,
+      adversaire: isWinner ? m.perdant : m.vainqueur,
+      adversaireClassement: 0,
+      pointsResultat: 0,
+      forfait: m.forfait,
+    };
+  });
+
   return c.json({
     player: {
       licence: player.licence,
@@ -248,15 +296,7 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
       classement: s.classement,
       points: s.points,
     })),
-    matches: playerMatches.map((m) => {
-      const isWinner = m.vainqueur.toUpperCase().startsWith(namePrefix);
-      return {
-        libelle: m.libelle,
-        victoire: isWinner,
-        adversaire: isWinner ? m.perdant : m.vainqueur,
-        forfait: m.forfait,
-      };
-    }),
+    matches: [...poolMatches, ...eliminationMatches],
   });
 });
 
