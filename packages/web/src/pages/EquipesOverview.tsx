@@ -164,13 +164,12 @@ function extractTeamNumber(libEquipe: string): number {
   return match ? parseInt(match[1]!, 10) : 999;
 }
 
-/** Truncate opponent name: "FUTURO VALVERT TT 1" → "FUTURO V." */
+/** Truncate opponent name: "FUTURO VALVERT TT 1" → "FUTURO VAL." */
 function truncateOpponent(name: string): string {
-  const words = name.split(/\s+/);
-  if (words.length <= 1) return name;
-  const first = words[0]!;
-  if (first.length > 8) return first.slice(0, 8) + ".";
-  return first;
+  // Remove trailing numbers (team number) and common suffixes
+  const cleaned = name.replace(/\s+\d+$/, "").replace(/\s+(TT|US|AS|USTT|ASTT|SP|ES)$/i, "");
+  if (cleaned.length <= 12) return cleaned;
+  return cleaned.slice(0, 11) + ".";
 }
 
 /** Format "FONTENAY USTT 3 - Phase 2" → "Equipe 3" */
