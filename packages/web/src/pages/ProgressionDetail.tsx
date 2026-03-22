@@ -132,7 +132,10 @@ export function ProgressionDetail() {
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
       {/* Breadcrumb */}
       <button
-        onClick={() => navigate("/progression")}
+        onClick={() => {
+          const qs = window.location.search;
+          navigate(`/progression${qs}`);
+        }}
         className="text-sm text-primary cursor-pointer hover:underline"
       >
         &larr; Tous les joueurs
