@@ -1,14 +1,6 @@
-import { useState, useRef } from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { useJoueurs, useJoueurProgression, useJoueurParties } from "../hooks/use-joueurs.js";
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import { useJoueurs } from "../hooks/use-joueurs.js";
 import { LoadingSkeleton } from "../components/LoadingSkeleton.js";
 import { EmptyState } from "../components/EmptyState.js";
 
@@ -31,32 +23,11 @@ interface Joueur {
   progression_mensuelle: number | null;
 }
 
-interface ProgressionPoint {
-  saison: string;
-  phase: number;
-  points: number;
-}
-
-interface Partie {
-  date_partie: string;
-  adversaire_nom: string;
-  adversaire_classement: number;
-  victoire: boolean;
-  points_resultat: number;
-}
-
 interface JoueursResponse {
   data: Joueur[];
   lastSync: string | null;
 }
 
-interface ProgressionResponse {
-  data: ProgressionPoint[];
-}
-
-interface PartiesResponse {
-  data: Partie[];
-}
 
 // ──────────────────────────────────────────────
 // Filter definitions
@@ -94,47 +65,16 @@ const CATEGORIE_LABELS: Record<string, string> = {
 // Helpers
 // ──────────────────────────────────────────────
 
-function parseDDMMYYYY(dateStr: string): Date {
-  const parts = dateStr.split("/");
-  if (parts.length === 3) {
-    const day = parseInt(parts[0]!, 10);
-    const month = parseInt(parts[1]!, 10) - 1;
-    const year = parseInt(parts[2]!, 10);
-    return new Date(year, month, day);
-  }
-  return new Date(NaN);
-}
-
-function formatDate(dateStr: string): string {
-  const date = parseDDMMYYYY(dateStr);
-  if (isNaN(date.getTime())) return dateStr;
-  return date.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-function getPointsColor(points: number): string {
-  if (points > 0) return "text-success";
-  if (points < 0) return "text-error";
-  return "text-[#737686]";
-}
-
 function formatProgression(value: number | null): string {
   if (value === null || value === undefined) return "—";
   if (value > 0) return `+${value}`;
   return String(value);
 }
 
-function formatChartLabel(point: ProgressionPoint): string {
-  const yearMatch = point.saison.match(/(\d{4})\s*[/-]\s*(\d{4})/);
-  if (yearMatch) {
-    const startYear = yearMatch[1]!.slice(2);
-    const endYear = yearMatch[2]!.slice(2);
-    return `${startYear}/${endYear} P${point.phase}`;
-  }
-  return `${point.saison} P${point.phase}`;
+function getPointsColor(points: number): string {
+  if (points > 0) return "text-success";
+  if (points < 0) return "text-error";
+  return "text-[#737686]";
 }
 
 // ──────────────────────────────────────────────
@@ -270,200 +210,13 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
 }
 
 // ──────────────────────────────────────────────
-// PlayerDetail component
-// ──────────────────────────────────────────────
-
-interface PlayerDetailProps {
-  licence: string;
-  joueur: Joueur | undefined;
-}
-
-function PlayerDetail({ licence, joueur }: PlayerDetailProps) {
-  const { data: progressionData, isLoading: progressionLoading } =
-    useJoueurProgression(licence) as {
-      data: ProgressionResponse | undefined;
-      isLoading: boolean;
-    };
-
-  const { data: partiesData, isLoading: partiesLoading } =
-    useJoueurParties(licence) as {
-      data: PartiesResponse | undefined;
-      isLoading: boolean;
-    };
-
-  const progression = progressionData?.data ?? [];
-  const parties = partiesData?.data ?? [];
-
-  const chartData = progression.map((p) => ({
-    label: formatChartLabel(p),
-    points: p.points,
-  }));
-
-  const sortedParties = parties
-    .slice()
-    .sort(
-      (a, b) =>
-        parseDDMMYYYY(b.date_partie).getTime() -
-        parseDDMMYYYY(a.date_partie).getTime()
-    );
-
-  const playerName = joueur ? `${joueur.prenom} ${joueur.nom}` : "Joueur";
-
-  return (
-    <div className="space-y-6">
-      {/* Detail header */}
-      <div className="flex items-center gap-3">
-        <div className="w-1 h-6 rounded bg-[#2563eb]" />
-        <h2
-          className="text-lg font-extrabold text-[#191c1e]"
-          style={{ fontFamily: "Manrope, sans-serif" }}
-        >
-          {playerName}
-        </h2>
-      </div>
-
-      {/* Chart card */}
-      <div className="bg-white rounded-xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-        <h3
-          className="font-extrabold text-[#191c1e] mb-5"
-          style={{ fontFamily: "Manrope, sans-serif" }}
-        >
-          Evolution des points
-        </h3>
-        {progressionLoading ? (
-          <LoadingSkeleton lines={4} />
-        ) : progression.length === 0 ? (
-          <EmptyState message="Aucune donnée de progression disponible" />
-        ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f2f4f6" />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 11, fill: "#737686" }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "#737686" }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <Tooltip
-                formatter={(value: number) => [value, "Points"]}
-                contentStyle={{
-                  background: "#fff",
-                  border: "none",
-                  borderRadius: "10px",
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
-                  fontSize: "12px",
-                }}
-              />
-              <Line
-                type="monotone"
-                dataKey="points"
-                stroke="#2563eb"
-                strokeWidth={2}
-                dot={{ fill: "#2563eb", r: 4, strokeWidth: 0 }}
-                activeDot={{ r: 6, strokeWidth: 0 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </div>
-
-      {/* Matches table card */}
-      <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="px-6 py-5">
-          <h3
-            className="font-extrabold text-[#191c1e]"
-            style={{ fontFamily: "Manrope, sans-serif" }}
-          >
-            Parties
-          </h3>
-        </div>
-        {partiesLoading ? (
-          <div className="px-6 pb-5">
-            <LoadingSkeleton lines={5} />
-          </div>
-        ) : sortedParties.length === 0 ? (
-          <div className="px-6 pb-5">
-            <EmptyState message="Aucune partie disponible" />
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-[#f2f4f6]">
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-                    Date
-                  </th>
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-                    Adversaire
-                  </th>
-                  <th className="text-center px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-                    Class.
-                  </th>
-                  <th className="text-center px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-                    V/D
-                  </th>
-                  <th className="text-center px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-                    Points
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedParties.map((partie, idx) => (
-                  <tr
-                    key={idx}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-[#f7f9fb]"}
-                  >
-                    <td className="px-5 py-3 text-[#737686] whitespace-nowrap">
-                      {formatDate(partie.date_partie)}
-                    </td>
-                    <td className="px-5 py-3 font-semibold text-[#191c1e]">
-                      {partie.adversaire_nom}
-                    </td>
-                    <td className="px-5 py-3 text-center text-[#737686]">
-                      {partie.adversaire_classement}
-                    </td>
-                    <td className="px-5 py-3 text-center">
-                      <span
-                        className={`font-bold ${
-                          partie.victoire ? "text-success" : "text-error"
-                        }`}
-                      >
-                        {partie.victoire ? "V" : "D"}
-                      </span>
-                    </td>
-                    <td
-                      className={`px-5 py-3 text-center font-semibold ${getPointsColor(partie.points_resultat)}`}
-                    >
-                      {partie.points_resultat > 0
-                        ? `+${partie.points_resultat}`
-                        : partie.points_resultat}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ──────────────────────────────────────────────
 // Main page
 // ──────────────────────────────────────────────
 
 export function Progression() {
-  const [selectedLicence, setSelectedLicence] = useState("");
+  const navigate = useNavigate();
   const [filterCategorie, setFilterCategorie] = useState("");
   const [filterSexe, setFilterSexe] = useState("");
-
-  const detailRef = useRef<HTMLDivElement>(null);
 
   const { data: joueursData, isLoading: joueursLoading } = useJoueurs() as {
     data: JoueursResponse | undefined;
@@ -480,16 +233,6 @@ export function Progression() {
     })
     .slice()
     .sort((a, b) => (b.points_officiels ?? 0) - (a.points_officiels ?? 0));
-
-  function handlePlayerSelect(licence: string) {
-    setSelectedLicence(licence);
-    // Scroll to detail section after state update
-    requestAnimationFrame(() => {
-      detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }
-
-  const selectedJoueur = allJoueurs.find((j) => j.licence === selectedLicence);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -528,11 +271,6 @@ export function Progression() {
               label="Filtrer par sexe"
             />
           </div>
-          <div className="space-y-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-              Type licence
-            </span>
-          </div>
         </div>
       </div>
 
@@ -542,16 +280,9 @@ export function Progression() {
       ) : (
         <PlayersTable
           joueurs={filteredJoueurs}
-          selectedLicence={selectedLicence}
-          onSelect={handlePlayerSelect}
+          selectedLicence=""
+          onSelect={(licence) => navigate(`/progression/${licence}`)}
         />
-      )}
-
-      {/* Player detail section */}
-      {selectedLicence && (
-        <div ref={detailRef} className="space-y-6 pt-2">
-          <PlayerDetail licence={selectedLicence} joueur={selectedJoueur} />
-        </div>
       )}
     </div>
   );
