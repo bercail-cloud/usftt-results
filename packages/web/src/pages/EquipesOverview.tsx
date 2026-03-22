@@ -3,7 +3,7 @@ import { useEquipes } from "../hooks/use-equipes.js";
 import { LoadingSkeleton } from "../components/LoadingSkeleton.js";
 import { EmptyState } from "../components/EmptyState.js";
 import { RankCircle } from "../components/RankCircle.js";
-import { ScoreBadge } from "../components/ScoreBadge.js";
+
 
 // ---------------------------------------------------------------------------
 // Types
@@ -283,44 +283,6 @@ function getUsfttMatches(rencontres: Rencontre[]): Rencontre[] {
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
-
-function RencontreCell({ rencontre }: { rencontre: Rencontre | undefined }) {
-  if (!rencontre) {
-    return <td className="px-3 py-2 text-xs text-[#94a3b8] text-center">-</td>;
-  }
-
-  const played = rencontre.score_a !== null && rencontre.score_b !== null;
-  const opponent = rencontre.is_domicile ? rencontre.equipe_b : rencontre.equipe_a;
-
-  if (played) {
-    const scoreA = rencontre.is_domicile ? rencontre.score_a! : rencontre.score_b!;
-    const scoreB = rencontre.is_domicile ? rencontre.score_b! : rencontre.score_a!;
-    const isVictory = scoreA > scoreB;
-    return (
-      <td className="px-3 py-2">
-        <div className="flex flex-col items-center gap-0.5">
-          <ScoreBadge scoreA={scoreA} scoreB={scoreB} isVictory={isVictory} />
-          <span className="text-[10px] text-[#64748b] truncate max-w-[80px]" title={opponent}>
-            {opponent}
-          </span>
-        </div>
-      </td>
-    );
-  }
-
-  return (
-    <td className="px-3 py-2">
-      <div className="flex flex-col items-center gap-0.5">
-        <span className="text-sm" title={rencontre.is_domicile ? "Domicile" : "Exterieur"}>
-          {rencontre.is_domicile ? "D" : "E"}
-        </span>
-        <span className="text-[10px] text-[#64748b] truncate max-w-[80px]" title={opponent}>
-          {opponent}
-        </span>
-      </div>
-    </td>
-  );
-}
 
 function LevelGroupTable({
   levelGroup,
