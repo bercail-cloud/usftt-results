@@ -5,9 +5,12 @@ interface ScoreBadgeProps {
 }
 
 export function ScoreBadge({ scoreA, scoreB, isVictory }: ScoreBadgeProps) {
-  const colorClass = isVictory
-    ? "bg-success-light text-success"
-    : "bg-error-light text-error";
+  const isDraw = scoreA === scoreB;
+  const colorClass = isDraw
+    ? "bg-amber-50 text-amber-700"
+    : isVictory
+      ? "bg-success-light text-success"
+      : "bg-error-light text-error";
 
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${colorClass}`}>
