@@ -3,6 +3,7 @@ import { useEquipes } from "../hooks/use-equipes.js";
 import { LoadingSkeleton } from "../components/LoadingSkeleton.js";
 import { EmptyState } from "../components/EmptyState.js";
 import { RankCircle } from "../components/RankCircle.js";
+import { Home, Car } from "lucide-react";
 
 
 // ---------------------------------------------------------------------------
@@ -424,13 +425,11 @@ function LevelGroupTable({
                             className="bg-[#f7f9fb] rounded-md px-1 py-1.5 text-center border border-dashed border-[#e2e8f0]"
                             title={`${r.date_prevue} - ${opponent}`}
                           >
-                            <div className="text-[10px] text-[#94a3b8]">{formatShortDate(r.date_prevue)}</div>
-                            <div className="text-[7px] text-[#94a3b8] truncate flex items-center justify-center gap-0.5">
-                              {isDom ? (
-                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                              ) : (
-                                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                              )}
+                            <div className="text-[10px] text-[#94a3b8] flex items-center justify-center gap-0.5">
+                              {isDom ? <Home size={7} /> : <Car size={7} />}
+                              {formatShortDate(r.date_prevue)}
+                            </div>
+                            <div className="text-[7px] text-[#94a3b8] truncate">
                               {shortOpp}
                             </div>
                           </div>
