@@ -103,9 +103,9 @@ function MatchDetail({
         <tbody>
           {data.parties.map((partie) => (
             <tr key={partie.id} className="border-b border-[#f1f5f9]">
-              <td className="py-1.5 px-2 whitespace-nowrap">
-                <span className="font-medium">{partie.joueur_a}</span>
-                <span className="text-xs text-[#94a3b8] ml-1">
+              <td className="py-1.5 px-2 max-w-[200px]">
+                <div className="truncate font-medium" title={partie.joueur_a}>{partie.joueur_a}</div>
+                <span className="text-xs text-[#94a3b8]">
                   ({partie.classement_a})
                 </span>
               </td>
@@ -116,9 +116,9 @@ function MatchDetail({
                   isVictory={fontenayIsSideA ? partie.score_a > partie.score_b : partie.score_b > partie.score_a}
                 />
               </td>
-              <td className="py-1.5 px-2 whitespace-nowrap">
-                <span className="font-medium">{partie.joueur_b}</span>
-                <span className="text-xs text-[#94a3b8] ml-1">
+              <td className="py-1.5 px-2 max-w-[200px]">
+                <div className="truncate font-medium" title={partie.joueur_b}>{partie.joueur_b}</div>
+                <span className="text-xs text-[#94a3b8]">
                   ({partie.classement_b})
                 </span>
               </td>
