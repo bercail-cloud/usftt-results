@@ -15,6 +15,7 @@ interface TourSummary {
 interface JoueurResult {
   licence: string;
   nom: string;
+  prenom?: string;
   club: string;
   division: string;
   classement: number;
@@ -299,7 +300,7 @@ function TourResultsTable({
 
                     {/* Name */}
                     <span className="font-semibold text-[#0f172a] flex-1 text-sm">
-                      {j.nom}
+                      {j.nom}{j.prenom ? ` ${j.prenom}` : ""}
                     </span>
 
                     {/* Classement */}
