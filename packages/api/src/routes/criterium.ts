@@ -126,6 +126,16 @@ app.get("/criterium/tours/:tour", async (c) => {
   // Build a lookup for tour info
   const tourLookup = new Map(tourRows.map((t) => [t.id, t]));
 
+  // Build prenom lookup from joueurs table
+  const licences = players.map((p) => p.licence).filter(Boolean) as string[];
+  const joueursRows = licences.length > 0
+    ? await db
+        .select({ licence: joueurs.licence, prenom: joueurs.prenom })
+        .from(joueurs)
+        .where(sql`${joueurs.licence} IN (${sql.raw(licences.map((l) => `'${l}'`).join(","))})`)
+    : [];
+  const prenomByLicence = new Map(joueursRows.map((j) => [j.licence, j.prenom]));
+
   // Collect all tour dates for pool match lookup
   const tourDates = [...new Set(tourRows.map((t) => t.date_tour).filter(Boolean))];
 
@@ -188,9 +198,12 @@ app.get("/criterium/tours/:tour", async (c) => {
         poolDefaites = dedupedPool.filter((p) => !p.victoire).length;
       }
 
+      const prenom = player.licence ? prenomByLicence.get(player.licence) ?? "" : "";
+
       return {
         licence: player.licence,
         nom: player.nom,
+        prenom,
         club: player.club,
         classement: player.classement,
         division: tourInfo?.division_libelle ?? "",
@@ -264,6 +277,7 @@ app.get("/criterium/tours/:tour", async (c) => {
       playerResults.push({
         licence: entry.licence,
         nom: entry.nom,
+        prenom: entry.prenom,
         club: USFTT_CLUB,
         classement: entry.classement,
         division: "Non publie",
