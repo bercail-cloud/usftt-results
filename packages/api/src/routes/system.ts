@@ -7,6 +7,8 @@ import type { CriteriumFfttConfig } from "../sync/sync-criterium.js";
 import type { SyncDb } from "../sync/sync-equipes.js";
 
 let isSyncing = false;
+let syncStartedAt = 0;
+const SYNC_TIMEOUT_MS = 15 * 60 * 1000; // 15 min max
 
 export function createSystemRoutes(ffttConfig: CriteriumFfttConfig | null) {
   const app = new Hono();
@@ -33,11 +35,17 @@ export function createSystemRoutes(ffttConfig: CriteriumFfttConfig | null) {
     if (!ffttConfig) {
       return c.json({ error: "FFTT config not available" }, 503);
     }
+    // Reset stale sync flag (e.g., after a crash)
+    if (isSyncing && Date.now() - syncStartedAt > SYNC_TIMEOUT_MS) {
+      isSyncing = false;
+    }
+
     if (isSyncing) {
       return c.json({ error: "Sync already in progress" }, 409);
     }
 
     isSyncing = true;
+    syncStartedAt = Date.now();
     // Run sync in background, don't block the response
     syncFull(db as SyncDb, ffttConfig)
       .finally(() => { isSyncing = false; });
