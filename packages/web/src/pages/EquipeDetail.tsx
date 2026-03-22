@@ -71,12 +71,14 @@ function MatchDetail({
   equipeId,
   rencId,
   fontenayIsSideA,
+  isFontenayMatch,
   equipeAName,
   equipeBName,
 }: {
   equipeId: string;
   rencId: string;
   fontenayIsSideA: boolean;
+  isFontenayMatch: boolean;
   equipeAName: string;
   equipeBName: string;
 }) {
@@ -98,9 +100,9 @@ function MatchDetail({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[#e2e8f0] text-[#64748b]">
-            <th className="text-left py-1 px-2">{equipeBName}</th>
-            <th className="text-center py-1 px-2">Score</th>
             <th className="text-left py-1 px-2">{equipeAName}</th>
+            <th className="text-center py-1 px-2">Score</th>
+            <th className="text-left py-1 px-2">{equipeBName}</th>
             <th className="text-right py-1 px-2">Sets</th>
           </tr>
         </thead>
@@ -114,11 +116,15 @@ function MatchDetail({
                 )}
               </td>
               <td className="py-1.5 px-2 text-center whitespace-nowrap">
-                <ScoreBadge
-                  scoreA={partie.score_a}
-                  scoreB={partie.score_b}
-                  isVictory={fontenayIsSideA ? partie.score_b > partie.score_a : partie.score_a > partie.score_b}
-                />
+                {isFontenayMatch ? (
+                  <ScoreBadge
+                    scoreA={partie.score_a}
+                    scoreB={partie.score_b}
+                    isVictory={fontenayIsSideA ? partie.score_a > partie.score_b : partie.score_b > partie.score_a}
+                  />
+                ) : (
+                  <span className="text-sm font-semibold text-[#64748b]">{partie.score_a} - {partie.score_b}</span>
+                )}
               </td>
               <td className="py-1.5 px-2 max-w-[200px]">
                 <div className="truncate font-medium" title={partie.joueur_b}>{partie.joueur_b}</div>
@@ -365,6 +371,7 @@ export function EquipeDetail() {
                             equipeId={id}
                             rencId={String(renc.id)}
                             fontenayIsSideA={renc.equipe_a.toUpperCase().includes("FONTENAY")}
+                            isFontenayMatch={isFontenay}
                             equipeAName={renc.equipe_a}
                             equipeBName={renc.equipe_b}
                           />
