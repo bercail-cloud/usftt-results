@@ -57,6 +57,13 @@
       "when": 1774159200000,
       "tag": "0007_criterium_result_indiv",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1774202400000,
+      "tag": "0008_detail_equa_equb",
+      "breakpoints": true
     }
   ]
 }
