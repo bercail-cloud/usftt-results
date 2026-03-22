@@ -363,13 +363,14 @@ function LevelGroupTable({
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded min-w-[28px] text-center ${getBadgeColor(badgeCode)}`}
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded min-w-[28px] text-center ${
+                          item.parsed.gender === "Dames"
+                            ? "bg-pink-100 text-pink-700"
+                            : getBadgeColor(badgeCode)
+                        }`}
                       >
-                        {badgeCode}
+                        {badgeCode}{item.parsed.gender === "Dames" ? " F" : ""}
                       </span>
-                      {item.parsed.gender === "Dames" && (
-                        <span className="text-[9px] font-bold px-1 py-0.5 rounded-sm bg-pink-100 text-pink-600">F</span>
-                      )}
                       <span className="font-semibold text-[#191c1e] whitespace-nowrap">
                         {item.equipe.lib_equipe}
                       </span>
