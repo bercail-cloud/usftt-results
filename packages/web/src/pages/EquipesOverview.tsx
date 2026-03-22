@@ -210,7 +210,18 @@ function groupEquipes(allEquipes: EquipeItem[]): PhaseSection[] {
       .sort(([a], [b]) => LEVEL_ORDER[a] - LEVEL_ORDER[b])
       .map(([level, equipes]) => ({
         level,
-        equipes: equipes.sort((a, b) => extractTeamNumber(a.equipe.lib_equipe) - extractTeamNumber(b.equipe.lib_equipe)),
+        equipes: equipes.sort((a, b) => {
+          // Sort by badge level number (N1 < N2 < N3, R1 < R2, D1 < D2...)
+          const aNum = parseInt(a.parsed.badgeCode.replace(/\D/g, "") || "99", 10);
+          const bNum = parseInt(b.parsed.badgeCode.replace(/\D/g, "") || "99", 10);
+          if (aNum !== bNum) return aNum - bNum;
+          // Then gender: H before F
+          const aGender = a.parsed.gender === "Dames" ? 1 : 0;
+          const bGender = b.parsed.gender === "Dames" ? 1 : 0;
+          if (aGender !== bGender) return aGender - bGender;
+          // Then team number
+          return extractTeamNumber(a.equipe.lib_equipe) - extractTeamNumber(b.equipe.lib_equipe);
+        }),
       }));
 
     sections.push({
