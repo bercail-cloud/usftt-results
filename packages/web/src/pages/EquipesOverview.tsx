@@ -426,7 +426,7 @@ function LevelGroupTable({
                             title={`${r.date_prevue} - ${opponent}`}
                           >
                             <div className="text-[10px] text-[#94a3b8] flex items-center justify-center gap-0.5">
-                              {isDom ? <Home size={7} /> : <Car size={7} />}
+                              {isDom ? <Home size={10} /> : <Car size={10} />}
                               {formatShortDate(r.date_prevue)}
                             </div>
                             <div className="text-[7px] text-[#94a3b8] truncate">
