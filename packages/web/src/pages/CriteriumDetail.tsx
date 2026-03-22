@@ -66,7 +66,7 @@ export function CriteriumDetail() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-6">
         <button
-          onClick={() => navigate("/criterium")}
+          onClick={() => navigate(`/criterium?tour=${tour}`)}
           className="text-sm text-primary cursor-pointer mb-4 hover:underline"
         >
           &larr; Criterium Tour {tour}
@@ -104,7 +104,7 @@ export function CriteriumDetail() {
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
       {/* Breadcrumb */}
       <button
-        onClick={() => navigate("/criterium")}
+        onClick={() => navigate(`/criterium?tour=${tour}`)}
         className="text-sm text-primary cursor-pointer hover:underline"
       >
         &larr; Criterium Tour {tour}
