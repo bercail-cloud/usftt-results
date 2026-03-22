@@ -19,6 +19,7 @@ interface Rencontre {
   score_b: number | null;
   is_domicile: boolean;
   journee: number | null;
+  date_prevue: string;
 }
 
 interface Classement {
