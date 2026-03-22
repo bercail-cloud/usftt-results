@@ -319,20 +319,22 @@ export function EquipeDetail() {
                         className={`px-6 py-3 ${idx % 2 === 0 ? "bg-white" : "bg-[#f7f9fb]"} ${isFontenay ? "border-l-[3px] border-l-[#2563eb]" : ""}`}
                       >
                         <div className="flex items-center gap-3 flex-wrap">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <span className={`font-medium truncate ${isFontenay && renc.equipe_a.toUpperCase().includes("FONTENAY") ? "text-[#2563eb] font-semibold" : "text-[#191c1e]"}`}>
+                          <div className="flex items-center flex-1 min-w-0">
+                            <span className={`font-medium truncate flex-1 text-right ${isFontenay && renc.equipe_a.toUpperCase().includes("FONTENAY") ? "text-[#2563eb] font-semibold" : "text-[#191c1e]"}`}>
                               {renc.equipe_a}
                             </span>
-                            {played ? (
-                              <ScoreBadge
-                                scoreA={renc.score_a!}
-                                scoreB={renc.score_b!}
-                                isVictory={isVictory}
-                              />
-                            ) : (
-                              <span className="text-[#94a3b8] text-sm">vs</span>
-                            )}
-                            <span className={`font-medium truncate ${isFontenay && renc.equipe_b.toUpperCase().includes("FONTENAY") ? "text-[#2563eb] font-semibold" : "text-[#191c1e]"}`}>
+                            <span className="mx-3 flex-shrink-0">
+                              {played ? (
+                                <ScoreBadge
+                                  scoreA={renc.score_a!}
+                                  scoreB={renc.score_b!}
+                                  isVictory={isVictory}
+                                />
+                              ) : (
+                                <span className="text-[#94a3b8] text-sm">vs</span>
+                              )}
+                            </span>
+                            <span className={`font-medium truncate flex-1 ${isFontenay && renc.equipe_b.toUpperCase().includes("FONTENAY") ? "text-[#2563eb] font-semibold" : "text-[#191c1e]"}`}>
                               {renc.equipe_b}
                             </span>
                           </div>
