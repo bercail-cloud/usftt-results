@@ -132,26 +132,26 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
         <table className="w-full text-sm" role="table" aria-label="Liste des joueurs">
           <thead>
             <tr className="bg-[#f2f4f6]">
-              <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
-                Nom Prénom
-              </th>
               <th className="text-center px-3 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
                 Cat
               </th>
               <th className="text-center px-3 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
                 Sexe
               </th>
-              <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
-                Pts officiels
+              <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
+                Nom Prénom
               </th>
               <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
-                Pts mensuels
+                Mensuel
               </th>
               <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
-                Pts début saison
+                Officiel
               </th>
               <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
-                Prog. mensuelle
+                Début saison
+              </th>
+              <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
+                Progression
               </th>
               <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
                 Matchs
@@ -175,20 +175,23 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
                   }`}
                   aria-selected={isSelected}
                 >
-                  <td className="px-5 py-3 font-semibold text-[#191c1e] whitespace-nowrap">
-                    {j.nom} {j.prenom}
-                  </td>
                   <td className="px-3 py-3 text-center text-[#737686]" title={CATEGORIE_LABELS[j.categorie ?? ""] ?? ""}>
                     {j.categorie ?? "—"}
                   </td>
-                  <td className="px-3 py-3 text-center text-[#737686]">
-                    {j.sexe ?? "—"}
+                  <td className="px-3 py-3 text-center">
+                    {j.sexe === "F"
+                      ? <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-pink-100 text-pink-700">F</span>
+                      : <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">M</span>
+                    }
                   </td>
-                  <td className="px-4 py-3 text-right text-[#191c1e] font-mono tabular-nums">
-                    {j.points_officiels ?? "—"}
+                  <td className="px-5 py-3 font-semibold text-[#191c1e] whitespace-nowrap">
+                    {j.nom} {j.prenom}
                   </td>
                   <td className="px-4 py-3 text-right text-[#191c1e] font-mono tabular-nums">
                     {j.points_mensuels != null ? Math.round(j.points_mensuels) : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-right text-[#191c1e] font-mono tabular-nums">
+                    {j.points_officiels ?? "—"}
                   </td>
                   <td className="px-4 py-3 text-right text-[#737686] font-mono tabular-nums">
                     {j.points_initm ?? "—"}
