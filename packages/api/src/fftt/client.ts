@@ -28,6 +28,11 @@ export async function fetchFftt(
     throw new Error(`FFTT API error: ${response.status} ${response.statusText}`);
   }
   const buffer = await response.arrayBuffer();
-  const decoder = new TextDecoder("iso-8859-1");
-  return decoder.decode(buffer);
+  // Try UTF-8 first (some FFTT endpoints return UTF-8 despite declaring ISO-8859-1)
+  // If UTF-8 decoding produces replacement characters, fall back to ISO-8859-1
+  const utf8 = new TextDecoder("utf-8").decode(buffer);
+  if (!utf8.includes("\uFFFD")) {
+    return utf8;
+  }
+  return new TextDecoder("iso-8859-1").decode(buffer);
 }
