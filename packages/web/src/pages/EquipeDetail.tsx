@@ -105,9 +105,9 @@ function MatchDetail({
             <tr key={partie.id} className="border-b border-[#f1f5f9]">
               <td className="py-1.5 px-2 max-w-[200px]">
                 <div className="truncate font-medium" title={partie.joueur_a}>{partie.joueur_a}</div>
-                <span className="text-xs text-[#94a3b8]">
-                  ({partie.classement_a})
-                </span>
+                {partie.classement_a && partie.classement_a.trim() !== "" && (
+                  <span className="text-xs text-[#94a3b8]">({partie.classement_a})</span>
+                )}
               </td>
               <td className="py-1.5 px-2 text-center whitespace-nowrap">
                 <ScoreBadge
@@ -118,9 +118,9 @@ function MatchDetail({
               </td>
               <td className="py-1.5 px-2 max-w-[200px]">
                 <div className="truncate font-medium" title={partie.joueur_b}>{partie.joueur_b}</div>
-                <span className="text-xs text-[#94a3b8]">
-                  ({partie.classement_b})
-                </span>
+                {partie.classement_b && partie.classement_b.trim() !== "" && (
+                  <span className="text-xs text-[#94a3b8]">({partie.classement_b})</span>
+                )}
               </td>
               <td className="py-1.5 px-2 text-right text-xs text-[#64748b] whitespace-nowrap">
                 {partie.detail_sets}
