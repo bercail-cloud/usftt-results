@@ -146,11 +146,6 @@ interface EnrichedEquipeItem extends EquipeItem {
   parsed: ParsedDivision;
 }
 
-interface GenderSection {
-  gender: Gender;
-  levelGroups: LevelGroup[];
-}
-
 interface LevelGroup {
   level: Level;
   equipes: EnrichedEquipeItem[];
@@ -159,31 +154,31 @@ interface LevelGroup {
 interface PhaseSection {
   phase: Phase;
   phaseOrder: number;
-  genderSections: GenderSection[];
+  levelGroups: LevelGroup[];
+}
+
+/** Extract team number from lib_equipe, e.g. "FONTENAY USTT 3 - Phase 2" → 3 */
+function extractTeamNumber(libEquipe: string): number {
+  const match = libEquipe.match(/(\d+)/);
+  return match ? parseInt(match[1]!, 10) : 999;
 }
 
 function groupEquipes(allEquipes: EquipeItem[]): PhaseSection[] {
-  // Enrich items with parsed info
   const enriched: EnrichedEquipeItem[] = allEquipes.map((item) => ({
     ...item,
     parsed: parseDivision(item.equipe.lib_division),
   }));
 
-  // Build map: phase → gender → level → items
-  const phaseMap = new Map<Phase, Map<Gender, Map<Level, EnrichedEquipeItem[]>>>();
+  // Build map: phase → level → items (no gender split)
+  const phaseMap = new Map<Phase, Map<Level, EnrichedEquipeItem[]>>();
 
   for (const item of enriched) {
-    const { phase, gender, level } = item.parsed;
+    const { phase, level } = item.parsed;
 
     if (!phaseMap.has(phase)) {
       phaseMap.set(phase, new Map());
     }
-    const genderMap = phaseMap.get(phase)!;
-
-    if (!genderMap.has(gender)) {
-      genderMap.set(gender, new Map());
-    }
-    const levelMap = genderMap.get(gender)!;
+    const levelMap = phaseMap.get(phase)!;
 
     if (!levelMap.has(level)) {
       levelMap.set(level, []);
@@ -192,27 +187,21 @@ function groupEquipes(allEquipes: EquipeItem[]): PhaseSection[] {
   }
 
   const PHASE_ORDER: Record<Phase, number> = { "Phase 2": 0, "Phase 1": 1, Jeunes: 2 };
-  const GENDER_ORDER: Record<Gender, number> = { Hommes: 0, Dames: 1 };
 
   const sections: PhaseSection[] = [];
 
-  for (const [phase, genderMap] of phaseMap) {
-    const genderSections: GenderSection[] = [];
-
-    for (const [gender, levelMap] of genderMap) {
-      const levelGroups: LevelGroup[] = Array.from(levelMap.entries())
-        .sort(([a], [b]) => LEVEL_ORDER[a] - LEVEL_ORDER[b])
-        .map(([level, equipes]) => ({ level, equipes }));
-
-      genderSections.push({ gender, levelGroups });
-    }
-
-    genderSections.sort((a, b) => GENDER_ORDER[a.gender] - GENDER_ORDER[b.gender]);
+  for (const [phase, levelMap] of phaseMap) {
+    const levelGroups: LevelGroup[] = Array.from(levelMap.entries())
+      .sort(([a], [b]) => LEVEL_ORDER[a] - LEVEL_ORDER[b])
+      .map(([level, equipes]) => ({
+        level,
+        equipes: equipes.sort((a, b) => extractTeamNumber(a.equipe.lib_equipe) - extractTeamNumber(b.equipe.lib_equipe)),
+      }));
 
     sections.push({
       phase,
       phaseOrder: PHASE_ORDER[phase],
-      genderSections,
+      levelGroups,
     });
   }
 
@@ -381,6 +370,9 @@ function LevelGroupTable({
                       <span className="font-semibold text-[#191c1e] whitespace-nowrap">
                         {item.equipe.lib_equipe}
                       </span>
+                      {item.parsed.gender === "Dames" && (
+                        <span className="text-[9px] font-medium px-1 py-0.5 rounded bg-pink-100 text-pink-600">F</span>
+                      )}
                     </div>
                   </td>
                   <td className="px-3 py-3">
@@ -415,33 +407,6 @@ function LevelGroupTable({
   );
 }
 
-function GenderSectionView({
-  genderSection,
-  onRowClick,
-}: {
-  genderSection: GenderSection;
-  onRowClick: (id: number) => void;
-}) {
-  return (
-    <div className="space-y-4">
-      {/* Gender sub-header */}
-      <div className="px-1">
-        <span className="text-[11px] font-semibold text-[#737686] uppercase tracking-widest">
-          {genderSection.gender}
-        </span>
-      </div>
-
-      {genderSection.levelGroups.map((lg) => (
-        <LevelGroupTable
-          key={lg.level}
-          levelGroup={lg}
-          onRowClick={onRowClick}
-        />
-      ))}
-    </div>
-  );
-}
-
 function PhaseSectionView({
   section,
   onRowClick,
@@ -449,9 +414,8 @@ function PhaseSectionView({
   section: PhaseSection;
   onRowClick: (id: number) => void;
 }) {
-  const totalEquipes = section.genderSections.reduce(
-    (sum, gs) => sum + gs.levelGroups.reduce((s, lg) => s + lg.equipes.length, 0),
-    0
+  const totalEquipes = section.levelGroups.reduce(
+    (sum, lg) => sum + lg.equipes.length, 0
   );
 
   return (
@@ -467,10 +431,10 @@ function PhaseSectionView({
         <span className="text-sm text-[#94a3b8]">({totalEquipes} equipes)</span>
       </div>
 
-      {section.genderSections.map((gs) => (
-        <GenderSectionView
-          key={gs.gender}
-          genderSection={gs}
+      {section.levelGroups.map((lg) => (
+        <LevelGroupTable
+          key={lg.level}
+          levelGroup={lg}
           onRowClick={onRowClick}
         />
       ))}
