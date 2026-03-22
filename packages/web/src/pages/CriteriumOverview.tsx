@@ -189,7 +189,7 @@ function getNiveauColor(niveau: string): string {
   switch (niveau) {
     case "National": return "text-blue-700 bg-blue-50 border-blue-200";
     case "Regional": return "text-purple-700 bg-purple-50 border-purple-200";
-    case "Non publie": return "text-gray-600 bg-gray-50 border-gray-200";
+    case "Resultats non trouves sur la FFTT": return "text-gray-600 bg-gray-50 border-gray-200";
     default: return "text-amber-700 bg-amber-50 border-amber-200";
   }
 }
