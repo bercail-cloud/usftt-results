@@ -165,12 +165,16 @@ describe("syncRencontres", () => {
     mockGetMatches.mockResolvedValue([]);
 
     const db = {
-      insert: vi.fn().mockReturnValue({
-        values: vi.fn().mockReturnValue({
-          onConflictDoUpdate: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue([]),
-          }),
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
         }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(undefined),
+      }),
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockResolvedValue(undefined),
       }),
     };
 
@@ -343,12 +347,16 @@ describe("syncRencontres", () => {
     mockGetMatches.mockResolvedValue([]);
 
     const db = {
-      insert: vi.fn().mockReturnValue({
-        values: vi.fn().mockReturnValue({
-          onConflictDoUpdate: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue([]),
-          }),
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
         }),
+      }),
+      delete: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(undefined),
+      }),
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockResolvedValue(undefined),
       }),
     };
 
@@ -395,6 +403,7 @@ describe("syncDetailsRencontres", () => {
       insert: vi.fn().mockReturnValue({
         values: vi.fn().mockResolvedValue(undefined),
       }),
+      update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }),
     };
 
     await syncDetailsRencontres(db as SyncDb, 1, FFTT_CONFIG);
@@ -430,6 +439,7 @@ describe("syncDetailsRencontres", () => {
       insert: vi.fn().mockReturnValue({
         values: vi.fn().mockResolvedValue(undefined),
       }),
+      update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }),
     };
 
     await syncDetailsRencontres(db as SyncDb, 1, FFTT_CONFIG);
@@ -467,6 +477,7 @@ describe("syncDetailsRencontres", () => {
           return Promise.resolve(undefined);
         }),
       }),
+      update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }),
     };
 
     await syncDetailsRencontres(db as SyncDb, 1, FFTT_CONFIG);
@@ -492,6 +503,7 @@ describe("syncDetailsRencontres", () => {
       }),
       delete: vi.fn(),
       insert: vi.fn(),
+      update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }),
     };
 
     await syncDetailsRencontres(db as SyncDb, 1, FFTT_CONFIG);

@@ -63,9 +63,15 @@ function makeDb(equipes: unknown[] = []) {
   const fromMock = vi.fn().mockResolvedValue(equipes);
   const selectMock = vi.fn().mockReturnValue({ from: fromMock });
 
+  const deleteMock = vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+  const updateSetMock = vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+  const updateMock = vi.fn().mockReturnValue({ set: updateSetMock });
+
   return {
     insert: insertMock,
     select: selectMock,
+    delete: deleteMock,
+    update: updateMock,
   };
 }
 
