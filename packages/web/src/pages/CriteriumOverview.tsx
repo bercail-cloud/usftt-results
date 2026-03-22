@@ -50,6 +50,21 @@ function parseDivision(raw: string): {
   let niveauLabel = "Departemental";
   let levelCode = "";
 
+  if (raw === "Non publie" || raw === "") {
+    niveauOrder = 4;
+    niveauLabel = "Resultats non trouves sur la FFTT";
+    levelCode = "?";
+    return {
+      niveauOrder,
+      niveauLabel,
+      levelCode,
+      ageCategory: "",
+      ageOrder: 0,
+      gender: "",
+      display: raw,
+    };
+  }
+
   if (raw.startsWith("FED_") || raw.includes("N1") || raw.includes("N2")) {
     niveauOrder = 1;
     niveauLabel = "National";
@@ -151,7 +166,13 @@ function groupPlayers(joueurs: JoueurResult[]): GroupedSection[] {
       .sort(([, a], [, b]) => a.order - b.order)
       .map(([ageCategory, { players }]) => ({
         ageCategory,
-        players: players.sort((a, b) => a.levelNum - b.levelNum || a.rang - b.rang),
+        players: players.sort((a, b) => {
+          // For "Non publie" players (levelCode "?"), sort by classement DESC
+          if (a.levelCode === "?" && b.levelCode === "?") {
+            return (b.classement ?? 0) - (a.classement ?? 0);
+          }
+          return a.levelNum - b.levelNum || a.rang - b.rang;
+        }),
       }));
 
     sections.push({
@@ -168,11 +189,13 @@ function getNiveauColor(niveau: string): string {
   switch (niveau) {
     case "National": return "text-blue-700 bg-blue-50 border-blue-200";
     case "Regional": return "text-purple-700 bg-purple-50 border-purple-200";
+    case "Resultats non trouves sur la FFTT": return "text-gray-600 bg-gray-50 border-gray-200";
     default: return "text-amber-700 bg-amber-50 border-amber-200";
   }
 }
 
 function getLevelBadgeColor(code: string): string {
+  if (code === "?") return "bg-gray-100 text-gray-500";
   if (code.startsWith("N")) return "bg-blue-100 text-blue-700";
   if (code.startsWith("R")) return "bg-purple-100 text-purple-700";
   return "bg-amber-100 text-amber-700";
@@ -250,13 +273,15 @@ function TourResultsTable({
 
           <div className="bg-white">
             {section.ageGroups.map((group) => (
-              <div key={group.ageCategory}>
-                {/* Age category header */}
-                <div className="px-5 py-2 bg-[#f8fafc] border-t border-[#e2e8f0]">
-                  <span className="text-xs font-semibold text-[#64748b] uppercase tracking-wide">
-                    {group.ageCategory}
-                  </span>
-                </div>
+              <div key={group.ageCategory || "uncategorized"}>
+                {/* Age category header (skip if empty) */}
+                {group.ageCategory && (
+                  <div className="px-5 py-2 bg-[#f8fafc] border-t border-[#e2e8f0]">
+                    <span className="text-xs font-semibold text-[#64748b] uppercase tracking-wide">
+                      {group.ageCategory}
+                    </span>
+                  </div>
+                )}
 
                 {/* Players in this group */}
                 {group.players.map((j) => (
@@ -287,14 +312,13 @@ function TourResultsTable({
                       <span className="text-error font-medium">{j.defaites}D</span>
                     </span>
 
-                    {/* Rang */}
+                    {/* Rang + Points (hide for unpublished) */}
                     <span className="w-12 flex justify-center">
-                      <RankCircle rank={j.rang} />
+                      {j.rang > 0 && <RankCircle rank={j.rang} />}
                     </span>
 
-                    {/* Points */}
                     <span className="text-sm font-semibold text-[#0f172a] w-16 text-right">
-                      {j.points}
+                      {j.points || ""}
                     </span>
                   </div>
                 ))}
@@ -309,6 +333,9 @@ function TourResultsTable({
 
 export function CriteriumOverview() {
   const navigate = useNavigate();
+  const searchParams = new URLSearchParams(window.location.search);
+  const tourFromUrl = searchParams.get("tour");
+
   const { data: toursData, isLoading: toursLoading, isError: toursError } =
     useCriteriumTours() as {
       data: TourSummary[] | undefined;
@@ -322,7 +349,8 @@ export function CriteriumOverview() {
   const latestTour = hasRealTours
     ? (tourNumbers.filter((t) => t > 0).at(-1) ?? 1)
     : (tourNumbers[0] ?? 0);
-  const [activeTour, setActiveTour] = useState<number | null>(null);
+  const defaultTour = tourFromUrl ? parseInt(tourFromUrl, 10) : null;
+  const [activeTour, setActiveTour] = useState<number | null>(defaultTour);
 
   const currentTour = activeTour ?? latestTour;
   const currentTourData = availableTours.find((t) => t.tour === currentTour);
