@@ -56,7 +56,7 @@ export function CriteriumDetail() {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         <LoadingSkeleton lines={6} />
       </div>
     );
@@ -64,7 +64,7 @@ export function CriteriumDetail() {
 
   if (isError) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         <button
           onClick={() => navigate(`/criterium?tour=${tour}`)}
           className="text-sm text-primary cursor-pointer mb-4 hover:underline"
@@ -84,7 +84,7 @@ export function CriteriumDetail() {
 
   if (!data) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         <EmptyState message="Joueur non trouve" />
       </div>
     );
@@ -96,7 +96,7 @@ export function CriteriumDetail() {
   const defaites = matches.filter((m) => !m.victoire).length;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       {/* Breadcrumb */}
       <button
         onClick={() => navigate(`/criterium?tour=${tour}`)}
@@ -107,14 +107,14 @@ export function CriteriumDetail() {
 
       {/* Player header */}
       <div>
-        <h1 className="text-xl font-bold text-[#0f172a]">
+        <h1 className="text-2xl font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>
           {player.nom}
         </h1>
         <div className="flex items-center gap-2 mt-1">
           <DivisionBadge division={player.division} />
           <span className="text-sm text-[#64748b]">{player.classement}</span>
         </div>
-        <p className="text-2xl font-bold mt-2">
+        <p className="text-3xl font-extrabold mt-3" style={{ fontFamily: "Manrope, sans-serif" }}>
           <span className="text-success">{victoires}V</span>
           <span className="text-[#94a3b8] mx-1">/</span>
           <span className="text-error">{defaites}D</span>
@@ -123,17 +123,19 @@ export function CriteriumDetail() {
 
       {/* Division standings */}
       {divisionStandings && divisionStandings.length > 0 && (
-        <div className="bg-white border border-[#e2e8f0] rounded-lg p-5">
-          <h2 className="font-bold text-[#0f172a] mb-3">Classement division</h2>
+        <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
+          <div className="px-6 py-4 border-b border-[rgba(67,70,85,0.08)]">
+            <h2 className="font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>Classement division</h2>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#e2e8f0] text-[#64748b]">
-                  <th className="text-center px-3 py-2 font-semibold">Rang</th>
-                  <th className="text-left px-3 py-2 font-semibold">Joueur</th>
-                  <th className="text-left px-3 py-2 font-semibold">Club</th>
-                  <th className="text-center px-3 py-2 font-semibold">Clt</th>
-                  <th className="text-center px-3 py-2 font-semibold">Points</th>
+                <tr className="bg-[#f2f4f6] text-[#64748b]">
+                  <th className="text-center px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Rang</th>
+                  <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Joueur</th>
+                  <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Club</th>
+                  <th className="text-center px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Clt</th>
+                  <th className="text-center px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Points</th>
                 </tr>
               </thead>
               <tbody>
@@ -142,19 +144,19 @@ export function CriteriumDetail() {
                   return (
                     <tr
                       key={row.licence ?? idx}
-                      className={`border-b border-[#f1f5f9] ${
+                      className={`transition-colors ${
                         isPlayer
                           ? "bg-[#eff6ff] text-primary font-semibold"
-                          : ""
+                          : idx % 2 === 0 ? "bg-[#f7f9fb]" : "bg-white"
                       }`}
                     >
-                      <td className="px-3 py-2 text-center">{row.rang}</td>
-                      <td className="px-3 py-2">{row.nom}</td>
-                      <td className="px-3 py-2 text-[#64748b]">{row.club}</td>
-                      <td className="px-3 py-2 text-center text-[#64748b]">
+                      <td className="px-4 py-3 text-center">{row.rang}</td>
+                      <td className="px-4 py-3 font-medium text-[#191c1e]">{row.nom}</td>
+                      <td className="px-4 py-3 text-[#64748b]">{row.club}</td>
+                      <td className="px-4 py-3 text-center text-[#64748b]">
                         {row.classement}
                       </td>
-                      <td className="px-3 py-2 text-center font-bold">
+                      <td className="px-4 py-3 text-center font-bold">
                         {row.points}
                       </td>
                     </tr>
@@ -175,18 +177,20 @@ export function CriteriumDetail() {
         const poolPoints = poolMatches.reduce((s, m) => s + (m.pointsResultat ?? 0), 0);
 
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Pool matches */}
             {poolMatches.length > 0 && (
-              <div className="bg-white border border-[#e2e8f0] rounded-lg p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="font-bold text-[#0f172a]">{elimMatches.length > 0 ? "Matchs de poule" : "Matchs"}</h2>
+              <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
+                <div className="px-6 py-4 border-b border-[rgba(67,70,85,0.08)] flex items-center justify-between">
+                  <h2 className="font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>
+                    {elimMatches.length > 0 ? "Matchs de poule" : "Matchs"}
+                  </h2>
                   <div className="text-sm">
-                    <span className="text-success font-medium">{poolV}V</span>
+                    <span className="text-success font-semibold">{poolV}V</span>
                     <span className="text-[#94a3b8] mx-1">-</span>
-                    <span className="text-error font-medium">{poolD}D</span>
+                    <span className="text-error font-semibold">{poolD}D</span>
                     <span className="text-[#94a3b8] mx-2">|</span>
-                    <span className={`font-medium ${poolPoints >= 0 ? "text-success" : "text-error"}`}>
+                    <span className={`font-semibold ${poolPoints >= 0 ? "text-success" : "text-error"}`}>
                       {poolPoints > 0 ? "+" : ""}{poolPoints.toFixed(1)} pts
                     </span>
                   </div>
@@ -194,26 +198,26 @@ export function CriteriumDetail() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-[#e2e8f0] text-[#64748b]">
-                        <th className="text-center px-3 py-2 font-semibold w-12">Res.</th>
-                        <th className="text-left px-3 py-2 font-semibold">Adversaire</th>
-                        <th className="text-center px-3 py-2 font-semibold">Clt</th>
-                        <th className="text-center px-3 py-2 font-semibold">Points</th>
+                      <tr className="bg-[#f2f4f6] text-[#64748b]">
+                        <th className="text-center px-4 py-3 font-semibold text-[11px] uppercase tracking-widest w-12">Res.</th>
+                        <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Adversaire</th>
+                        <th className="text-center px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Clt</th>
+                        <th className="text-center px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Points</th>
                       </tr>
                     </thead>
                     <tbody>
                       {poolMatches.map((match, idx) => (
-                        <tr key={idx} className="border-b border-[#f1f5f9]">
-                          <td className="px-3 py-2 text-center">
-                            <span className={`font-bold ${match.victoire ? "text-success" : "text-error"}`}>
+                        <tr key={idx} className={idx % 2 === 0 ? "bg-[#f7f9fb]" : "bg-white"}>
+                          <td className="px-4 py-3.5 text-center">
+                            <span className={`font-bold text-base ${match.victoire ? "text-success" : "text-error"}`}>
                               {match.victoire ? "V" : "D"}
                             </span>
                           </td>
-                          <td className="px-3 py-2 text-[#0f172a]">{match.adversaire}</td>
-                          <td className="px-3 py-2 text-center text-[#64748b]">
+                          <td className="px-4 py-3.5 text-[#191c1e] font-medium">{match.adversaire}</td>
+                          <td className="px-4 py-3.5 text-center text-[#64748b]">
                             {match.adversaireClassement || ""}
                           </td>
-                          <td className={`px-3 py-2 text-center font-medium ${(match.pointsResultat ?? 0) >= 0 ? "text-success" : "text-error"}`}>
+                          <td className={`px-4 py-3.5 text-center font-semibold ${(match.pointsResultat ?? 0) >= 0 ? "text-success" : "text-error"}`}>
                             {(match.pointsResultat ?? 0) > 0 ? "+" : ""}{match.pointsResultat?.toFixed(1) ?? ""}
                           </td>
                         </tr>
@@ -230,15 +234,15 @@ export function CriteriumDetail() {
               const elimD = elimMatches.filter((m) => !m.victoire).length;
               const elimPoints = elimMatches.reduce((s, m) => s + (m.pointsResultat ?? 0), 0);
               return (
-              <div className="bg-white border border-[#e2e8f0] rounded-lg p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="font-bold text-[#0f172a]">Phases finales</h2>
+              <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
+                <div className="px-6 py-4 border-b border-[rgba(67,70,85,0.08)] flex items-center justify-between">
+                  <h2 className="font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>Phases finales</h2>
                   <div className="text-sm">
-                    <span className="text-success font-medium">{elimV}V</span>
+                    <span className="text-success font-semibold">{elimV}V</span>
                     <span className="text-[#94a3b8] mx-1">-</span>
-                    <span className="text-error font-medium">{elimD}D</span>
+                    <span className="text-error font-semibold">{elimD}D</span>
                     <span className="text-[#94a3b8] mx-2">|</span>
-                    <span className={`font-medium ${elimPoints >= 0 ? "text-success" : "text-error"}`}>
+                    <span className={`font-semibold ${elimPoints >= 0 ? "text-success" : "text-error"}`}>
                       {elimPoints > 0 ? "+" : ""}{elimPoints.toFixed(1)} pts
                     </span>
                   </div>
@@ -246,28 +250,28 @@ export function CriteriumDetail() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-[#e2e8f0] text-[#64748b]">
-                        <th className="text-center px-3 py-2 font-semibold w-12">Res.</th>
-                        <th className="text-left px-3 py-2 font-semibold">Phase</th>
-                        <th className="text-left px-3 py-2 font-semibold">Adversaire</th>
-                        <th className="text-center px-3 py-2 font-semibold">Clt</th>
-                        <th className="text-center px-3 py-2 font-semibold">Points</th>
+                      <tr className="bg-[#f2f4f6] text-[#64748b]">
+                        <th className="text-center px-4 py-3 font-semibold text-[11px] uppercase tracking-widest w-12">Res.</th>
+                        <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Phase</th>
+                        <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Adversaire</th>
+                        <th className="text-center px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Clt</th>
+                        <th className="text-center px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Points</th>
                       </tr>
                     </thead>
                     <tbody>
                       {elimMatches.map((match, idx) => (
-                        <tr key={idx} className="border-b border-[#f1f5f9]">
-                          <td className="px-3 py-2 text-center">
-                            <span className={`font-bold ${match.victoire ? "text-success" : "text-error"}`}>
+                        <tr key={idx} className={idx % 2 === 0 ? "bg-[#f7f9fb]" : "bg-white"}>
+                          <td className="px-4 py-3.5 text-center">
+                            <span className={`font-bold text-base ${match.victoire ? "text-success" : "text-error"}`}>
                               {match.victoire ? "V" : "D"}
                             </span>
                           </td>
-                          <td className="px-3 py-2 text-[#64748b]">{match.libelle}</td>
-                          <td className="px-3 py-2 text-[#0f172a]">{match.adversaire}</td>
-                          <td className="px-3 py-2 text-center text-[#64748b]">
+                          <td className="px-4 py-3.5 text-[#64748b]">{match.libelle}</td>
+                          <td className="px-4 py-3.5 text-[#191c1e] font-medium">{match.adversaire}</td>
+                          <td className="px-4 py-3.5 text-center text-[#64748b]">
                             {match.adversaireClassement || ""}
                           </td>
-                          <td className={`px-3 py-2 text-center font-medium ${(match.pointsResultat ?? 0) >= 0 ? "text-success" : "text-error"}`}>
+                          <td className={`px-4 py-3.5 text-center font-semibold ${(match.pointsResultat ?? 0) >= 0 ? "text-success" : "text-error"}`}>
                             {(match.pointsResultat ?? 0) > 0 ? "+" : ""}{match.pointsResultat ? match.pointsResultat.toFixed(1) : ""}
                           </td>
                         </tr>

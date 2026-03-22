@@ -188,12 +188,21 @@ function groupPlayers(joueurs: JoueurResult[]): GroupedSection[] {
   return sections.sort((a, b) => a.niveauOrder - b.niveauOrder);
 }
 
-function getNiveauColor(niveau: string): string {
+function getNiveauAccentBar(niveau: string): string {
   switch (niveau) {
-    case "National": return "text-blue-700 bg-blue-50 border-blue-200";
-    case "Regional": return "text-purple-700 bg-purple-50 border-purple-200";
-    case "Resultats non trouves sur la FFTT": return "text-gray-600 bg-gray-50 border-gray-200";
-    default: return "text-amber-700 bg-amber-50 border-amber-200";
+    case "National": return "border-l-[4px] border-l-[#2563eb]";
+    case "Regional": return "border-l-[4px] border-l-[#7c3aed]";
+    case "Resultats non trouves sur la FFTT": return "border-l-[4px] border-l-[#94a3b8]";
+    default: return "border-l-[4px] border-l-[#d97706]";
+  }
+}
+
+function getNiveauHeaderColor(niveau: string): string {
+  switch (niveau) {
+    case "National": return "text-[#2563eb]";
+    case "Regional": return "text-[#7c3aed]";
+    case "Resultats non trouves sur la FFTT": return "text-[#94a3b8]";
+    default: return "text-[#d97706]";
   }
 }
 
@@ -236,28 +245,28 @@ function TourResultsTable({
   const grouped = groupPlayers(joueurs);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       {tourDate && (
         <p className="text-sm text-[#64748b]">Date : {tourDate}</p>
       )}
 
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 text-center">
+        <div className="bg-white rounded-xl p-6 text-center shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
           <p className="text-xs text-[#64748b] mb-1">Joueurs engages</p>
-          <p className="text-2xl font-bold text-[#0f172a]">{joueurs.length}</p>
+          <p className="text-3xl font-bold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>{joueurs.length}</p>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 text-center">
+        <div className="bg-white rounded-xl p-6 text-center shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
           <p className="text-xs text-[#64748b] mb-1">Bilan global</p>
-          <p className="text-xl font-bold">
+          <p className="text-2xl font-bold">
             <span className="text-success">{totalVictoires}V</span>
             <span className="text-[#64748b] mx-1">/</span>
             <span className="text-error">{totalDefaites}D</span>
           </p>
         </div>
-        <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 text-center">
+        <div className="bg-white rounded-xl p-6 text-center shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
           <p className="text-xs text-[#64748b] mb-1">Meilleur bilan</p>
-          <p className="text-sm font-bold text-[#0f172a] truncate">{bestBilan.nom}</p>
+          <p className="text-sm font-bold text-[#191c1e] truncate">{bestBilan.nom}</p>
           <p className="text-xs">
             <span className="text-success">{bestBilan.victoires}V</span>
             <span className="text-[#64748b] mx-0.5">-</span>
@@ -268,29 +277,34 @@ function TourResultsTable({
 
       {/* Grouped results */}
       {grouped.map((section) => (
-        <div key={section.niveauLabel} className={`border rounded-lg overflow-hidden ${getNiveauColor(section.niveauLabel)}`}>
+        <div
+          key={section.niveauLabel}
+          className={`bg-white rounded-xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.04)] ${getNiveauAccentBar(section.niveauLabel)}`}
+        >
           {/* Niveau header */}
-          <div className="px-5 py-3 font-bold text-base">
+          <div className={`px-6 py-4 font-extrabold text-base ${getNiveauHeaderColor(section.niveauLabel)}`} style={{ fontFamily: "Manrope, sans-serif" }}>
             {section.niveauLabel}
           </div>
 
-          <div className="bg-white">
+          <div>
             {section.ageGroups.map((group) => (
               <div key={group.ageCategory || "uncategorized"}>
                 {/* Age category header (skip if empty) */}
                 {group.ageCategory && (
-                  <div className="px-5 py-2 bg-[#f8fafc] border-t border-[#e2e8f0]">
-                    <span className="text-xs font-semibold text-[#64748b] uppercase tracking-wide">
+                  <div className="px-6 py-2 bg-[#f2f4f6]">
+                    <span className="text-[11px] font-semibold text-[#737686] uppercase tracking-widest">
                       {group.ageCategory}
                     </span>
                   </div>
                 )}
 
                 {/* Players in this group */}
-                {group.players.map((j) => (
+                {group.players.map((j, idx) => (
                   <div
                     key={`${j.licence}-${j.division}`}
-                    className="flex items-center px-5 py-2.5 border-t border-[#f1f5f9] hover:bg-[#f8fafc] cursor-pointer transition-colors"
+                    className={`flex items-center px-5 py-3.5 cursor-pointer transition-colors hover:bg-[#eff6ff] ${
+                      idx % 2 === 0 ? "bg-[#f7f9fb]" : "bg-white"
+                    }`}
                     onClick={() => j.licence && onRowClick(j.licence)}
                   >
                     {/* Level badge */}
@@ -299,7 +313,7 @@ function TourResultsTable({
                     </span>
 
                     {/* Name */}
-                    <span className="font-semibold text-[#0f172a] flex-1 text-sm">
+                    <span className="font-semibold text-[#191c1e] flex-1 text-sm">
                       {j.nom}{j.prenom ? ` ${j.prenom}` : ""}
                     </span>
 
@@ -309,10 +323,10 @@ function TourResultsTable({
                     </span>
 
                     {/* Bilan */}
-                    <span className="w-20 text-center text-sm">
-                      <span className="text-success font-medium">{j.victoires}V</span>
+                    <span className="w-20 text-center text-sm font-semibold">
+                      <span className="text-success">{j.victoires}V</span>
                       <span className="text-[#94a3b8] mx-0.5">-</span>
-                      <span className="text-error font-medium">{j.defaites}D</span>
+                      <span className="text-error">{j.defaites}D</span>
                     </span>
 
                     {/* Rang + Points (hide for unpublished) */}
@@ -320,7 +334,7 @@ function TourResultsTable({
                       {j.rang > 0 && <RankCircle rank={j.rang} />}
                     </span>
 
-                    <span className="text-sm font-semibold text-[#0f172a] w-16 text-right">
+                    <span className="text-sm font-semibold text-[#191c1e] w-16 text-right">
                       {j.points || ""}
                     </span>
                   </div>
@@ -359,9 +373,9 @@ export function CriteriumOverview() {
   const currentTourData = availableTours.find((t) => t.tour === currentTour);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
       <div>
-        <h1 className="text-2xl font-extrabold text-[#0f172a]">
+        <h1 className="text-2xl font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>
           Criterium Federal
         </h1>
       </div>
@@ -383,10 +397,10 @@ export function CriteriumOverview() {
                       role="tab"
                       aria-selected={isActive}
                       onClick={() => setActiveTour(t.tour)}
-                      className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
                         isActive
-                          ? "bg-[#0f172a] text-white"
-                          : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0]"
+                          ? "bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white shadow-[0_2px_8px_rgba(37,99,235,0.3)]"
+                          : "bg-[#f2f4f6] text-[#505f76] hover:bg-[#e8eaed]"
                       }`}
                     >
                       {TOUR_LABELS[t.tour - 1] ?? `Tour ${t.tour}`}

@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -8,11 +9,13 @@
   --color-success-light: #dcfce7;
   --color-error: #dc2626;
   --color-error-light: #fee2e2;
-  --color-text-primary: #0f172a;
+  --color-text-primary: #191c1e;
   --color-text-secondary: #64748b;
   --color-text-muted: #94a3b8;
-  --color-bg-page: #f8fafc;
+  --color-bg-page: #f7f9fb;
   --color-bg-card: #ffffff;
+  --color-bg-nested: #f2f4f6;
   --color-border: #e2e8f0;
   --color-border-light: #f1f5f9;
+  --color-border-ghost: rgba(67, 70, 85, 0.08);
 }
