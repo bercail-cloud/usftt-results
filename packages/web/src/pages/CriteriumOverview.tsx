@@ -312,14 +312,15 @@ function TourResultsTable({
                       {j.levelCode}
                     </span>
 
-                    {/* Name */}
-                    <span className="font-semibold text-[#191c1e] flex-1 text-sm">
-                      {j.nom}{j.prenom ? ` ${j.prenom}` : ""}
+                    {/* Name + classement inline */}
+                    <span className="flex-1 text-sm">
+                      <span className="font-semibold text-[#191c1e]">{j.nom}{j.prenom ? ` ${j.prenom}` : ""}</span>
+                      {j.classement ? <span className="text-[#94a3b8] ml-1">({j.classement})</span> : null}
                     </span>
 
-                    {/* Classement */}
-                    <span className="text-[#64748b] text-sm w-16 text-center">
-                      {j.classement || "-"}
+                    {/* Rang */}
+                    <span className="w-12 flex justify-center">
+                      {j.rang > 0 && <RankCircle rank={j.rang} />}
                     </span>
 
                     {/* Bilan */}
@@ -329,12 +330,8 @@ function TourResultsTable({
                       <span className="text-error">{j.defaites}D</span>
                     </span>
 
-                    {/* Rang + Points (hide for unpublished) */}
-                    <span className="w-12 flex justify-center">
-                      {j.rang > 0 && <RankCircle rank={j.rang} />}
-                    </span>
-
-                    <span className="text-sm font-semibold text-[#191c1e] w-16 text-right">
+                    {/* Points code */}
+                    <span className="text-sm text-[#64748b] w-16 text-right">
                       {j.points || ""}
                     </span>
                   </div>
