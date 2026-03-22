@@ -212,6 +212,7 @@ export function EquipeDetail() {
                   <th className="text-left px-3 py-2 font-semibold">Equipe</th>
                   <th className="text-center px-3 py-2 font-semibold">J</th>
                   <th className="text-center px-3 py-2 font-semibold">V</th>
+                  <th className="text-center px-3 py-2 font-semibold">N</th>
                   <th className="text-center px-3 py-2 font-semibold">D</th>
                   <th className="text-center px-3 py-2 font-semibold">Pts</th>
                 </tr>
@@ -235,6 +236,7 @@ export function EquipeDetail() {
                         <td className="px-3 py-2">{row.nom_equipe}</td>
                         <td className="px-3 py-2 text-center">{row.joue}</td>
                         <td className="px-3 py-2 text-center">{row.victoires}</td>
+                        <td className="px-3 py-2 text-center">{row.nuls}</td>
                         <td className="px-3 py-2 text-center">{row.defaites}</td>
                         <td className="px-3 py-2 text-center font-bold">{row.points}</td>
                       </tr>
