@@ -250,77 +250,78 @@ export function ProgressionDetail() {
           <div className="px-6 pb-5">
             <EmptyState message="Aucune partie disponible" />
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-[#f2f4f6]">
-                  <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-                    Date
-                  </th>
-                  <th className="text-center px-3 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-                    Type
-                  </th>
-                  <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-                    Adversaire
-                  </th>
-                  <th className="text-center px-3 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-                    Clt
-                  </th>
-                  <th className="text-center px-3 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-                    Rés.
-                  </th>
-                  <th className="text-right px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-                    Points
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedParties.map((partie, idx) => (
-                  <tr
-                    key={idx}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-[#f7f9fb]"}
-                  >
-                    <td className="px-5 py-3 text-[#737686] whitespace-nowrap">
-                      {formatDate(partie.date_partie)}
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      <span
-                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${getEpreuveBadgeColor(partie.epreuve)}`}
-                        title={partie.epreuve_libelle ?? formatEpreuve(partie.epreuve)}
-                      >
-                        {partie.epreuve_libelle
-                          ? partie.epreuve_libelle.replace(/^FED_/, "").replace(/^L\d+_/, "").slice(0, 20)
-                          : formatEpreuve(partie.epreuve)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-[#191c1e] font-medium">
-                      {partie.adversaire_nom}
-                    </td>
-                    <td className="px-3 py-3 text-center text-[#737686]">
-                      {partie.adversaire_classement}
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      <span
-                        className={`font-bold text-base ${
-                          partie.victoire ? "text-success" : "text-error"
-                        }`}
-                      >
+        ) : (() => {
+          // Group by date + epreuve
+          const groups: Array<{ label: string; color: string; parties: typeof sortedParties }> = [];
+          let currentKey = "";
+
+          for (const partie of sortedParties) {
+            const eprLabel = partie.epreuve_libelle
+              ? partie.epreuve_libelle.replace(/^FED_/, "").replace(/^L\d+_/, "")
+              : formatEpreuve(partie.epreuve);
+            const key = `${partie.date_partie}|${eprLabel}`;
+
+            if (key !== currentKey) {
+              currentKey = key;
+              groups.push({
+                label: `${formatDate(partie.date_partie)} - ${eprLabel}`,
+                color: getEpreuveBadgeColor(partie.epreuve),
+                parties: [],
+              });
+            }
+            groups[groups.length - 1]!.parties.push(partie);
+          }
+
+          return (
+            <div>
+              {groups.map((group, gi) => (
+                <div key={gi}>
+                  {/* Group header */}
+                  <div className="px-6 py-2.5 bg-[#f2f4f6] border-t border-[rgba(67,70,85,0.06)]">
+                    <span className="text-xs font-semibold text-[#505f76]">
+                      {group.label}
+                    </span>
+                  </div>
+
+                  {/* Matches */}
+                  {group.parties.map((partie, idx) => (
+                    <div
+                      key={idx}
+                      className={`flex items-center px-6 py-3 ${idx % 2 === 0 ? "bg-white" : "bg-[#f7f9fb]"}`}
+                    >
+                      {/* Points badge */}
+                      <div className={`w-14 h-8 rounded-md flex items-center justify-center font-bold text-xs text-white flex-shrink-0 ${
+                        partie.points_resultat > 0
+                          ? "bg-green-500"
+                          : partie.points_resultat < 0
+                            ? "bg-red-500"
+                            : "bg-[#475569]"
+                      }`}>
+                        {partie.points_resultat > 0 ? "+" : ""}{partie.points_resultat || "0"}
+                      </div>
+
+                      {/* Player info */}
+                      <div className="ml-4 flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-primary">{partie.adversaire_classement}</span>
+                          <span className="text-[#191c1e] font-medium">- {partie.adversaire_nom}</span>
+                        </div>
+                        <div className="text-xs text-[#94a3b8]">
+                          Coef: {partie.coefficient || "1"}
+                        </div>
+                      </div>
+
+                      {/* V/D indicator */}
+                      <span className={`text-lg font-bold flex-shrink-0 ${partie.victoire ? "text-success" : "text-error"}`}>
                         {partie.victoire ? "V" : "D"}
                       </span>
-                    </td>
-                    <td
-                      className={`px-5 py-3 text-right font-semibold ${getPointsColor(partie.points_resultat)}`}
-                    >
-                      {partie.points_resultat > 0 ? "+" : ""}
-                      {partie.points_resultat}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
