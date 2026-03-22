@@ -154,8 +154,8 @@ describe("syncCriterium", () => {
 
     await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
-    // 3 organismes, each keeping only 1 most recent C epreuve = 3 calls
-    expect(mockGetDivisions).toHaveBeenCalledTimes(3);
+    // 4 organismes (federal + zone + regional + dept), each keeping only 1 most recent C epreuve = 4 calls
+    expect(mockGetDivisions).toHaveBeenCalledTimes(4);
   });
 
   it("calls getResultIndivPoules for each division", async () => {
@@ -169,7 +169,7 @@ describe("syncCriterium", () => {
     await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     // 3 organismes, each with 1 division = 3 calls
-    expect(mockGetResultIndivPoules).toHaveBeenCalledTimes(3);
+    expect(mockGetResultIndivPoules).toHaveBeenCalledTimes(4);
     expect(mockGetResultIndivPoules).toHaveBeenCalledWith(
       "EP1",
       "DIV1",
