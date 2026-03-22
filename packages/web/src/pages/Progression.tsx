@@ -135,9 +135,6 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
               <th className="text-center px-3 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
                 Cat
               </th>
-              <th className="text-center px-3 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-                Sexe
-              </th>
               <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
                 Nom Prénom
               </th>
@@ -178,13 +175,7 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
                   <td className="px-3 py-3 text-center text-[#737686]" title={CATEGORIE_LABELS[j.categorie ?? ""] ?? ""}>
                     {j.categorie ?? "—"}
                   </td>
-                  <td className="px-3 py-3 text-center">
-                    {j.sexe === "F"
-                      ? <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-pink-100 text-pink-700">F</span>
-                      : <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">M</span>
-                    }
-                  </td>
-                  <td className="px-5 py-3 font-semibold text-[#191c1e] whitespace-nowrap">
+                  <td className={`px-5 py-3 font-semibold text-[#191c1e] whitespace-nowrap border-l-[3px] ${j.sexe === "F" ? "border-l-pink-400" : "border-l-blue-400"}`}>
                     {j.nom} {j.prenom}
                   </td>
                   <td className="px-4 py-3 text-right text-[#191c1e] font-mono tabular-nums">
