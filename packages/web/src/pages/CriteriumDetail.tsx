@@ -92,8 +92,6 @@ export function CriteriumDetail() {
 
   const { player, divisionStandings, matches } = data;
 
-  const poolMatches = matches.filter((m) => m.libelle === "Poule");
-  const elimMatches = matches.filter((m) => m.libelle !== "Poule");
   const victoires = matches.filter((m) => m.victoire).length;
   const defaites = matches.filter((m) => !m.victoire).length;
 

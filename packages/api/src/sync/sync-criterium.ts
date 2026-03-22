@@ -16,7 +16,6 @@ import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
 export interface CriteriumFfttConfig extends FfttConfig {
   clubNom: string;
-  organismeId: string;
 }
 
 function si(v: unknown): number {
@@ -55,33 +54,25 @@ function parseLienParams(lien: string): Record<string, string> {
 
 function niveauFromOrganisme(orgId: string): string {
   if (orgId === "1") return "National";
-  if (orgId === "8") return "National"; // Zone 1 CVL-IDF = national level
-  if (orgId === "16") return "Regional";
+  if (orgId === "8") return "National"; // Zone 1 CVL-IDF
+  if (orgId === "16") return "Regional"; // Ligue IDF
+  if (orgId === "112") return "Departemental"; // Val-de-Marne
   return "Departemental";
 }
 
 // Organismes to search for criterium epreuves:
-// 1 = Federation (national), 8 = Zone 1 CVL-IDF, 16 = Ligue IDF (regional), departement from config
-function getOrganismeIds(deptOrganismeId: string): string[] {
-  const ids = ["1", "8", "16"]; // Federal + Zone 1 + Ligue IDF
-  if (deptOrganismeId && !ids.includes(deptOrganismeId)) {
-    ids.push(deptOrganismeId);
-  }
-  return ids;
+// 1 = Federation (national), 8 = Zone 1 CVL-IDF, 16 = Ligue IDF (regional), 112 = Val-de-Marne (dept)
+function getOrganismeIds(): string[] {
+  return ["1", "8", "16", "112"];
 }
 
 export async function syncCriterium(
   db: SyncDb,
   ffttConfig: CriteriumFfttConfig
 ): Promise<number> {
-  const { appId, serie, password, organismeId, clubNom } = ffttConfig;
+  const { appId, serie, password, clubNom } = ffttConfig;
 
-  if (!organismeId) {
-    console.log("Skipping criterium sync: organismeId not configured");
-    return 0;
-  }
-
-  const organismeIds = getOrganismeIds(organismeId);
+  const organismeIds = getOrganismeIds();
 
   // Fetch all joueurs for name matching
   const joueursAll: Array<{ licence: string; nom: string; prenom: string; points_officiels: number | null }> =
