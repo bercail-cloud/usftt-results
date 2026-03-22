@@ -325,11 +325,15 @@ export function EquipeDetail() {
                             </span>
                             <span className="mx-3 flex-shrink-0">
                               {played ? (
-                                <ScoreBadge
-                                  scoreA={renc.score_a!}
-                                  scoreB={renc.score_b!}
-                                  isVictory={isVictory}
-                                />
+                                isFontenay ? (
+                                  <ScoreBadge
+                                    scoreA={renc.score_a!}
+                                    scoreB={renc.score_b!}
+                                    isVictory={isVictory}
+                                  />
+                                ) : (
+                                  <span className="text-sm font-semibold text-[#64748b]">{renc.score_a} - {renc.score_b}</span>
+                                )
                               ) : (
                                 <span className="text-[#94a3b8] text-sm">vs</span>
                               )}
