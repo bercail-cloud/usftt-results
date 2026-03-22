@@ -30,6 +30,8 @@ interface Rencontre {
   score_b: number | null;
   date_prevue: string;
   is_domicile: boolean;
+  detail_equa: string | null;
+  detail_equb: string | null;
 }
 
 interface Equipe {
@@ -100,9 +102,9 @@ function MatchDetail({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[#e2e8f0] text-[#64748b]">
-            <th className="text-left py-1 px-2">Joueur A</th>
+            <th className="text-left py-1 px-2">{equipeAName}</th>
             <th className="text-center py-1 px-2">Score</th>
-            <th className="text-left py-1 px-2">Joueur B</th>
+            <th className="text-left py-1 px-2">{equipeBName}</th>
             <th className="text-right py-1 px-2">Sets</th>
           </tr>
         </thead>
@@ -370,10 +372,10 @@ export function EquipeDetail() {
                           <MatchDetail
                             equipeId={id}
                             rencId={String(renc.id)}
-                            fontenayIsSideA={renc.equipe_a.toUpperCase().includes("FONTENAY")}
+                            fontenayIsSideA={(renc.detail_equa ?? renc.equipe_a).toUpperCase().includes("FONTENAY")}
                             isFontenayMatch={isFontenay}
-                            equipeAName={renc.equipe_a}
-                            equipeBName={renc.equipe_b}
+                            equipeAName={renc.detail_equa ?? renc.equipe_a}
+                            equipeBName={renc.detail_equb ?? renc.equipe_b}
                           />
                         )}
                       </div>

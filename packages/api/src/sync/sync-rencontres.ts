@@ -149,6 +149,17 @@ export async function syncDetailsRencontres(
       .delete(parties_rencontre)
       .where(eq(parties_rencontre.rencontre_id, rencontre.id));
 
+    // Store equa/equb from detail result
+    if (chpRenc.resultat) {
+      await db
+        .update(rencontres)
+        .set({
+          detail_equa: chpRenc.resultat.equa,
+          detail_equb: chpRenc.resultat.equb,
+        })
+        .where(eq(rencontres.id, rencontre.id));
+    }
+
     if (chpRenc.parties.length === 0) {
       continue;
     }
