@@ -36,12 +36,12 @@ interface JoueursResponse {
 
 const CATEGORIES = [
   { value: "", label: "Toutes" },
-  { value: "S", label: "S" },
-  { value: "J", label: "J" },
-  { value: "C", label: "C" },
-  { value: "M", label: "M" },
-  { value: "B", label: "B" },
   { value: "P", label: "P" },
+  { value: "B", label: "B" },
+  { value: "M", label: "M" },
+  { value: "C", label: "C" },
+  { value: "J", label: "J" },
+  { value: "S", label: "S" },
   { value: "V", label: "V" },
 ] as const;
 
