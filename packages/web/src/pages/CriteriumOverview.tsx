@@ -52,14 +52,14 @@ function parseDivision(raw: string): {
 
   if (raw === "Non publie" || raw === "") {
     niveauOrder = 4;
-    niveauLabel = "Non publie";
+    niveauLabel = "Resultats non trouves sur la FFTT";
     levelCode = "?";
     return {
       niveauOrder,
       niveauLabel,
       levelCode,
-      ageCategory: "Non classe",
-      ageOrder: 99,
+      ageCategory: "",
+      ageOrder: 0,
       gender: "",
       display: raw,
     };
@@ -166,7 +166,13 @@ function groupPlayers(joueurs: JoueurResult[]): GroupedSection[] {
       .sort(([, a], [, b]) => a.order - b.order)
       .map(([ageCategory, { players }]) => ({
         ageCategory,
-        players: players.sort((a, b) => a.levelNum - b.levelNum || a.rang - b.rang),
+        players: players.sort((a, b) => {
+          // For "Non publie" players (levelCode "?"), sort by classement DESC
+          if (a.levelCode === "?" && b.levelCode === "?") {
+            return (b.classement ?? 0) - (a.classement ?? 0);
+          }
+          return a.levelNum - b.levelNum || a.rang - b.rang;
+        }),
       }));
 
     sections.push({
@@ -267,13 +273,15 @@ function TourResultsTable({
 
           <div className="bg-white">
             {section.ageGroups.map((group) => (
-              <div key={group.ageCategory}>
-                {/* Age category header */}
-                <div className="px-5 py-2 bg-[#f8fafc] border-t border-[#e2e8f0]">
-                  <span className="text-xs font-semibold text-[#64748b] uppercase tracking-wide">
-                    {group.ageCategory}
-                  </span>
-                </div>
+              <div key={group.ageCategory || "uncategorized"}>
+                {/* Age category header (skip if empty) */}
+                {group.ageCategory && (
+                  <div className="px-5 py-2 bg-[#f8fafc] border-t border-[#e2e8f0]">
+                    <span className="text-xs font-semibold text-[#64748b] uppercase tracking-wide">
+                      {group.ageCategory}
+                    </span>
+                  </div>
+                )}
 
                 {/* Players in this group */}
                 {group.players.map((j) => (
