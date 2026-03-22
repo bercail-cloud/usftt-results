@@ -31,7 +31,6 @@ const FFTT_CONFIG = {
   password: "FFTT",
   clubNumero: "99999",
   clubNom: "FONTENAY USTT",
-  organismeId: "D94",
 };
 
 function makeEpreuve(overrides: Record<string, string> = {}) {
@@ -128,18 +127,16 @@ describe("syncCriterium", () => {
     vi.clearAllMocks();
   });
 
-  it("calls getEpreuves with organismeId and type I", async () => {
+  it("calls getEpreuves for each hardcoded organisme", async () => {
     mockGetEpreuves.mockResolvedValue([]);
     const db = makeDb();
 
     await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
+    // 4 organismes: federal (1), zone (8), regional (16), departemental (112)
+    expect(mockGetEpreuves).toHaveBeenCalledTimes(4);
     expect(mockGetEpreuves).toHaveBeenCalledWith(
-      FFTT_CONFIG.organismeId,
-      "I",
-      FFTT_CONFIG.appId,
-      FFTT_CONFIG.serie,
-      FFTT_CONFIG.password
+      "1", "I", FFTT_CONFIG.appId, FFTT_CONFIG.serie, FFTT_CONFIG.password
     );
   });
 
@@ -218,16 +215,6 @@ describe("syncCriterium", () => {
     await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     expect(mockGetDivisions).not.toHaveBeenCalled();
-  });
-
-  it("returns 0 when organismeId is not configured", async () => {
-    const config = { ...FFTT_CONFIG, organismeId: "" };
-    const db = makeDb();
-
-    const count = await syncCriterium(db as SyncDb, config);
-
-    expect(count).toBe(0);
-    expect(mockGetEpreuves).not.toHaveBeenCalled();
   });
 
   it("skips divisions with no USFTT players", async () => {

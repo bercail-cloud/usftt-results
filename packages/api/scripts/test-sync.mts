@@ -16,8 +16,7 @@ const config = {
   password: process.env.FFTT_PASSWORD!,
   serie: process.env.FFTT_SERIE!,
   clubNumero: process.env.CLUB_NUMERO ?? "08940073",
-  clubNom: process.env.CLUB_NOM ?? "FONTENAY",
-  organismeId: process.env.ORGANISME_ID ?? "",
+  clubNom: process.env.CLUB_NOM ?? "FONTENAYSIENNE",
 };
 
 const arg = process.argv[2];

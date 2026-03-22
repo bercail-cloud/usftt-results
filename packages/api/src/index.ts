@@ -23,7 +23,6 @@ const ffttConfig: CriteriumFfttConfig | null = hasEnvVars
       serie: process.env.FFTT_SERIE!,
       clubNumero: process.env.CLUB_NUMERO ?? "08940073",
       clubNom: process.env.CLUB_NOM ?? "",
-      organismeId: process.env.ORGANISME_ID ?? "",
     }
   : null;
 

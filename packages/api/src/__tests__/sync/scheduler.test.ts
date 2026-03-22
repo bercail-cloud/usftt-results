@@ -52,7 +52,6 @@ const FFTT_CONFIG = {
   password: "FFTT",
   clubNumero: "99999",
   clubNom: "FONTENAY USTT",
-  organismeId: "D94",
 };
 
 function makeDb(equipes: unknown[] = []) {
