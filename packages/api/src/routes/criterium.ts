@@ -6,6 +6,7 @@ import {
   criterium_classement,
   criterium_parties,
   parties_individuelles,
+  joueurs,
 } from "../db/schema.js";
 
 const USFTT_CLUB = "FONTENAYSIENNE";
@@ -122,10 +123,6 @@ app.get("/criterium/tours/:tour", async (c) => {
     )
     .orderBy(asc(criterium_classement.rang));
 
-  if (players.length === 0) {
-    return c.json([]);
-  }
-
   // Build a lookup for tour info
   const tourLookup = new Map(tourRows.map((t) => [t.id, t]));
 
@@ -204,6 +201,79 @@ app.get("/criterium/tours/:tour", async (c) => {
       };
     })
   );
+
+  // Find USFTT players who played on tour dates but aren't in criterium standings
+  const existingLicences = new Set(
+    players.map((p) => p.licence).filter(Boolean)
+  );
+
+  if (tourDates.length > 0) {
+    const dateList = tourDates.map((d) => `'${d}'`).join(",");
+    const missingPlayers = await db
+      .select({
+        licence: parties_individuelles.licence,
+        nom: joueurs.nom,
+        prenom: joueurs.prenom,
+        points_officiels: joueurs.points_officiels,
+        date_partie: parties_individuelles.date_partie,
+        victoire: parties_individuelles.victoire,
+      })
+      .from(parties_individuelles)
+      .innerJoin(joueurs, eq(joueurs.licence, parties_individuelles.licence))
+      .where(
+        and(
+          eq(joueurs.club_numero, "08940073"),
+          sql`${parties_individuelles.date_partie} IN (${sql.raw(dateList)})`
+        )
+      );
+
+    // Group by licence
+    const missingByLicence = new Map<string, {
+      licence: string;
+      nom: string;
+      prenom: string;
+      classement: number;
+      victoires: number;
+      defaites: number;
+    }>();
+
+    for (const row of missingPlayers) {
+      if (existingLicences.has(row.licence)) continue;
+
+      if (!missingByLicence.has(row.licence)) {
+        missingByLicence.set(row.licence, {
+          licence: row.licence,
+          nom: row.nom,
+          prenom: row.prenom,
+          classement: row.points_officiels ?? 0,
+          victoires: 0,
+          defaites: 0,
+        });
+      }
+
+      const entry = missingByLicence.get(row.licence)!;
+      if (row.victoire) {
+        entry.victoires++;
+      } else {
+        entry.defaites++;
+      }
+    }
+
+    // Add missing players to results
+    for (const [, entry] of missingByLicence) {
+      playerResults.push({
+        licence: entry.licence,
+        nom: entry.nom,
+        club: USFTT_CLUB,
+        classement: entry.classement,
+        division: "Non publie",
+        rang: 0,
+        points: "",
+        victoires: entry.victoires,
+        defaites: entry.defaites,
+      });
+    }
+  }
 
   return c.json(playerResults);
 });
