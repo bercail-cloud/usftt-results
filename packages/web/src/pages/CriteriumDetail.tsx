@@ -69,12 +69,12 @@ export function CriteriumDetail() {
           onClick={() => navigate(`/criterium?tour=${tour}`)}
           className="text-sm text-primary cursor-pointer mb-4 hover:underline"
         >
-          &larr; Criterium Tour {tour}
+          &larr; Critérium Tour {tour}
         </button>
         <EmptyState
           message={
             error?.message?.includes("404")
-              ? "Joueur non trouve"
+              ? "Joueur non trouvé"
               : `Erreur : ${error?.message ?? "Une erreur est survenue"}`
           }
         />
@@ -85,7 +85,7 @@ export function CriteriumDetail() {
   if (!data) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <EmptyState message="Joueur non trouve" />
+        <EmptyState message="Joueur non trouvé" />
       </div>
     );
   }
@@ -102,7 +102,7 @@ export function CriteriumDetail() {
         onClick={() => navigate(`/criterium?tour=${tour}`)}
         className="text-sm text-primary cursor-pointer hover:underline"
       >
-        &larr; Criterium Tour {tour}
+        &larr; Critérium Tour {tour}
       </button>
 
       {/* Player header */}
@@ -288,7 +288,7 @@ export function CriteriumDetail() {
 
       {(!divisionStandings || divisionStandings.length === 0) &&
         (!matches || matches.length === 0) && (
-          <EmptyState message="Aucune donnee disponible pour ce joueur" />
+          <EmptyState message="Aucune donnée disponible pour ce joueur" />
         )}
     </div>
   );
