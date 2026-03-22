@@ -46,26 +46,50 @@ interface PartiesResponse {
   data: Partie[];
 }
 
-function formatDate(dateStr: string): string {
-  try {
-    return new Date(dateStr).toLocaleDateString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  } catch {
-    return dateStr;
+/**
+ * Parse a date string in DD/MM/YYYY format and return a Date object.
+ * Returns an invalid Date if parsing fails.
+ */
+function parseDDMMYYYY(dateStr: string): Date {
+  const parts = dateStr.split("/");
+  if (parts.length === 3) {
+    const day = parseInt(parts[0]!, 10);
+    const month = parseInt(parts[1]!, 10) - 1; // months are 0-indexed
+    const year = parseInt(parts[2]!, 10);
+    return new Date(year, month, day);
   }
+  return new Date(NaN);
+}
+
+function formatDate(dateStr: string): string {
+  const date = parseDDMMYYYY(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
 function getPointsColor(points: number): string {
   if (points > 0) return "text-success";
   if (points < 0) return "text-error";
-  return "text-text-secondary";
+  return "text-[#737686]";
 }
 
+/**
+ * Format chart X-axis label from "Saison 2004 / 2005" + phase 1 → "04/05 P1"
+ */
 function formatChartLabel(point: ProgressionPoint): string {
-  return `${point.saison} ${point.phase}`;
+  // Expected saison format: "Saison 2004 / 2005" or "2004/2005" or similar
+  const yearMatch = point.saison.match(/(\d{4})\s*[/\-]\s*(\d{4})/);
+  if (yearMatch) {
+    const startYear = yearMatch[1]!.slice(2); // last 2 digits
+    const endYear = yearMatch[2]!.slice(2);
+    return `${startYear}/${endYear} P${point.phase}`;
+  }
+  // Fallback: keep original but compact
+  return `${point.saison} P${point.phase}`;
 }
 
 export function Progression() {
@@ -99,13 +123,20 @@ export function Progression() {
 
   const sortedParties = parties
     .slice()
-    .sort((a, b) => new Date(b.date_partie).getTime() - new Date(a.date_partie).getTime());
+    .sort(
+      (a, b) =>
+        parseDDMMYYYY(b.date_partie).getTime() -
+        parseDDMMYYYY(a.date_partie).getTime()
+    );
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       {/* Title */}
       <div>
-        <h1 className="text-2xl font-extrabold text-[#0f172a]">
+        <h1
+          className="text-2xl font-extrabold text-[#191c1e]"
+          style={{ fontFamily: "Manrope, sans-serif" }}
+        >
           Progression individuelle
         </h1>
       </div>
@@ -115,19 +146,36 @@ export function Progression() {
         {joueursLoading ? (
           <LoadingSkeleton lines={1} />
         ) : (
-          <select
-            value={selectedLicence}
-            onChange={(e) => setSelectedLicence(e.target.value)}
-            className="w-full sm:w-auto border border-[#e2e8f0] rounded-lg px-3 py-2 text-sm text-[#0f172a] bg-white focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Sélectionner un joueur"
-          >
-            <option value="">-- Sélectionner un joueur --</option>
-            {joueurs.map((j) => (
-              <option key={j.licence} value={j.licence}>
-                {j.prenom} {j.nom} ({j.points_officiels ?? 0} pts)
-              </option>
-            ))}
-          </select>
+          <div className="relative inline-flex items-center w-full sm:w-80">
+            <select
+              value={selectedLicence}
+              onChange={(e) => setSelectedLicence(e.target.value)}
+              className="w-full appearance-none bg-white border border-[#dde1e7] rounded-xl px-4 py-2.5 pr-10 text-sm text-[#191c1e] shadow-[0_2px_12px_rgba(0,0,0,0.04)] focus:outline-none focus:ring-2 focus:ring-[#2563eb] cursor-pointer"
+              aria-label="Sélectionner un joueur"
+            >
+              <option value="">Sélectionner un joueur...</option>
+              {joueurs.map((j) => (
+                <option key={j.licence} value={j.licence}>
+                  {j.prenom} {j.nom} ({j.points_officiels ?? 0} pts)
+                </option>
+              ))}
+            </select>
+            <svg
+              className="pointer-events-none absolute right-3 text-[#737686]"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+            >
+              <path
+                d="M4 6l4 4 4-4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
         )}
       </div>
 
@@ -137,32 +185,40 @@ export function Progression() {
 
       {selectedLicence && (
         <>
-          {/* Chart */}
-          <div className="bg-white border border-[#e2e8f0] rounded-lg p-5">
-            <h2 className="font-bold text-[#0f172a] mb-4">Evolution des points</h2>
+          {/* Chart card */}
+          <div className="bg-white rounded-xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+            <h2
+              className="font-extrabold text-[#191c1e] mb-5"
+              style={{ fontFamily: "Manrope, sans-serif" }}
+            >
+              Evolution des points
+            </h2>
             {progressionLoading ? (
               <LoadingSkeleton lines={4} />
             ) : progression.length === 0 ? (
               <EmptyState message="Aucune donnée de progression disponible" />
             ) : (
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={260}>
                 <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f2f4f6" />
                   <XAxis
                     dataKey="label"
-                    tick={{ fontSize: 12, fill: "#64748b" }}
+                    tick={{ fontSize: 11, fill: "#737686" }}
                     tickLine={false}
+                    axisLine={false}
                   />
                   <YAxis
-                    tick={{ fontSize: 12, fill: "#64748b" }}
+                    tick={{ fontSize: 11, fill: "#737686" }}
                     tickLine={false}
                     axisLine={false}
                   />
                   <Tooltip
                     formatter={(value: number) => [value, "Points"]}
                     contentStyle={{
-                      border: "1px solid #e2e8f0",
-                      borderRadius: "8px",
+                      background: "#fff",
+                      border: "none",
+                      borderRadius: "10px",
+                      boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
                       fontSize: "12px",
                     }}
                   />
@@ -171,58 +227,80 @@ export function Progression() {
                     dataKey="points"
                     stroke="#2563eb"
                     strokeWidth={2}
-                    dot={{ fill: "#2563eb", r: 4 }}
-                    activeDot={{ r: 6 }}
+                    dot={{ fill: "#2563eb", r: 4, strokeWidth: 0 }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
             )}
           </div>
 
-          {/* Matches table */}
-          <div className="bg-white border border-[#e2e8f0] rounded-lg p-5">
-            <h2 className="font-bold text-[#0f172a] mb-3">Parties</h2>
+          {/* Matches table card */}
+          <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="px-6 py-5">
+              <h2
+                className="font-extrabold text-[#191c1e]"
+                style={{ fontFamily: "Manrope, sans-serif" }}
+              >
+                Parties
+              </h2>
+            </div>
             {partiesLoading ? (
-              <LoadingSkeleton lines={5} />
+              <div className="px-6 pb-5">
+                <LoadingSkeleton lines={5} />
+              </div>
             ) : sortedParties.length === 0 ? (
-              <EmptyState message="Aucune partie disponible" />
+              <div className="px-6 pb-5">
+                <EmptyState message="Aucune partie disponible" />
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-[#e2e8f0] text-[#64748b]">
-                      <th className="text-left px-3 py-2 font-semibold">Date</th>
-                      <th className="text-left px-3 py-2 font-semibold">Adversaire</th>
-                      <th className="text-center px-3 py-2 font-semibold">Classement</th>
-                      <th className="text-center px-3 py-2 font-semibold">Res.</th>
-                      <th className="text-center px-3 py-2 font-semibold">Points</th>
+                    <tr className="bg-[#f2f4f6]">
+                      <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
+                        Date
+                      </th>
+                      <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
+                        Adversaire
+                      </th>
+                      <th className="text-center px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
+                        Class.
+                      </th>
+                      <th className="text-center px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
+                        V/D
+                      </th>
+                      <th className="text-center px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
+                        Points
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {sortedParties.map((partie, idx) => (
-                      <tr key={idx} className="border-b border-[#f1f5f9]">
-                        <td className="px-3 py-2 text-[#64748b] whitespace-nowrap">
+                      <tr
+                        key={idx}
+                        className={idx % 2 === 0 ? "bg-white" : "bg-[#f7f9fb]"}
+                      >
+                        <td className="px-5 py-3 text-[#737686] whitespace-nowrap">
                           {formatDate(partie.date_partie)}
                         </td>
-                        <td className="px-3 py-2 text-[#0f172a]">
+                        <td className="px-5 py-3 font-semibold text-[#191c1e]">
                           {partie.adversaire_nom}
                         </td>
-                        <td className="px-3 py-2 text-center text-[#64748b]">
+                        <td className="px-5 py-3 text-center text-[#737686]">
                           {partie.adversaire_classement}
                         </td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-5 py-3 text-center">
                           <span
                             className={`font-bold ${
-                              partie.victoire
-                                ? "text-success"
-                                : "text-error"
+                              partie.victoire ? "text-success" : "text-error"
                             }`}
                           >
                             {partie.victoire ? "V" : "D"}
                           </span>
                         </td>
                         <td
-                          className={`px-3 py-2 text-center font-semibold ${getPointsColor(partie.points_resultat)}`}
+                          className={`px-5 py-3 text-center font-semibold ${getPointsColor(partie.points_resultat)}`}
                         >
                           {partie.points_resultat > 0
                             ? `+${partie.points_resultat}`
