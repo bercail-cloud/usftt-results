@@ -211,9 +211,15 @@ function groupEquipes(allEquipes: EquipeItem[]): PhaseSection[] {
       .map(([level, equipes]) => ({
         level,
         equipes: equipes.sort((a, b) => {
-          // Sort by badge level number (N1 < N2 < N3, R1 < R2, D1 < D2...)
-          const aNum = parseInt(a.parsed.badgeCode.replace(/\D/g, "") || "99", 10);
-          const bNum = parseInt(b.parsed.badgeCode.replace(/\D/g, "") || "99", 10);
+          // Sort by badge level number (PN < R1 < R2, PR < D1 < D2...)
+          // PN and PR come first (rank 0) in their level group
+          function badgeRank(code: string): number {
+            if (code === "PN" || code === "PR") return 0;
+            const num = parseInt(code.replace(/\D/g, ""), 10);
+            return Number.isNaN(num) ? 99 : num;
+          }
+          const aNum = badgeRank(a.parsed.badgeCode);
+          const bNum = badgeRank(b.parsed.badgeCode);
           if (aNum !== bNum) return aNum - bNum;
           // Then gender: H before F
           const aGender = a.parsed.gender === "Dames" ? 1 : 0;
