@@ -18,14 +18,23 @@ export async function syncJoueurs(db: SyncDb, ffttConfig: FfttConfig): Promise<n
     return Number.isNaN(n) ? null : n;
   };
 
+  const safeFloat = (val: string | undefined): number | null => {
+    if (!val) return null;
+    const n = parseFloat(val);
+    return Number.isNaN(n) ? null : n;
+  };
+
   const rows = players.map((player) => ({
     licence: player.licence,
     nom: player.nom,
     prenom: player.prenom,
     club_numero: player.numclub,
     points_officiels: safeInt(player.point),
-    points_mensuels: safeInt(player.pointm),
+    points_mensuels: safeFloat(player.pointm),
+    ancien_points_mensuels: safeFloat(player.apointm),
+    points_initm: safeFloat(player.initm),
     categorie: player.cat || null,
+    type_licence: player.type || null,
     sexe: player.sexe || "M",
     rang_departemental: null,
     rang_regional: null,
@@ -42,7 +51,10 @@ export async function syncJoueurs(db: SyncDb, ffttConfig: FfttConfig): Promise<n
         club_numero: sql`excluded.club_numero`,
         points_officiels: sql`excluded.points_officiels`,
         points_mensuels: sql`excluded.points_mensuels`,
+        ancien_points_mensuels: sql`excluded.ancien_points_mensuels`,
+        points_initm: sql`excluded.points_initm`,
         categorie: sql`excluded.categorie`,
+        type_licence: sql`excluded.type_licence`,
         sexe: sql`excluded.sexe`,
         updated_at: sql`now()`,
       },
