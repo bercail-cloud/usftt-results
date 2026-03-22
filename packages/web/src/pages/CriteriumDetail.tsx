@@ -96,9 +96,6 @@ export function CriteriumDetail() {
   const elimMatches = matches.filter((m) => m.libelle !== "Poule");
   const victoires = matches.filter((m) => m.victoire).length;
   const defaites = matches.filter((m) => !m.victoire).length;
-  const poolLabel = poolMatches.length > 0
-    ? ` (${poolMatches.filter((m) => m.victoire).length}V poule + ${elimMatches.filter((m) => m.victoire).length}V phases)`
-    : "";
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
