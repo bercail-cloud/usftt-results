@@ -97,11 +97,6 @@ function formatDate(dateStr: string): string {
   });
 }
 
-function getPointsColor(points: number): string {
-  if (points > 0) return "text-success";
-  if (points < 0) return "text-error";
-  return "text-[#737686]";
-}
 
 function formatChartLabel(point: ProgressionPoint): string {
   const yearMatch = point.saison.match(/(\d{4})\s*[/-]\s*(\d{4})/);
