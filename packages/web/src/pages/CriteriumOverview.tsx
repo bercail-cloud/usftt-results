@@ -50,6 +50,21 @@ function parseDivision(raw: string): {
   let niveauLabel = "Departemental";
   let levelCode = "";
 
+  if (raw === "Non publie" || raw === "") {
+    niveauOrder = 4;
+    niveauLabel = "Non publie";
+    levelCode = "?";
+    return {
+      niveauOrder,
+      niveauLabel,
+      levelCode,
+      ageCategory: "Non classe",
+      ageOrder: 99,
+      gender: "",
+      display: raw,
+    };
+  }
+
   if (raw.startsWith("FED_") || raw.includes("N1") || raw.includes("N2")) {
     niveauOrder = 1;
     niveauLabel = "National";
@@ -168,11 +183,13 @@ function getNiveauColor(niveau: string): string {
   switch (niveau) {
     case "National": return "text-blue-700 bg-blue-50 border-blue-200";
     case "Regional": return "text-purple-700 bg-purple-50 border-purple-200";
+    case "Non publie": return "text-gray-600 bg-gray-50 border-gray-200";
     default: return "text-amber-700 bg-amber-50 border-amber-200";
   }
 }
 
 function getLevelBadgeColor(code: string): string {
+  if (code === "?") return "bg-gray-100 text-gray-500";
   if (code.startsWith("N")) return "bg-blue-100 text-blue-700";
   if (code.startsWith("R")) return "bg-purple-100 text-purple-700";
   return "bg-amber-100 text-amber-700";
