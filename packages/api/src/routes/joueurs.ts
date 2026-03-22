@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, desc, asc } from "drizzle-orm";
+import { eq, desc, asc, count } from "drizzle-orm";
 import { db } from "../db/connection.js";
 import {
   joueurs,
@@ -16,6 +16,25 @@ app.get("/joueurs", async (c) => {
     .from(joueurs)
     .orderBy(desc(joueurs.points_officiels));
 
+  // Count matches per player
+  const matchCounts = await db
+    .select({
+      licence: parties_individuelles.licence,
+      nb_matchs: count(),
+    })
+    .from(parties_individuelles)
+    .groupBy(parties_individuelles.licence);
+
+  const matchCountMap = new Map(matchCounts.map((m) => [m.licence, Number(m.nb_matchs)]));
+
+  const enriched = allJoueurs.map((j) => ({
+    ...j,
+    nb_matchs: matchCountMap.get(j.licence) ?? 0,
+    progression_mensuelle: j.points_mensuels && j.ancien_points_mensuels
+      ? Math.round((j.points_mensuels - j.ancien_points_mensuels) * 10) / 10
+      : null,
+  }));
+
   const syncRows = await db
     .select()
     .from(sync_status)
@@ -23,7 +42,7 @@ app.get("/joueurs", async (c) => {
 
   const lastSync = syncRows.length > 0 ? syncRows[0]!.last_run : null;
 
-  return c.json({ data: allJoueurs, lastSync });
+  return c.json({ data: enriched, lastSync });
 });
 
 app.get("/joueurs/:licence", async (c) => {
