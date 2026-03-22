@@ -100,9 +100,9 @@ function MatchDetail({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[#e2e8f0] text-[#64748b]">
-            <th className="text-left py-1 px-2">{equipeAName}</th>
+            <th className="text-left py-1 px-2">Joueur A</th>
             <th className="text-center py-1 px-2">Score</th>
-            <th className="text-left py-1 px-2">{equipeBName}</th>
+            <th className="text-left py-1 px-2">Joueur B</th>
             <th className="text-right py-1 px-2">Sets</th>
           </tr>
         </thead>
