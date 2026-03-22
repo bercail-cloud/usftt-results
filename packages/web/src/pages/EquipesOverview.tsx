@@ -260,16 +260,24 @@ function formatDate(dateStr: string | null): string {
   }
 }
 
-function getMaxJourneeForGroup(equipes: EnrichedEquipeItem[]): number {
-  let max = 0;
-  for (const item of equipes) {
-    for (const r of item.rencontres) {
-      if (r.journee !== null && r.journee > max) {
-        max = r.journee;
-      }
-    }
-  }
-  return max;
+function parseDate(d: string): number {
+  if (!d) return 0;
+  const parts = d.split("/");
+  if (parts.length === 3) return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).getTime();
+  return 0;
+}
+
+function formatShortDate(d: string): string {
+  if (!d) return "";
+  const parts = d.split("/");
+  if (parts.length >= 2) return `${parts[0]}/${parts[1]}`;
+  return d;
+}
+
+function getUsfttMatches(rencontres: Rencontre[]): Rencontre[] {
+  return rencontres
+    .filter((r) => r.equipe_a.toUpperCase().includes("FONTENAY") || r.equipe_b.toUpperCase().includes("FONTENAY"))
+    .sort((a, b) => parseDate(a.date_prevue) - parseDate(b.date_prevue));
 }
 
 // ---------------------------------------------------------------------------
@@ -321,8 +329,7 @@ function LevelGroupTable({
   levelGroup: LevelGroup;
   onRowClick: (id: number) => void;
 }) {
-  const maxJournee = getMaxJourneeForGroup(levelGroup.equipes);
-  const journees = Array.from({ length: maxJournee }, (_, i) => i + 1);
+  // No longer using journee columns
 
   return (
     <div
@@ -344,11 +351,7 @@ function LevelGroupTable({
               <th className="text-left px-5 py-2 font-semibold text-[#64748b] text-xs">Equipe</th>
               <th className="text-center px-3 py-2 font-semibold text-[#64748b] text-xs">Clt</th>
               <th className="text-center px-3 py-2 font-semibold text-[#64748b] text-xs">Pts</th>
-              {journees.map((j) => (
-                <th key={j} className="text-center px-3 py-2 font-semibold text-[#64748b] text-xs">
-                  J{j}
-                </th>
-              ))}
+              <th className="text-left px-3 py-2 font-semibold text-[#64748b] text-xs">Matchs</th>
             </tr>
           </thead>
           <tbody>
@@ -356,9 +359,7 @@ function LevelGroupTable({
               const classement = item.classements.find(
                 (c) => c.nom_equipe?.toUpperCase().includes("FONTENAY")
               ) ?? item.classements[0];
-              const rencontresByJournee = new Map(
-                item.rencontres.map((r) => [r.journee, r])
-              );
+              const matches = getUsfttMatches(item.rencontres);
               const badgeCode = item.parsed.badgeCode;
 
               return (
@@ -401,12 +402,43 @@ function LevelGroupTable({
                   <td className="px-3 py-3 text-center font-bold text-[#191c1e]">
                     {classement ? classement.points : "-"}
                   </td>
-                  {journees.map((j) => (
-                    <RencontreCell
-                      key={j}
-                      rencontre={rencontresByJournee.get(j)}
-                    />
-                  ))}
+                  <td className="px-3 py-2">
+                    <div className="flex gap-1.5 flex-wrap">
+                      {matches.map((r, mi) => {
+                        const opponent = r.is_domicile ? r.equipe_b : r.equipe_a;
+                        const shortOpp = opponent.split(" ").slice(0, 2).join(" ");
+                        const played = r.score_a !== null && r.score_b !== null;
+
+                        if (played) {
+                          const scoreUs = r.is_domicile ? r.score_a! : r.score_b!;
+                          const scoreThem = r.is_domicile ? r.score_b! : r.score_a!;
+                          const won = scoreUs > scoreThem;
+                          const draw = scoreUs === scoreThem;
+                          return (
+                            <span
+                              key={mi}
+                              className={`text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap ${
+                                won ? "bg-green-50 text-green-700" : draw ? "bg-gray-100 text-gray-600" : "bg-red-50 text-red-700"
+                              }`}
+                              title={`${formatShortDate(r.date_prevue)} - ${opponent} (${r.is_domicile ? "Dom" : "Ext"})`}
+                            >
+                              {scoreUs}-{scoreThem} {shortOpp}
+                            </span>
+                          );
+                        }
+
+                        return (
+                          <span
+                            key={mi}
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-[#f2f4f6] text-[#64748b] whitespace-nowrap"
+                            title={`${formatShortDate(r.date_prevue)} - ${opponent}`}
+                          >
+                            {r.is_domicile ? "D" : "E"} {shortOpp}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </td>
                 </tr>
               );
             })}
