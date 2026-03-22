@@ -163,6 +163,12 @@ function extractTeamNumber(libEquipe: string): number {
   return match ? parseInt(match[1]!, 10) : 999;
 }
 
+/** Format "FONTENAY USTT 3 - Phase 2" → "Equipe 3" */
+function formatTeamName(libEquipe: string): string {
+  const num = extractTeamNumber(libEquipe);
+  return num < 999 ? `Equipe ${num}` : libEquipe;
+}
+
 function groupEquipes(allEquipes: EquipeItem[]): PhaseSection[] {
   const enriched: EnrichedEquipeItem[] = allEquipes.map((item) => ({
     ...item,
@@ -372,7 +378,7 @@ function LevelGroupTable({
                         {badgeCode}{item.parsed.gender === "Dames" ? " F" : ""}
                       </span>
                       <span className="font-semibold text-[#191c1e] whitespace-nowrap">
-                        {item.equipe.lib_equipe}
+                        {formatTeamName(item.equipe.lib_equipe)}
                       </span>
                     </div>
                   </td>
