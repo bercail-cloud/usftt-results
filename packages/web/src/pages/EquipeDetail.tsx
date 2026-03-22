@@ -70,9 +70,11 @@ function isUsfttTeam(nomEquipe: string): boolean {
 function MatchDetail({
   equipeId,
   rencId,
+  fontenayIsSideA,
 }: {
   equipeId: string;
   rencId: string;
+  fontenayIsSideA: boolean;
 }) {
   const { data, isLoading, isError } = useRencontreDetail(
     equipeId,
@@ -111,7 +113,7 @@ function MatchDetail({
                 <ScoreBadge
                   scoreA={partie.score_a}
                   scoreB={partie.score_b}
-                  isVictory={partie.score_a > partie.score_b}
+                  isVictory={fontenayIsSideA ? partie.score_a > partie.score_b : partie.score_b > partie.score_a}
                 />
               </td>
               <td className="py-1.5 px-2">
@@ -355,7 +357,7 @@ export function EquipeDetail() {
                         </div>
 
                         {isExpanded && id && (
-                          <MatchDetail equipeId={id} rencId={String(renc.id)} />
+                          <MatchDetail equipeId={id} rencId={String(renc.id)} fontenayIsSideA={renc.equipe_a.toUpperCase().includes("FONTENAY")} />
                         )}
                       </div>
                     );
