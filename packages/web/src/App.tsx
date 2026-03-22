@@ -5,6 +5,7 @@ import { EquipeDetail } from "./pages/EquipeDetail";
 import { CriteriumOverview } from "./pages/CriteriumOverview";
 import { CriteriumDetail } from "./pages/CriteriumDetail";
 import { Progression } from "./pages/Progression";
+import { ProgressionDetail } from "./pages/ProgressionDetail";
 
 export function App() {
   return (
@@ -21,6 +22,7 @@ export function App() {
             element={<CriteriumDetail />}
           />
           <Route path="/progression" element={<Progression />} />
+          <Route path="/progression/:licence" element={<ProgressionDetail />} />
           <Route path="*" element={<Navigate to="/equipes" replace />} />
         </Routes>
       </main>
