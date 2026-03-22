@@ -172,7 +172,7 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
                   }`}
                   aria-selected={isSelected}
                 >
-                  <td className={`px-3 py-3 text-center text-[#737686] border-l-[3px] ${j.sexe === "F" ? "border-l-pink-400" : "border-l-blue-400"}`} title={CATEGORIE_LABELS[j.categorie ?? ""] ?? ""}>
+                  <td className={`px-3 py-3 text-center text-[#737686] border-l-[4px] ${j.sexe === "F" ? "border-l-pink-400" : "border-l-blue-400"}`} title={CATEGORIE_LABELS[j.categorie ?? ""] ?? ""}>
                     {j.categorie ?? "—"}
                   </td>
                   <td className="px-5 py-3 font-semibold text-[#191c1e] whitespace-nowrap">
