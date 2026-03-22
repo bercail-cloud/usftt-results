@@ -320,7 +320,11 @@ function TourResultsTable({
 
                     {/* Rang */}
                     <span className="w-12 flex justify-center">
-                      {j.rang > 0 && <RankCircle rank={j.rang} />}
+                      {j.rang > 0 && (
+                        j.rang <= 4
+                          ? <RankCircle rank={j.rang} />
+                          : <span className="text-sm text-[#64748b]">{j.rang}</span>
+                      )}
                     </span>
 
                     {/* Bilan */}
