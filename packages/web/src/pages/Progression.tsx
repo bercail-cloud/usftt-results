@@ -79,11 +79,6 @@ const SEXES = [
   { value: "F", label: "F" },
 ] as const;
 
-const TYPE_LICENCES = [
-  { value: "", label: "Toutes" },
-  { value: "T", label: "T" },
-  { value: "P", label: "P" },
-] as const;
 
 const CATEGORIE_LABELS: Record<string, string> = {
   S: "Senior",
@@ -206,9 +201,6 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
               <th className="text-center px-3 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
                 Sexe
               </th>
-              <th className="text-center px-3 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
-                Type
-              </th>
               <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
                 Pts officiels
               </th>
@@ -251,9 +243,6 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
                   </td>
                   <td className="px-3 py-3 text-center text-[#737686]">
                     {j.sexe ?? "—"}
-                  </td>
-                  <td className="px-3 py-3 text-center text-[#737686]">
-                    {j.type_licence ?? "—"}
                   </td>
                   <td className="px-4 py-3 text-right text-[#191c1e] font-mono tabular-nums">
                     {j.points_officiels ?? "—"}
@@ -473,7 +462,6 @@ export function Progression() {
   const [selectedLicence, setSelectedLicence] = useState("");
   const [filterCategorie, setFilterCategorie] = useState("");
   const [filterSexe, setFilterSexe] = useState("");
-  const [filterType, setFilterType] = useState("");
 
   const detailRef = useRef<HTMLDivElement>(null);
 
@@ -488,7 +476,6 @@ export function Progression() {
     .filter((j) => {
       if (filterCategorie && j.categorie !== filterCategorie) return false;
       if (filterSexe && j.sexe !== filterSexe) return false;
-      if (filterType && j.type_licence !== filterType) return false;
       return true;
     })
     .slice()
@@ -545,12 +532,6 @@ export function Progression() {
             <span className="text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
               Type licence
             </span>
-            <PillTabs
-              options={TYPE_LICENCES}
-              value={filterType}
-              onChange={setFilterType}
-              label="Filtrer par type de licence"
-            />
           </div>
         </div>
       </div>
