@@ -164,6 +164,15 @@ function extractTeamNumber(libEquipe: string): number {
   return match ? parseInt(match[1]!, 10) : 999;
 }
 
+/** Truncate opponent name: "FUTURO VALVERT TT 1" → "FUTURO V." */
+function truncateOpponent(name: string): string {
+  const words = name.split(/\s+/);
+  if (words.length <= 1) return name;
+  const first = words[0]!;
+  if (first.length > 8) return first.slice(0, 8) + ".";
+  return first;
+}
+
 /** Format "FONTENAY USTT 3 - Phase 2" → "Equipe 3" */
 function formatTeamName(libEquipe: string): string {
   const num = extractTeamNumber(libEquipe);
@@ -365,10 +374,10 @@ function LevelGroupTable({
                     {classement ? classement.points : "-"}
                   </td>
                   <td className="px-3 py-2">
-                    <div className="flex gap-1.5 flex-wrap">
+                    <div className="grid grid-cols-7 gap-1" style={{ minWidth: "350px" }}>
                       {matches.map((r, mi) => {
                         const opponent = r.is_domicile ? r.equipe_b : r.equipe_a;
-                        const shortOpp = opponent.split(" ").slice(0, 2).join(" ");
+                        const shortOpp = truncateOpponent(opponent);
                         const played = r.score_a !== null && r.score_b !== null;
 
                         if (played) {
@@ -376,27 +385,30 @@ function LevelGroupTable({
                           const scoreThem = r.is_domicile ? r.score_b! : r.score_a!;
                           const won = scoreUs > scoreThem;
                           const draw = scoreUs === scoreThem;
+                          const bg = won ? "bg-green-50" : draw ? "bg-amber-50" : "bg-red-50";
+                          const color = won ? "text-green-700" : draw ? "text-amber-700" : "text-red-700";
+                          const colorSub = won ? "text-green-600" : draw ? "text-amber-600" : "text-red-600";
                           return (
-                            <span
+                            <div
                               key={mi}
-                              className={`text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap ${
-                                won ? "bg-green-50 text-green-700" : draw ? "bg-gray-100 text-gray-600" : "bg-red-50 text-red-700"
-                              }`}
-                              title={`${formatShortDate(r.date_prevue)} - ${opponent} (${r.is_domicile ? "Dom" : "Ext"})`}
+                              className={`${bg} rounded-md px-1 py-1.5 text-center`}
+                              title={`${r.date_prevue} - ${opponent} (${r.is_domicile ? "Dom" : "Ext"})`}
                             >
-                              {scoreUs}-{scoreThem} {shortOpp}
-                            </span>
+                              <div className={`text-xs font-extrabold ${color}`}>{scoreUs}-{scoreThem}</div>
+                              <div className={`text-[7px] ${colorSub} truncate`}>{shortOpp}</div>
+                            </div>
                           );
                         }
 
                         return (
-                          <span
+                          <div
                             key={mi}
-                            className="text-[10px] px-1.5 py-0.5 rounded bg-[#f2f4f6] text-[#64748b] whitespace-nowrap"
-                            title={`${formatShortDate(r.date_prevue)} - ${opponent}`}
+                            className="bg-[#f7f9fb] rounded-md px-1 py-1.5 text-center border border-dashed border-[#e2e8f0]"
+                            title={`${r.date_prevue} - ${opponent}`}
                           >
-                            {r.is_domicile ? "D" : "E"} {shortOpp}
-                          </span>
+                            <div className="text-[10px] text-[#94a3b8]">{formatShortDate(r.date_prevue)}</div>
+                            <div className="text-[7px] text-[#94a3b8] truncate">{r.is_domicile ? "D" : "E"} {shortOpp}</div>
+                          </div>
                         );
                       })}
                     </div>
