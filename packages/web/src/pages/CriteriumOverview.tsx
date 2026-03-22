@@ -46,9 +46,9 @@ function parseDivision(raw: string): {
   const gender = genderMatch ? genderMatch[1]! : "";
 
   // Determine niveau
-  let niveauOrder = 3;
-  let niveauLabel = "Departemental";
-  let levelCode = "";
+  let niveauOrder: number;
+  let niveauLabel: string;
+  let levelCode: string;
 
   if (raw === "Non publie" || raw === "") {
     niveauOrder = 4;
@@ -80,6 +80,8 @@ function parseDivision(raw: string): {
     const rMatch = raw.match(/R(\d)/);
     levelCode = rMatch ? `R${rMatch[1]}` : "R1";
   } else {
+    niveauOrder = 3;
+    niveauLabel = "Departemental";
     // Match "_D2", "-D1", etc. (the division level, not the department code D94)
     const dMatch = raw.match(/[_-]D(\d)/);
     levelCode = dMatch ? `D${dMatch[1]}` : "D1";
