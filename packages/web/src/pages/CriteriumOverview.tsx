@@ -312,14 +312,13 @@ function TourResultsTable({
                       <span className="text-error font-medium">{j.defaites}D</span>
                     </span>
 
-                    {/* Rang */}
+                    {/* Rang + Points (hide for unpublished) */}
                     <span className="w-12 flex justify-center">
-                      <RankCircle rank={j.rang} />
+                      {j.rang > 0 && <RankCircle rank={j.rang} />}
                     </span>
 
-                    {/* Points */}
                     <span className="text-sm font-semibold text-[#0f172a] w-16 text-right">
-                      {j.points}
+                      {j.points || ""}
                     </span>
                   </div>
                 ))}
