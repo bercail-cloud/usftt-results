@@ -333,6 +333,9 @@ function TourResultsTable({
 
 export function CriteriumOverview() {
   const navigate = useNavigate();
+  const searchParams = new URLSearchParams(window.location.search);
+  const tourFromUrl = searchParams.get("tour");
+
   const { data: toursData, isLoading: toursLoading, isError: toursError } =
     useCriteriumTours() as {
       data: TourSummary[] | undefined;
@@ -346,7 +349,8 @@ export function CriteriumOverview() {
   const latestTour = hasRealTours
     ? (tourNumbers.filter((t) => t > 0).at(-1) ?? 1)
     : (tourNumbers[0] ?? 0);
-  const [activeTour, setActiveTour] = useState<number | null>(null);
+  const defaultTour = tourFromUrl ? parseInt(tourFromUrl, 10) : null;
+  const [activeTour, setActiveTour] = useState<number | null>(defaultTour);
 
   const currentTour = activeTour ?? latestTour;
   const currentTourData = availableTours.find((t) => t.tour === currentTour);
