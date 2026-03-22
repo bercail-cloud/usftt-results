@@ -34,6 +34,33 @@ interface Partie {
   adversaire_classement: number;
   victoire: boolean;
   points_resultat: number;
+  epreuve: string;
+}
+
+function formatEpreuve(code: string): string {
+  switch (code) {
+    case "1": return "Équipes";
+    case "2": return "Équipes";
+    case "I": return "Critérium";
+    case "T": return "Tournoi";
+    case "+": return "Amical";
+    case "#": return "Coupe";
+    case "B": return "Coupe";
+    case "V": return "Vétérans";
+    case "H": return "Handicap";
+    default: return code;
+  }
+}
+
+function getEpreuveBadgeColor(code: string): string {
+  switch (code) {
+    case "1": case "2": return "bg-blue-50 text-blue-700";
+    case "I": return "bg-purple-50 text-purple-700";
+    case "T": return "bg-amber-50 text-amber-700";
+    case "+": return "bg-gray-100 text-gray-600";
+    case "#": case "B": return "bg-green-50 text-green-700";
+    default: return "bg-gray-100 text-gray-600";
+  }
 }
 
 interface JoueursResponse {
@@ -230,6 +257,9 @@ export function ProgressionDetail() {
                   <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
                     Date
                   </th>
+                  <th className="text-center px-3 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
+                    Type
+                  </th>
                   <th className="text-left px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
                     Adversaire
                   </th>
@@ -252,6 +282,11 @@ export function ProgressionDetail() {
                   >
                     <td className="px-5 py-3 text-[#737686] whitespace-nowrap">
                       {formatDate(partie.date_partie)}
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${getEpreuveBadgeColor(partie.epreuve)}`}>
+                        {formatEpreuve(partie.epreuve)}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-[#191c1e] font-medium">
                       {partie.adversaire_nom}
