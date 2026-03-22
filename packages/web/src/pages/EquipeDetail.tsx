@@ -250,8 +250,9 @@ export function EquipeDetail() {
       {rencontres.length > 0 && (() => {
         // Extract journee from libelle (e.g., "Poule 4 - tour n°1 du 06/02/2026" → "tour 1")
         function extractJournee(libelle: string): string {
-          const match = libelle.match(/tour\s*n?°?\s*(\d+)/i);
-          return match ? `Journee ${match[1]}` : libelle.split(" du ")[0] ?? libelle;
+          // Handle broken encoding: n°, n�, nÂ°
+          const match = libelle.match(/tour\s*n?[°�Â°]?\s*(\d+)/i);
+          return match ? `Journee ${match[1]}` : libelle.split(" du ")[0]?.replace(/[�Â°]/g, "°") ?? libelle;
         }
         function extractDate(libelle: string): string {
           const match = libelle.match(/(\d{2}\/\d{2}\/\d{4})/);
