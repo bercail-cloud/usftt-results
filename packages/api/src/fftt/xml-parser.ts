@@ -127,6 +127,7 @@ export interface Partie {
   pointres: string;
   coefchamp: string;
   advclaof: string;
+  idpartie: string;
 }
 
 export interface Historique {
@@ -308,6 +309,7 @@ export function parseParties(xml: string): Partie[] {
     pointres: getString(raw.pointres),
     coefchamp: getString(raw.coefchamp),
     advclaof: getString(raw.advclaof),
+    idpartie: getString(raw.idpartie),
   }));
 }
 
@@ -414,5 +416,24 @@ export function parseResultIndivParties(xml: string): ResultIndivPartie[] {
     vain: getString(raw.vain),
     perd: getString(raw.perd),
     forfait: raw.forfait !== undefined && raw.forfait !== null,
+  }));
+}
+
+/**
+ * Parse xml_partie (SPID) response
+ * Returns: [{ date, nom, classement, epreuve, victoire, forfait, idpartie, coefchamp }]
+ */
+export function parsePartieSpid(xml: string) {
+  const data = parseXml(xml) as { liste?: { partie?: unknown } };
+  const items = toArray(data.liste?.partie as Record<string, unknown> | Record<string, unknown>[] | undefined);
+  return items.map((raw) => ({
+    date: getString(raw.date),
+    nom: getString(raw.nom),
+    classement: getString(raw.classement),
+    epreuve: getString(raw.epreuve),
+    victoire: getString(raw.victoire),
+    forfait: getString(raw.forfait),
+    idpartie: getString(raw.idpartie),
+    coefchamp: getString(raw.coefchamp),
   }));
 }

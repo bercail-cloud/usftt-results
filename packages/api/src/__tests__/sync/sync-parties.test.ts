@@ -2,13 +2,15 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../../fftt/endpoints.js", () => ({
   getPartieMysql: vi.fn(),
+  getPartieSpid: vi.fn(),
 }));
 
-import { getPartieMysql } from "../../fftt/endpoints.js";
+import { getPartieMysql, getPartieSpid } from "../../fftt/endpoints.js";
 import { syncParties } from "../../sync/sync-parties.js";
 import type { SyncDb } from "../../sync/sync-equipes.js";
 
 const mockGetPartieMysql = vi.mocked(getPartieMysql);
+const mockGetPartieSpid = vi.mocked(getPartieSpid);
 
 const FFTT_CONFIG = {
   appId: "A001",
@@ -30,6 +32,7 @@ function makeApiPartie(overrides: Record<string, string> = {}) {
     pointres: "2.5",
     coefchamp: "1.0",
     advclaof: "1600",
+    idpartie: "999",
     ...overrides,
   };
 }
@@ -38,6 +41,7 @@ function makeApiPartie(overrides: Record<string, string> = {}) {
 describe("syncParties", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetPartieSpid.mockResolvedValue([]);
   });
 
   it("gets all joueurs licences from DB", async () => {

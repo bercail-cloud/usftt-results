@@ -106,6 +106,8 @@ export const parties_individuelles = pgTable("parties_individuelles", {
   coefficient: real("coefficient").notNull(),
   date_partie: varchar("date_partie").notNull(),
   epreuve: varchar("epreuve").notNull(),
+  epreuve_libelle: varchar("epreuve_libelle"),
+  id_partie: varchar("id_partie"),
   journee: integer("journee").notNull(),
 });
 
