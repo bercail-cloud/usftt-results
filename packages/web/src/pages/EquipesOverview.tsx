@@ -376,13 +376,15 @@ function LevelGroupTable({
                   <td className="px-3 py-2">
                     <div className="grid grid-cols-7 gap-1" style={{ minWidth: "350px" }}>
                       {matches.map((r, mi) => {
-                        const opponent = r.is_domicile ? r.equipe_b : r.equipe_a;
+                        // Determine domicile from equipe_a containing FONTENAY
+                        const isDom = r.equipe_a.toUpperCase().includes("FONTENAY");
+                        const opponent = isDom ? r.equipe_b : r.equipe_a;
                         const shortOpp = truncateOpponent(opponent);
                         const played = r.score_a !== null && r.score_b !== null;
 
                         if (played) {
-                          const scoreUs = r.is_domicile ? r.score_a! : r.score_b!;
-                          const scoreThem = r.is_domicile ? r.score_b! : r.score_a!;
+                          const scoreUs = isDom ? r.score_a! : r.score_b!;
+                          const scoreThem = isDom ? r.score_b! : r.score_a!;
                           const won = scoreUs > scoreThem;
                           const draw = scoreUs === scoreThem;
                           const bg = won ? "bg-green-50" : draw ? "bg-amber-50" : "bg-red-50";
@@ -392,7 +394,7 @@ function LevelGroupTable({
                             <div
                               key={mi}
                               className={`${bg} rounded-md px-1 py-1.5 text-center`}
-                              title={`${r.date_prevue} - ${opponent} (${r.is_domicile ? "Dom" : "Ext"})`}
+                              title={`${r.date_prevue} - ${opponent} (${isDom ? "Dom" : "Ext"})`}
                             >
                               <div className={`text-xs font-extrabold ${color}`}>{scoreUs}-{scoreThem}</div>
                               <div className={`text-[7px] ${colorSub} truncate`}>{shortOpp}</div>
@@ -407,7 +409,7 @@ function LevelGroupTable({
                             title={`${r.date_prevue} - ${opponent}`}
                           >
                             <div className="text-[10px] text-[#94a3b8]">{formatShortDate(r.date_prevue)}</div>
-                            <div className="text-[7px] text-[#94a3b8] truncate">{r.is_domicile ? "D" : "E"} {shortOpp}</div>
+                            <div className="text-[7px] text-[#94a3b8] truncate">{isDom ? "D" : "E"} {shortOpp}</div>
                           </div>
                         );
                       })}
