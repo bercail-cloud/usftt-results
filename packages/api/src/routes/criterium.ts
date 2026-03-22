@@ -255,14 +255,28 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
         )
       );
 
-    poolMatches = allPoolParties.map((p) => ({
-      libelle: "Poule",
-      victoire: p.victoire,
-      adversaire: p.adversaire_nom,
-      adversaireClassement: p.adversaire_classement,
-      pointsResultat: p.points_resultat,
-      forfait: false,
-    }));
+    // Build set of elimination phase adversary names (to deduplicate)
+    const elimAdversaries = new Set(
+      playerMatches.map((m) => {
+        const isWinner = m.vainqueur.toUpperCase().startsWith(namePrefix);
+        return (isWinner ? m.perdant : m.vainqueur).toUpperCase().split(" ")[0];
+      })
+    );
+
+    poolMatches = allPoolParties
+      .filter((p) => {
+        // Exclude matches that are already in elimination phases
+        const advLastName = p.adversaire_nom.toUpperCase().split(" ")[0];
+        return !elimAdversaries.has(advLastName);
+      })
+      .map((p) => ({
+        libelle: "Poule",
+        victoire: p.victoire,
+        adversaire: p.adversaire_nom,
+        adversaireClassement: p.adversaire_classement,
+        pointsResultat: p.points_resultat,
+        forfait: false,
+      }));
   }
 
   // Combine: pool matches first, then elimination phase matches
