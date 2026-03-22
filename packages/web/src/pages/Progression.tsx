@@ -256,7 +256,7 @@ export function Progression() {
 
   const filteredJoueurs = allJoueurs
     .filter((j) => {
-      if (filterCategorie && j.categorie !== filterCategorie) return false;
+      if (filterCategorie && !(j.categorie ?? "").startsWith(filterCategorie)) return false;
       if (filterSexe && j.sexe !== filterSexe) return false;
       return true;
     })
