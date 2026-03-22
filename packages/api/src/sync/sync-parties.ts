@@ -1,4 +1,4 @@
-import { getPartieMysql } from "../fftt/endpoints.js";
+import { getPartieMysql, getPartieSpid } from "../fftt/endpoints.js";
 import { joueurs, parties_individuelles } from "../db/schema.js";
 import { eq, sql } from "drizzle-orm";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
@@ -36,18 +36,36 @@ export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<n
       continue;
     }
 
-    const rows = parties.map((partie) => ({
-      licence: partie.licence,
-      adversaire_licence: partie.advlic || "",
-      adversaire_nom: partie.advnompre || "",
-      adversaire_classement: safeInt(partie.advclaof),
-      victoire: partie.vd === "V",
-      points_resultat: safeFloat(partie.pointres),
-      coefficient: safeFloat(partie.coefchamp),
-      date_partie: partie.date || "",
-      epreuve: partie.codechamp || "",
-      journee: safeInt(partie.numjourn),
-    }));
+    // Get SPID parties for epreuve libelle (uses idpartie to cross-reference)
+    let spidEpreuveMap = new Map<string, string>();
+    try {
+      const spidParties = await getPartieSpid(joueur.licence, appId, serie, password);
+      spidEpreuveMap = new Map(
+        spidParties.map((p) => [p.idpartie, p.epreuve])
+      );
+    } catch {
+      // xml_partie may fail for some players, continue without libelle
+    }
+
+    const rows = parties.map((partie) => {
+      const idPartie = partie.idpartie || "";
+      const epreuveLibelle = spidEpreuveMap.get(idPartie) || null;
+
+      return {
+        licence: partie.licence,
+        adversaire_licence: partie.advlic || "",
+        adversaire_nom: partie.advnompre || "",
+        adversaire_classement: safeInt(partie.advclaof),
+        victoire: partie.vd === "V",
+        points_resultat: safeFloat(partie.pointres),
+        coefficient: safeFloat(partie.coefchamp),
+        date_partie: partie.date || "",
+        epreuve: partie.codechamp || "",
+        epreuve_libelle: epreuveLibelle,
+        id_partie: idPartie || null,
+        journee: safeInt(partie.numjourn),
+      };
+    });
 
     // Delete existing parties for this player, then re-insert all
     await db

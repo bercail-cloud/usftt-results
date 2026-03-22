@@ -35,6 +35,7 @@ interface Partie {
   victoire: boolean;
   points_resultat: number;
   epreuve: string;
+  epreuve_libelle: string | null;
 }
 
 function formatEpreuve(code: string): string {
@@ -284,8 +285,13 @@ export function ProgressionDetail() {
                       {formatDate(partie.date_partie)}
                     </td>
                     <td className="px-3 py-3 text-center">
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${getEpreuveBadgeColor(partie.epreuve)}`}>
-                        {formatEpreuve(partie.epreuve)}
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${getEpreuveBadgeColor(partie.epreuve)}`}
+                        title={partie.epreuve_libelle ?? formatEpreuve(partie.epreuve)}
+                      >
+                        {partie.epreuve_libelle
+                          ? partie.epreuve_libelle.replace(/^FED_/, "").replace(/^L\d+_/, "").slice(0, 20)
+                          : formatEpreuve(partie.epreuve)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-[#191c1e] font-medium">

@@ -7,6 +7,7 @@ import {
   parseJoueurs,
   parseLicenceB,
   parseParties,
+  parsePartieSpid,
   parseHistorique,
   parseEpreuves,
   parseDivisions,
@@ -264,4 +265,21 @@ export async function getResultIndivParties(
     password
   );
   return parseResultIndivParties(xml);
+}
+
+/** xml_partie (SPID) - returns parties with epreuve libelle */
+export async function getPartieSpid(
+  numlic: string,
+  appId: string,
+  serie: string,
+  password: string
+) {
+  const xml = await fetchFftt(
+    "xml_partie",
+    { numlic },
+    appId,
+    serie,
+    password
+  );
+  return parsePartieSpid(xml);
 }

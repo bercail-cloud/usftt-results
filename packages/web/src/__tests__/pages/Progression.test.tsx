@@ -123,7 +123,7 @@ describe("Progression", () => {
     });
     renderPage();
     const categoryGroup = screen.getByRole("group", { name: /catégorie/i });
-    const sPill = categoryGroup.querySelector("button:nth-child(2)")!;
+    const sPill = categoryGroup.querySelector("button:nth-child(7)")!;
     fireEvent.click(sPill);
     expect(screen.getByText("Dupont Jean")).toBeInTheDocument();
     expect(screen.queryByText("Martin Alice")).not.toBeInTheDocument();
