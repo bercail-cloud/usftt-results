@@ -303,7 +303,7 @@ function TourResultsTable({
                   <div
                     key={`${j.licence}-${j.division}`}
                     className={`flex items-center px-5 py-3.5 cursor-pointer transition-colors hover:bg-[#eff6ff] ${
-                      idx % 2 === 0 ? "bg-[#f7f9fb]" : "bg-white"
+                      idx % 2 === 0 ? "bg-white" : "bg-[#f7f9fb]"
                     }`}
                     onClick={() => j.licence && onRowClick(j.licence)}
                   >

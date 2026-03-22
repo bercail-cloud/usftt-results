@@ -365,7 +365,7 @@ function LevelGroupTable({
                 <tr
                   key={item.equipe.id}
                   className={`cursor-pointer transition-colors hover:bg-[#eff6ff] ${
-                    idx % 2 === 0 ? "bg-[#f7f9fb]" : "bg-white"
+                    idx % 2 === 0 ? "bg-white" : "bg-[#f7f9fb]"
                   }`}
                   onClick={() => onRowClick(item.equipe.id)}
                 >
