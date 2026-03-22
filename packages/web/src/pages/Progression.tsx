@@ -121,10 +121,38 @@ interface PlayersTableProps {
   onSelect: (licence: string) => void;
 }
 
+type SortKey = "points_mensuels" | "points_officiels" | "points_initm" | "progression_mensuelle" | "nb_matchs";
+type SortDir = "asc" | "desc";
+
 function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps) {
+  const [sortKey, setSortKey] = useState<SortKey>("points_mensuels");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir(sortDir === "desc" ? "asc" : "desc");
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  }
+
+  const sorted = joueurs.slice().sort((a, b) => {
+    const av = a[sortKey] ?? 0;
+    const bv = b[sortKey] ?? 0;
+    return sortDir === "desc" ? bv - av : av - bv;
+  });
+
+  function SortIndicator({ col }: { col: SortKey }) {
+    if (sortKey !== col) return <span className="text-[#c3c6d7] ml-1">↕</span>;
+    return <span className="text-[#2563eb] ml-1">{sortDir === "desc" ? "↓" : "↑"}</span>;
+  }
+
   if (joueurs.length === 0) {
     return <EmptyState message="Aucun joueur ne correspond aux filtres" />;
   }
+
+  const thClass = "text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap cursor-pointer select-none hover:text-[#191c1e] transition-colors";
 
   return (
     <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
@@ -138,25 +166,25 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
               <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
                 Nom Prénom
               </th>
-              <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
-                Mensuel
+              <th className={thClass} onClick={() => handleSort("points_mensuels")}>
+                Mensuel<SortIndicator col="points_mensuels" />
               </th>
-              <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
-                Officiel
+              <th className={thClass} onClick={() => handleSort("points_officiels")}>
+                Officiel<SortIndicator col="points_officiels" />
               </th>
-              <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
-                Début saison
+              <th className={thClass} onClick={() => handleSort("points_initm")}>
+                Début saison<SortIndicator col="points_initm" />
               </th>
-              <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
-                Progression
+              <th className={thClass} onClick={() => handleSort("progression_mensuelle")}>
+                Progression<SortIndicator col="progression_mensuelle" />
               </th>
-              <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
-                Matchs
+              <th className={thClass} onClick={() => handleSort("nb_matchs")}>
+                Matchs<SortIndicator col="nb_matchs" />
               </th>
             </tr>
           </thead>
           <tbody>
-            {joueurs.map((j, idx) => {
+            {sorted.map((j, idx) => {
               const isSelected = j.licence === selectedLicence;
               const prog = j.progression_mensuelle ?? 0;
               return (
