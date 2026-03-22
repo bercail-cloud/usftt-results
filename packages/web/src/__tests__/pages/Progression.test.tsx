@@ -71,7 +71,7 @@ describe("Progression", () => {
 
     renderPage();
     expect(
-      screen.getByRole("combobox", { name: /selectionner un joueur/i })
+      screen.getByRole("combobox", { name: /sélectionner un joueur/i })
     ).toBeInTheDocument();
   });
 
@@ -96,7 +96,7 @@ describe("Progression", () => {
 
     renderPage();
     expect(
-      screen.getByText(/Selectionnez un joueur pour voir sa progression/)
+      screen.getByText(/Sélectionnez un joueur pour voir sa progression/)
     ).toBeInTheDocument();
   });
 

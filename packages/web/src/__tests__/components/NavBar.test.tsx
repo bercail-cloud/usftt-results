@@ -19,7 +19,7 @@ describe("NavBar", () => {
 
   it("renders the brand name", () => {
     renderNavBar();
-    expect(screen.getByText("USFTT Resultats")).toBeInTheDocument();
+    expect(screen.getByText("USFTT Résultats")).toBeInTheDocument();
   });
 
   it("renders 3 navigation links", () => {
@@ -29,12 +29,12 @@ describe("NavBar", () => {
 
   it("renders the Equipes link", () => {
     renderNavBar();
-    expect(screen.getByRole("link", { name: "Equipes" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Équipes" })).toBeInTheDocument();
   });
 
   it("renders the Criterium link", () => {
     renderNavBar();
-    expect(screen.getByRole("link", { name: "Criterium" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Critérium" })).toBeInTheDocument();
   });
 
   it("renders the Progression link", () => {

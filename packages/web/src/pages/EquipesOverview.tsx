@@ -174,10 +174,20 @@ function truncateOpponent(name: string): string {
   return cleaned.slice(0, 11) + ".";
 }
 
-/** Format "FONTENAY USTT 3 - Phase 2" → "Equipe 3" */
+/** Format "FONTENAY USTT 3 - Phase 2" → "Équipe 3" */
 function formatTeamName(libEquipe: string): string {
   const num = extractTeamNumber(libEquipe);
-  return num < 999 ? `Equipe ${num}` : libEquipe;
+  return num < 999 ? `Équipe ${num}` : libEquipe;
+}
+
+/** Display level names with proper French accents */
+function formatLevelName(level: Level): string {
+  switch (level) {
+    case "Nationale": return "Nationale";
+    case "Regionale": return "Régionale";
+    case "Departementale": return "Départementale";
+    case "Jeunes": return "Jeunes";
+  }
 }
 
 function groupEquipes(allEquipes: EquipeItem[]): PhaseSection[] {
@@ -329,7 +339,7 @@ function LevelGroupTable({
         className={`px-6 py-3 font-extrabold text-sm ${getLevelHeaderColor(levelGroup.level)}`}
         style={{ fontFamily: "Manrope, sans-serif" }}
       >
-        {levelGroup.level}
+        {formatLevelName(levelGroup.level)}
       </div>
 
       {/* Table */}
@@ -337,7 +347,7 @@ function LevelGroupTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[#f7f9fb]">
-              <th className="text-left px-5 py-2 font-semibold text-[#64748b] text-xs">Equipe</th>
+              <th className="text-left px-5 py-2 font-semibold text-[#64748b] text-xs">Équipe</th>
               <th className="text-center px-3 py-2 font-semibold text-[#64748b] text-xs">Clt</th>
               <th className="text-center px-3 py-2 font-semibold text-[#64748b] text-xs">Pts</th>
               <th className="text-left px-3 py-2 font-semibold text-[#64748b] text-xs">Matchs</th>
@@ -481,7 +491,7 @@ function PhaseSectionView({
         >
           {section.phase}
         </h2>
-        <span className="text-sm text-[#94a3b8]">({totalEquipes} equipes)</span>
+        <span className="text-sm text-[#94a3b8]">({totalEquipes} équipes)</span>
       </div>
 
       {section.levelGroups.map((lg) => (
@@ -520,11 +530,11 @@ export function EquipesOverview() {
           className="text-2xl font-extrabold text-[#191c1e]"
           style={{ fontFamily: "Manrope, sans-serif" }}
         >
-          Resultats par equipes
+          Résultats par équipes
         </h1>
         {data?.lastSync && (
           <p className="text-xs text-[#94a3b8] mt-1">
-            Derniere mise a jour : {formatDate(data.lastSync)}
+            Dernière mise à jour : {formatDate(data.lastSync)}
           </p>
         )}
       </div>
@@ -543,7 +553,7 @@ export function EquipesOverview() {
       )}
 
       {!isLoading && !isError && sections.length === 0 && (
-        <EmptyState message="Aucune equipe trouvee" />
+        <EmptyState message="Aucune équipe trouvée" />
       )}
 
       {!isLoading && !isError && sections.length > 0 && (
@@ -561,7 +571,7 @@ export function EquipesOverview() {
       {/* Legend */}
       {!isLoading && !isError && sections.length > 0 && (
         <p className="text-xs text-[#94a3b8]">
-          D = Domicile &nbsp;&middot;&nbsp; E = Exterieur
+          D = Domicile &nbsp;&middot;&nbsp; E = Extérieur
         </p>
       )}
     </div>

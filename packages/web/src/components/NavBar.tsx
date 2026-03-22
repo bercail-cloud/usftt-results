@@ -3,8 +3,8 @@ import { NavLink } from "react-router";
 import { SyncButton } from "./SyncButton.js";
 
 const NAV_LINKS = [
-  { to: "/equipes", label: "Equipes" },
-  { to: "/criterium", label: "Criterium" },
+  { to: "/equipes", label: "Équipes" },
+  { to: "/criterium", label: "Critérium" },
   { to: "/progression", label: "Progression" },
 ];
 
@@ -20,7 +20,7 @@ export function NavBar() {
   return (
     <nav className="bg-bg-card border-b border-border">
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-14">
-        <span className="font-bold text-primary text-lg">USFTT Resultats</span>
+        <span className="font-bold text-primary text-lg">USFTT Résultats</span>
 
         {/* Desktop links */}
         <div className="hidden sm:flex items-center gap-6">

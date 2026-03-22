@@ -53,7 +53,7 @@ function parseDivision(raw: string): {
 
   if (raw === "Non publie" || raw === "") {
     niveauOrder = 4;
-    niveauLabel = "Resultats non trouves sur la FFTT";
+    niveauLabel = "Resultats non trouves sur la FFTT";  // key value, displayed via formatNiveauLabel
     levelCode = "?";
     return {
       niveauOrder,
@@ -206,6 +206,16 @@ function getNiveauHeaderColor(niveau: string): string {
   }
 }
 
+function formatNiveauLabel(niveau: string): string {
+  switch (niveau) {
+    case "National": return "National";
+    case "Regional": return "Régional";
+    case "Departemental": return "Départemental";
+    case "Resultats non trouves sur la FFTT": return "Résultats non trouvés sur la FFTT";
+    default: return niveau;
+  }
+}
+
 function getLevelBadgeColor(code: string): string {
   if (code === "?") return "bg-gray-100 text-gray-500";
   if (code.startsWith("N")) return "bg-blue-100 text-blue-700";
@@ -229,10 +239,10 @@ function TourResultsTable({
   };
 
   if (isLoading) return <LoadingSkeleton lines={5} />;
-  if (isError) return <EmptyState message="Erreur lors du chargement des resultats" />;
+  if (isError) return <EmptyState message="Erreur lors du chargement des résultats" />;
 
   const joueurs = data ?? [];
-  if (joueurs.length === 0) return <EmptyState message="Aucun resultat pour ce tour" />;
+  if (joueurs.length === 0) return <EmptyState message="Aucun résultat pour ce tour" />;
 
   const totalVictoires = joueurs.reduce((s, j) => s + j.victoires, 0);
   const totalDefaites = joueurs.reduce((s, j) => s + j.defaites, 0);
@@ -253,7 +263,7 @@ function TourResultsTable({
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white rounded-xl p-6 text-center shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-          <p className="text-xs text-[#64748b] mb-1">Joueurs engages</p>
+          <p className="text-xs text-[#64748b] mb-1">Joueurs engagés</p>
           <p className="text-3xl font-bold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>{joueurs.length}</p>
         </div>
         <div className="bg-white rounded-xl p-6 text-center shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
@@ -283,7 +293,7 @@ function TourResultsTable({
         >
           {/* Niveau header */}
           <div className={`px-6 py-4 font-extrabold text-base ${getNiveauHeaderColor(section.niveauLabel)}`} style={{ fontFamily: "Manrope, sans-serif" }}>
-            {section.niveauLabel}
+            {formatNiveauLabel(section.niveauLabel)}
           </div>
 
           <div>
@@ -377,7 +387,7 @@ export function CriteriumOverview() {
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
       <div>
         <h1 className="text-2xl font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>
-          Criterium Federal
+          Critérium Fédéral
         </h1>
       </div>
 

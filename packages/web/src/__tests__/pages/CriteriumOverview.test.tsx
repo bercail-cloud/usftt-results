@@ -54,7 +54,7 @@ describe("CriteriumOverview", () => {
     });
 
     renderPage();
-    expect(screen.getByText(/Criterium Federal/)).toBeInTheDocument();
+    expect(screen.getByText(/Critérium Fédéral/)).toBeInTheDocument();
   });
 
   it("renders tour tabs only for available tours", () => {
@@ -96,7 +96,7 @@ describe("CriteriumOverview", () => {
     });
 
     renderPage();
-    expect(screen.getByText("Aucun resultat pour ce tour")).toBeInTheDocument();
+    expect(screen.getByText("Aucun résultat pour ce tour")).toBeInTheDocument();
   });
 
   it("renders joueurs when data is available", () => {
@@ -157,6 +157,6 @@ describe("CriteriumOverview", () => {
     });
 
     renderPage();
-    expect(screen.getByText(/Criterium Federal/)).toBeInTheDocument();
+    expect(screen.getByText(/Critérium Fédéral/)).toBeInTheDocument();
   });
 });

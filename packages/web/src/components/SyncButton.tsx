@@ -41,7 +41,7 @@ export function SyncButton() {
       onClick={handleSync}
       disabled={isSyncing || triggering}
       className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border text-text-secondary hover:text-text-primary hover:bg-border-light disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      title={isSyncing ? "Synchronisation en cours..." : "Synchroniser les donnees"}
+      title={isSyncing ? "Synchronisation en cours..." : "Synchroniser les données"}
     >
       <RefreshCw
         size={14}

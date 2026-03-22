@@ -95,7 +95,7 @@ function MatchDetail({
 
   if (isLoading) return <LoadingSkeleton lines={3} />;
   if (isError || !data)
-    return <p className="text-xs text-[#94a3b8] py-2">Detail non disponible</p>;
+    return <p className="text-xs text-[#94a3b8] py-2">Détail non disponible</p>;
 
   return (
     <div className="mt-3 overflow-x-auto">
@@ -175,12 +175,12 @@ export function EquipeDetail() {
           onClick={() => navigate("/equipes")}
           className="text-sm text-primary cursor-pointer mb-4 hover:underline"
         >
-          &larr; Toutes les equipes
+          &larr; Toutes les équipes
         </button>
         <EmptyState
           message={
             is404
-              ? "Equipe non trouvee"
+              ? "Équipe non trouvée"
               : `Erreur : ${error?.message ?? "Une erreur est survenue"}`
           }
         />
@@ -191,7 +191,7 @@ export function EquipeDetail() {
   if (!data) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-6">
-        <EmptyState message="Equipe non trouvee" />
+        <EmptyState message="Équipe non trouvée" />
       </div>
     );
   }
@@ -205,7 +205,7 @@ export function EquipeDetail() {
         onClick={() => navigate("/equipes")}
         className="text-sm text-primary cursor-pointer hover:underline"
       >
-        &larr; Toutes les equipes
+        &larr; Toutes les équipes
       </button>
 
       {/* Team header */}
@@ -223,7 +223,7 @@ export function EquipeDetail() {
               <thead>
                 <tr className="border-b border-[#e2e8f0] text-[#64748b]">
                   <th className="text-center px-3 py-2 font-semibold">#</th>
-                  <th className="text-left px-3 py-2 font-semibold">Equipe</th>
+                  <th className="text-left px-3 py-2 font-semibold">Équipe</th>
                   <th className="text-center px-3 py-2 font-semibold">J</th>
                   <th className="text-center px-3 py-2 font-semibold">V</th>
                   <th className="text-center px-3 py-2 font-semibold">N</th>
@@ -268,7 +268,7 @@ export function EquipeDetail() {
         function extractJournee(libelle: string): string {
           // Handle broken encoding: n°, n�, nÂ°
           const match = libelle.match(/tour\s*n?[°�Â°]?\s*(\d+)/i);
-          return match ? `Journee ${match[1]}` : libelle.split(" du ")[0]?.replace(/[�Â°]/g, "°") ?? libelle;
+          return match ? `Journée ${match[1]}` : libelle.split(" du ")[0]?.replace(/[�Â°]/g, "°") ?? libelle;
         }
         function extractDate(libelle: string): string {
           const match = libelle.match(/(\d{2}\/\d{2}\/\d{4})/);
@@ -363,7 +363,7 @@ export function EquipeDetail() {
                               onClick={() => setExpandedRencId(isExpanded ? null : renc.id)}
                               className="text-xs text-primary hover:underline whitespace-nowrap cursor-pointer"
                             >
-                              {isExpanded ? "Masquer" : "Detail →"}
+                              {isExpanded ? "Masquer" : "Détail →"}
                             </button>
                           )}
                         </div>
@@ -389,7 +389,7 @@ export function EquipeDetail() {
       })()}
 
       {rencontres.length === 0 && classement.length === 0 && (
-        <EmptyState message="Aucune donnee disponible pour cette equipe" />
+        <EmptyState message="Aucune donnée disponible pour cette équipe" />
       )}
     </div>
   );

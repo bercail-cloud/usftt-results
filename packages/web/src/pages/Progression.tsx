@@ -119,9 +119,9 @@ export function Progression() {
             value={selectedLicence}
             onChange={(e) => setSelectedLicence(e.target.value)}
             className="w-full sm:w-auto border border-[#e2e8f0] rounded-lg px-3 py-2 text-sm text-[#0f172a] bg-white focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Selectionner un joueur"
+            aria-label="Sélectionner un joueur"
           >
-            <option value="">-- Selectionner un joueur --</option>
+            <option value="">-- Sélectionner un joueur --</option>
             {joueurs.map((j) => (
               <option key={j.licence} value={j.licence}>
                 {j.prenom} {j.nom} ({j.points_officiels ?? 0} pts)
@@ -132,7 +132,7 @@ export function Progression() {
       </div>
 
       {!selectedLicence && (
-        <EmptyState message="Selectionnez un joueur pour voir sa progression" />
+        <EmptyState message="Sélectionnez un joueur pour voir sa progression" />
       )}
 
       {selectedLicence && (
@@ -143,7 +143,7 @@ export function Progression() {
             {progressionLoading ? (
               <LoadingSkeleton lines={4} />
             ) : progression.length === 0 ? (
-              <EmptyState message="Aucune donnee de progression disponible" />
+              <EmptyState message="Aucune donnée de progression disponible" />
             ) : (
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={chartData}>

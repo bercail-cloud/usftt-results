@@ -42,7 +42,7 @@ describe("EquipesOverview", () => {
       isError: false,
     });
     renderPage();
-    expect(screen.getByText("Resultats par equipes")).toBeInTheDocument();
+    expect(screen.getByText("Résultats par équipes")).toBeInTheDocument();
   });
 
   it("shows loading skeleton when loading", () => {
@@ -63,7 +63,7 @@ describe("EquipesOverview", () => {
       isError: false,
     });
     renderPage();
-    expect(screen.getByText("Aucune equipe trouvee")).toBeInTheDocument();
+    expect(screen.getByText("Aucune équipe trouvée")).toBeInTheDocument();
   });
 
   it("shows error state when request fails", () => {
@@ -104,7 +104,7 @@ describe("EquipesOverview", () => {
     });
     renderPage();
     expect(screen.getByText("Phase 2")).toBeInTheDocument();
-    expect(screen.getByText("USFTT 1")).toBeInTheDocument();
+    expect(screen.getByText("Équipe 1")).toBeInTheDocument();
   });
 
   it("displays last sync timestamp when available", () => {
@@ -117,6 +117,6 @@ describe("EquipesOverview", () => {
       isError: false,
     });
     renderPage();
-    expect(screen.getByText(/Derniere mise a jour/)).toBeInTheDocument();
+    expect(screen.getByText(/Dernière mise à jour/)).toBeInTheDocument();
   });
 });
