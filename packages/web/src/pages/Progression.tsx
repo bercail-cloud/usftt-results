@@ -174,7 +174,7 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
                 Officiel<SortIndicator col="points_officiels" />
               </th>
               <th className={thClass} onClick={() => handleSort("points_initm")}>
-                Début saison<SortIndicator col="points_initm" />
+                Début<SortIndicator col="points_initm" />
               </th>
               <th className={thClass} onClick={() => handleSort("progression_mensuelle")}>
                 Prog. mois<SortIndicator col="progression_mensuelle" />
