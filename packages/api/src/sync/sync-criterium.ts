@@ -55,14 +55,15 @@ function parseLienParams(lien: string): Record<string, string> {
 
 function niveauFromOrganisme(orgId: string): string {
   if (orgId === "1") return "National";
+  if (orgId === "8") return "National"; // Zone 1 CVL-IDF = national level
   if (orgId === "16") return "Regional";
   return "Departemental";
 }
 
 // Organismes to search for criterium epreuves:
-// 1 = Federation (national), 16 = Ligue IDF (regional), departement from config
+// 1 = Federation (national), 8 = Zone 1 CVL-IDF, 16 = Ligue IDF (regional), departement from config
 function getOrganismeIds(deptOrganismeId: string): string[] {
-  const ids = ["1", "16"]; // Federal + Ligue IDF
+  const ids = ["1", "8", "16"]; // Federal + Zone 1 + Ligue IDF
   if (deptOrganismeId && !ids.includes(deptOrganismeId)) {
     ids.push(deptOrganismeId);
   }

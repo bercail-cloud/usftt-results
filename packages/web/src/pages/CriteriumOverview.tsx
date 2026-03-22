@@ -65,7 +65,7 @@ function parseDivision(raw: string): {
     };
   }
 
-  if (raw.startsWith("FED_") || raw.includes("N1") || raw.includes("N2")) {
+  if (raw.startsWith("FED_") || raw.startsWith("Z0") || raw.includes("N1") || raw.includes("N2")) {
     niveauOrder = 1;
     niveauLabel = "National";
     const nMatch = raw.match(/N(\d)/);
