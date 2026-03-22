@@ -230,9 +230,24 @@ export function CriteriumDetail() {
             )}
 
             {/* Elimination matches */}
-            {elimMatches.length > 0 && (
+            {elimMatches.length > 0 && (() => {
+              const elimV = elimMatches.filter((m) => m.victoire).length;
+              const elimD = elimMatches.filter((m) => !m.victoire).length;
+              const elimPoints = elimMatches.reduce((s, m) => s + (m.pointsResultat ?? 0), 0);
+              return (
               <div className="bg-white border border-[#e2e8f0] rounded-lg p-5">
-                <h2 className="font-bold text-[#0f172a] mb-3">Phases finales</h2>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="font-bold text-[#0f172a]">Phases finales</h2>
+                  <div className="text-sm">
+                    <span className="text-success font-medium">{elimV}V</span>
+                    <span className="text-[#94a3b8] mx-1">-</span>
+                    <span className="text-error font-medium">{elimD}D</span>
+                    <span className="text-[#94a3b8] mx-2">|</span>
+                    <span className={`font-medium ${elimPoints >= 0 ? "text-success" : "text-error"}`}>
+                      {elimPoints > 0 ? "+" : ""}{elimPoints.toFixed(1)} pts
+                    </span>
+                  </div>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -240,6 +255,8 @@ export function CriteriumDetail() {
                         <th className="text-center px-3 py-2 font-semibold w-12">Res.</th>
                         <th className="text-left px-3 py-2 font-semibold">Phase</th>
                         <th className="text-left px-3 py-2 font-semibold">Adversaire</th>
+                        <th className="text-center px-3 py-2 font-semibold">Clt</th>
+                        <th className="text-center px-3 py-2 font-semibold">Points</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -252,13 +269,20 @@ export function CriteriumDetail() {
                           </td>
                           <td className="px-3 py-2 text-[#64748b]">{match.libelle}</td>
                           <td className="px-3 py-2 text-[#0f172a]">{match.adversaire}</td>
+                          <td className="px-3 py-2 text-center text-[#64748b]">
+                            {match.adversaireClassement || ""}
+                          </td>
+                          <td className={`px-3 py-2 text-center font-medium ${(match.pointsResultat ?? 0) >= 0 ? "text-success" : "text-error"}`}>
+                            {(match.pointsResultat ?? 0) > 0 ? "+" : ""}{match.pointsResultat ? match.pointsResultat.toFixed(1) : ""}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
               </div>
-            )}
+              );
+            })()}
           </div>
         );
       })()}

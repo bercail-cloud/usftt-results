@@ -438,15 +438,35 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
       }));
   }
 
+  // Build lookup from parties_individuelles by adversary last name for enrichment
+  const allPartiesOnDate = tourDates.length > 0
+    ? await db
+        .select()
+        .from(parties_individuelles)
+        .where(
+          and(
+            eq(parties_individuelles.licence, licence),
+            sql`${parties_individuelles.date_partie} IN (${sql.raw(tourDates.map((d) => `'${d}'`).join(","))})`
+          )
+        )
+    : [];
+
+  const partiesByAdv = new Map(
+    allPartiesOnDate.map((p) => [p.adversaire_nom.toUpperCase().split(" ")[0]!, p])
+  );
+
   // Combine: pool matches first, then elimination phase matches
   const eliminationMatches = playerMatches.map((m) => {
     const isWinner = m.vainqueur.toUpperCase().startsWith(namePrefix);
+    const adversaire = isWinner ? m.perdant : m.vainqueur;
+    const advLastName = adversaire.toUpperCase().split(" ")[0]!;
+    const partieInfo = partiesByAdv.get(advLastName);
     return {
       libelle: m.libelle,
       victoire: isWinner,
-      adversaire: isWinner ? m.perdant : m.vainqueur,
-      adversaireClassement: 0,
-      pointsResultat: 0,
+      adversaire,
+      adversaireClassement: partieInfo?.adversaire_classement ?? 0,
+      pointsResultat: partieInfo?.points_resultat ?? 0,
       forfait: m.forfait,
     };
   });
