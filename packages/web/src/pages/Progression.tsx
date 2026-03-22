@@ -244,8 +244,10 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
 
 export function Progression() {
   const navigate = useNavigate();
-  const [filterCategorie, setFilterCategorie] = useState("");
-  const [filterSexe, setFilterSexe] = useState("");
+  const searchParams = new URLSearchParams(window.location.search);
+
+  const [filterCategorie, setFilterCategorie] = useState(searchParams.get("cat") ?? "");
+  const [filterSexe, setFilterSexe] = useState(searchParams.get("sexe") ?? "");
 
   const { data: joueursData, isLoading: joueursLoading } = useJoueurs() as {
     data: JoueursResponse | undefined;
@@ -310,7 +312,13 @@ export function Progression() {
         <PlayersTable
           joueurs={filteredJoueurs}
           selectedLicence=""
-          onSelect={(licence) => navigate(`/progression/${licence}`)}
+          onSelect={(licence) => {
+            const params = new URLSearchParams();
+            if (filterCategorie) params.set("cat", filterCategorie);
+            if (filterSexe) params.set("sexe", filterSexe);
+            const qs = params.toString();
+            navigate(`/progression/${licence}${qs ? `?${qs}` : ""}`);
+          }}
         />
       )}
     </div>
