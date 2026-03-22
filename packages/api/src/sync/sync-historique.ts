@@ -1,13 +1,16 @@
 import { getHistoClassement } from "../fftt/endpoints.js";
 import { joueurs, historique_classement } from "../db/schema.js";
+import { sql } from "drizzle-orm";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
 export async function syncHistorique(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
   const { appId, serie, password } = ffttConfig;
 
+  // Only sync historique for active players (licence T or A)
   const joueursInDb: Array<{ licence: string }> = await db
     .select({ licence: joueurs.licence })
-    .from(joueurs);
+    .from(joueurs)
+    .where(sql`${joueurs.type_licence} IN ('T', 'A')`);
 
   if (joueursInDb.length === 0) {
     return 0;

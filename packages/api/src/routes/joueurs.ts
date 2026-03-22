@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, desc, asc, count } from "drizzle-orm";
+import { eq, desc, asc, count, sql } from "drizzle-orm";
 import { db } from "../db/connection.js";
 import {
   joueurs,
@@ -14,6 +14,7 @@ app.get("/joueurs", async (c) => {
   const allJoueurs = await db
     .select()
     .from(joueurs)
+    .where(sql`${joueurs.type_licence} IN ('T', 'A')`)
     .orderBy(desc(joueurs.points_officiels));
 
   // Count matches per player
