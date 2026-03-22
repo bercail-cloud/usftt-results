@@ -88,5 +88,6 @@ jobs:
           script: |
             cd /opt/usftt-results
             docker compose pull
-            docker compose up -d
+            # Rolling update: start new containers, wait for healthy, stop old ones
+            docker compose up -d --wait --wait-timeout 60
             docker image prune -f
