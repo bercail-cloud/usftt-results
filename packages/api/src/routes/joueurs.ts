@@ -31,8 +31,11 @@ app.get("/joueurs", async (c) => {
   const enriched = allJoueurs.map((j) => ({
     ...j,
     nb_matchs: matchCountMap.get(j.licence) ?? 0,
-    progression_mensuelle: j.points_mensuels && j.ancien_points_mensuels
-      ? Math.round((j.points_mensuels - j.ancien_points_mensuels) * 10) / 10
+    progression_mensuelle: j.points_mensuels != null && j.ancien_points_mensuels != null
+      ? Math.round(j.points_mensuels - j.ancien_points_mensuels)
+      : null,
+    progression_saison: j.points_mensuels != null && j.points_initm != null
+      ? Math.round(j.points_mensuels - j.points_initm)
       : null,
   }));
 
