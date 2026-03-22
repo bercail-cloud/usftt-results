@@ -70,6 +70,8 @@ export const rencontres = pgTable("rencontres", {
   date_reelle: varchar("date_reelle").notNull(),
   lien_detail: varchar("lien_detail"),
   is_domicile: boolean("is_domicile").notNull(),
+  detail_equa: varchar("detail_equa"),
+  detail_equb: varchar("detail_equb"),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
