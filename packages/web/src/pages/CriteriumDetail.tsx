@@ -185,7 +185,7 @@ export function CriteriumDetail() {
             {poolMatches.length > 0 && (
               <div className="bg-white border border-[#e2e8f0] rounded-lg p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="font-bold text-[#0f172a]">Matchs de poule</h2>
+                  <h2 className="font-bold text-[#0f172a]">{elimMatches.length > 0 ? "Matchs de poule" : "Matchs"}</h2>
                   <div className="text-sm">
                     <span className="text-success font-medium">{poolV}V</span>
                     <span className="text-[#94a3b8] mx-1">-</span>
