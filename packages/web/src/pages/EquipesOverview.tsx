@@ -419,6 +419,18 @@ function LevelGroupTable({
                           );
                         }
 
+                        // No opponent = exempt
+                        if (!opponent || opponent.trim() === "") {
+                          return (
+                            <div
+                              key={mi}
+                              className="bg-[#f7f9fb] rounded-md px-1 py-1.5 text-center border border-dashed border-[#e2e8f0]"
+                            >
+                              <div className="text-[9px] text-[#94a3b8] font-medium">Exempt</div>
+                            </div>
+                          );
+                        }
+
                         return (
                           <div
                             key={mi}
