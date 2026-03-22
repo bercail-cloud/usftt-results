@@ -25,6 +25,12 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-usftt}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-usftt}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
       - web
       - internal
@@ -39,6 +45,12 @@ services:
   web:
     image: ghcr.io/dcuenot/usftt-results-web:latest
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - web
     labels:
