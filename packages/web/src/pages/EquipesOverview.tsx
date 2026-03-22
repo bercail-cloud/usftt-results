@@ -21,6 +21,7 @@ interface Rencontre {
 }
 
 interface Classement {
+  nom_equipe?: string;
   position: number;
   points: number;
   joue: number;
@@ -352,7 +353,9 @@ function LevelGroupTable({
           </thead>
           <tbody>
             {levelGroup.equipes.map((item, idx) => {
-              const classement = item.classements[0];
+              const classement = item.classements.find(
+                (c) => c.nom_equipe?.toUpperCase().includes("FONTENAY")
+              ) ?? item.classements[0];
               const rencontresByJournee = new Map(
                 item.rencontres.map((r) => [r.journee, r])
               );
