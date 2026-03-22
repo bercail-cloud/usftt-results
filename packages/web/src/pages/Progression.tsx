@@ -21,6 +21,7 @@ interface Joueur {
   sexe: string | null;
   nb_matchs: number | null;
   progression_mensuelle: number | null;
+  progression_saison: number | null;
 }
 
 interface JoueursResponse {
@@ -121,7 +122,7 @@ interface PlayersTableProps {
   onSelect: (licence: string) => void;
 }
 
-type SortKey = "points_mensuels" | "points_officiels" | "points_initm" | "progression_mensuelle" | "nb_matchs";
+type SortKey = "points_mensuels" | "points_officiels" | "points_initm" | "progression_mensuelle" | "progression_saison" | "nb_matchs";
 type SortDir = "asc" | "desc";
 
 function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps) {
@@ -176,7 +177,10 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
                 Début saison<SortIndicator col="points_initm" />
               </th>
               <th className={thClass} onClick={() => handleSort("progression_mensuelle")}>
-                Progression<SortIndicator col="progression_mensuelle" />
+                Prog. mois<SortIndicator col="progression_mensuelle" />
+              </th>
+              <th className={thClass} onClick={() => handleSort("progression_saison")}>
+                Prog. saison<SortIndicator col="progression_saison" />
               </th>
               <th className={thClass} onClick={() => handleSort("nb_matchs")}>
                 Matchs<SortIndicator col="nb_matchs" />
@@ -217,6 +221,9 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
                   </td>
                   <td className={`px-4 py-3 text-right font-semibold font-mono tabular-nums ${getPointsColor(prog)}`}>
                     {formatProgression(j.progression_mensuelle)}
+                  </td>
+                  <td className={`px-4 py-3 text-right font-semibold font-mono tabular-nums ${getPointsColor(j.progression_saison ?? 0)}`}>
+                    {formatProgression(j.progression_saison)}
                   </td>
                   <td className="px-4 py-3 text-right text-[#737686]">
                     {j.nb_matchs ?? "—"}
