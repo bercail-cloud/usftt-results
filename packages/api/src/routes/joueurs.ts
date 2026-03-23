@@ -137,16 +137,23 @@ app.get("/joueurs/:licence/equipes", async (c) => {
 
   // Build response
   const equipeMap = new Map(allEquipes.map((e) => [e.id, e]));
-  const result = Array.from(equipeStats.entries()).map(([equipeId, stats]) => {
-    const eq = equipeMap.get(equipeId);
-    return {
-      lib_equipe: eq?.lib_equipe ?? "",
-      lib_division: eq?.lib_division ?? "",
-      victoires: stats.victoires,
-      defaites: stats.defaites,
-      total: stats.victoires + stats.defaites,
-    };
-  });
+  const result = Array.from(equipeStats.entries())
+    .map(([equipeId, stats]) => {
+      const eq = equipeMap.get(equipeId);
+      return {
+        lib_equipe: eq?.lib_equipe ?? "",
+        lib_division: eq?.lib_division ?? "",
+        victoires: stats.victoires,
+        defaites: stats.defaites,
+        total: stats.victoires + stats.defaites,
+      };
+    })
+    .sort((a, b) => {
+      // Phase 2 before Phase 1
+      const phaseA = a.lib_equipe.includes("Phase 2") ? 0 : 1;
+      const phaseB = b.lib_equipe.includes("Phase 2") ? 0 : 1;
+      return phaseA - phaseB;
+    });
 
   return c.json({ data: result });
 });
