@@ -8,7 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useJoueurs, useJoueurProgression, useJoueurParties } from "../hooks/use-joueurs.js";
+import { useJoueurs, useJoueurProgression, useJoueurParties, useJoueurEquipes } from "../hooks/use-joueurs.js";
 import { LoadingSkeleton } from "../components/LoadingSkeleton.js";
 import { EmptyState } from "../components/EmptyState.js";
 
@@ -130,6 +130,18 @@ export function ProgressionDetail() {
       isLoading: boolean;
     };
 
+  interface EquipeStats {
+    lib_equipe: string;
+    lib_division: string;
+    victoires: number;
+    defaites: number;
+    total: number;
+  }
+
+  const { data: equipesData } = useJoueurEquipes(licence ?? "") as {
+    data: { data: EquipeStats[] } | undefined;
+  };
+
   const progression = progressionData?.data ?? [];
   const parties = partiesData?.data ?? [];
 
@@ -176,6 +188,58 @@ export function ProgressionDetail() {
           <p className="text-sm text-[#737686] mt-1">{playerInfo}</p>
         )}
       </div>
+
+      {/* Equipes card */}
+      {equipesData && equipesData.data.length > 0 && (
+        <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
+          <div className="px-6 py-5">
+            <h2
+              className="font-extrabold text-[#191c1e]"
+              style={{ fontFamily: "Manrope, sans-serif" }}
+            >
+              Équipes
+            </h2>
+          </div>
+          <div className="px-6 pb-5">
+            <div className="space-y-2">
+              {equipesData.data.map((eq, idx) => {
+                const phase = eq.lib_equipe.includes("Phase 2") ? "P2" : eq.lib_equipe.includes("Phase 1") ? "P1" : "";
+                const teamNum = eq.lib_equipe.match(/(\d+)/)?.[1] ?? "";
+                const divShort = eq.lib_division
+                  .replace(/^FED_/, "")
+                  .replace(/^L\d+_/, "")
+                  .replace(/^D\d+[-_]?/, "D")
+                  .replace(/\s*(Phase|phase)\s*\d\s*/g, "")
+                  .replace(/\s*Poule\s*\d+/g, "")
+                  .trim();
+
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-3 py-2.5 px-4 rounded-lg bg-[#f7f9fb]"
+                  >
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+                      {phase}
+                    </span>
+                    <span className="font-semibold text-[#191c1e] text-sm">
+                      Équipe {teamNum}
+                    </span>
+                    <span className="text-xs text-[#94a3b8]">{divShort}</span>
+                    <span className="ml-auto text-sm font-semibold">
+                      <span className="text-success">{eq.victoires}V</span>
+                      <span className="text-[#94a3b8] mx-1">-</span>
+                      <span className="text-error">{eq.defaites}D</span>
+                    </span>
+                    <span className="text-xs text-[#94a3b8]">
+                      ({eq.total} matchs)
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Chart card */}
       <div className="bg-white rounded-xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">

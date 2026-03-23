@@ -3,6 +3,9 @@ import { eq, desc, asc, count, sql } from "drizzle-orm";
 import { db } from "../db/connection.js";
 import {
   joueurs,
+  equipes,
+  rencontres,
+  parties_rencontre,
   historique_classement,
   parties_individuelles,
   sync_status,
@@ -63,6 +66,76 @@ app.get("/joueurs/:licence", async (c) => {
   }
 
   return c.json({ data: rows[0] });
+});
+
+app.get("/joueurs/:licence/equipes", async (c) => {
+  const licence = c.req.param("licence");
+
+  // Get joueur name
+  const joueurRows = await db
+    .select({ nom: joueurs.nom, prenom: joueurs.prenom })
+    .from(joueurs)
+    .where(eq(joueurs.licence, licence))
+    .limit(1);
+
+  if (joueurRows.length === 0) {
+    return c.json({ data: [] });
+  }
+
+  const joueurNom = joueurRows[0]!.nom.toUpperCase();
+
+  // Find all equipes where this player has played (via parties_rencontre)
+  const allEquipes = await db.select().from(equipes);
+  const allRencontres = await db.select().from(rencontres);
+  const allParties = await db.select().from(parties_rencontre);
+
+  // Build rencontre → equipe mapping
+  const rencToEquipe = new Map(allRencontres.map((r) => [r.id, r]));
+
+  // Find parties where joueur played
+  const playerParties = allParties.filter(
+    (p) => p.joueur_a.toUpperCase().includes(joueurNom) || p.joueur_b.toUpperCase().includes(joueurNom)
+  );
+
+  // Group by equipe
+  const equipeStats = new Map<number, { victoires: number; defaites: number }>();
+
+  for (const partie of playerParties) {
+    const renc = rencToEquipe.get(partie.rencontre_id);
+    if (!renc) continue;
+
+    if (!equipeStats.has(renc.equipe_id)) {
+      equipeStats.set(renc.equipe_id, { victoires: 0, defaites: 0 });
+    }
+
+    const stats = equipeStats.get(renc.equipe_id)!;
+
+    // Determine if player won: player could be joueur_a or joueur_b
+    // But FFTT API inverts sides, so use detail_equa/equb
+    const isPlayerA = partie.joueur_a.toUpperCase().includes(joueurNom);
+    const playerWon = isPlayerA ? partie.score_a > partie.score_b : partie.score_b > partie.score_a;
+
+    if (playerWon) {
+      stats.victoires++;
+    } else {
+      stats.defaites++;
+    }
+  }
+
+  // Build response
+  const equipeMap = new Map(allEquipes.map((e) => [e.id, e]));
+  const result = Array.from(equipeStats.entries()).map(([equipeId, stats]) => {
+    const eq = equipeMap.get(equipeId);
+    return {
+      lib_equipe: eq?.lib_equipe ?? "",
+      lib_division: eq?.lib_division ?? "",
+      victoires: stats.victoires,
+      defaites: stats.defaites,
+      total: stats.victoires + stats.defaites,
+    };
+  });
+
+  return c.json({ data: result });
 });
 
 app.get("/joueurs/:licence/progression", async (c) => {

@@ -16,6 +16,14 @@ export function useJoueurProgression(licence: string) {
   });
 }
 
+export function useJoueurEquipes(licence: string) {
+  return useQuery({
+    queryKey: ["joueur-equipes", licence],
+    queryFn: () => api.get(`/api/joueurs/${licence}/equipes`),
+    enabled: !!licence,
+  });
+}
+
 export function useJoueurParties(licence: string) {
   return useQuery({
     queryKey: ["parties", licence],
