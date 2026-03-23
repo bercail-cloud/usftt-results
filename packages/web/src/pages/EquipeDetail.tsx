@@ -199,7 +199,7 @@ export function EquipeDetail() {
   const { equipe, classement, rencontres } = data;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-4xl mx-auto px-3 md:px-4 py-6 md:py-8 space-y-6">
       {/* Breadcrumb */}
       <button
         onClick={() => navigate("/equipes")}
@@ -210,7 +210,7 @@ export function EquipeDetail() {
 
       {/* Team header */}
       <div>
-        <h1 className="text-xl font-bold text-[#0f172a]">{equipe.lib_equipe}</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-[#0f172a]">{equipe.lib_equipe}</h1>
         <p className="text-sm text-[#64748b] mt-1">{equipe.lib_division}</p>
       </div>
 
@@ -222,13 +222,13 @@ export function EquipeDetail() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#e2e8f0] text-[#64748b]">
-                  <th className="text-center px-3 py-2 font-semibold">#</th>
-                  <th className="text-left px-3 py-2 font-semibold">Équipe</th>
-                  <th className="text-center px-3 py-2 font-semibold">J</th>
-                  <th className="text-center px-3 py-2 font-semibold">V</th>
-                  <th className="text-center px-3 py-2 font-semibold">N</th>
-                  <th className="text-center px-3 py-2 font-semibold">D</th>
-                  <th className="text-center px-3 py-2 font-semibold">Pts</th>
+                  <th className="text-center px-2 md:px-3 py-2 font-semibold">#</th>
+                  <th className="text-left px-2 md:px-3 py-2 font-semibold">Équipe</th>
+                  <th className="text-center px-2 md:px-3 py-2 font-semibold">J</th>
+                  <th className="text-center px-2 md:px-3 py-2 font-semibold">V</th>
+                  <th className="hidden md:table-cell text-center px-2 md:px-3 py-2 font-semibold">N</th>
+                  <th className="text-center px-2 md:px-3 py-2 font-semibold">D</th>
+                  <th className="text-center px-2 md:px-3 py-2 font-semibold">Pts</th>
                 </tr>
               </thead>
               <tbody>
@@ -246,13 +246,13 @@ export function EquipeDetail() {
                             : ""
                         }`}
                       >
-                        <td className="px-3 py-2 text-center">{row.position}</td>
-                        <td className="px-3 py-2">{row.nom_equipe}</td>
-                        <td className="px-3 py-2 text-center">{row.joue}</td>
-                        <td className="px-3 py-2 text-center">{row.victoires}</td>
-                        <td className="px-3 py-2 text-center">{row.nuls}</td>
-                        <td className="px-3 py-2 text-center">{row.defaites}</td>
-                        <td className="px-3 py-2 text-center font-bold">{row.points}</td>
+                        <td className="px-2 md:px-3 py-2 md:py-3 text-center">{row.position}</td>
+                        <td className="px-2 md:px-3 py-2 md:py-3">{row.nom_equipe}</td>
+                        <td className="px-2 md:px-3 py-2 md:py-3 text-center">{row.joue}</td>
+                        <td className="px-2 md:px-3 py-2 md:py-3 text-center">{row.victoires}</td>
+                        <td className="hidden md:table-cell px-2 md:px-3 py-2 md:py-3 text-center">{row.nuls}</td>
+                        <td className="px-2 md:px-3 py-2 md:py-3 text-center">{row.defaites}</td>
+                        <td className="px-2 md:px-3 py-2 md:py-3 text-center font-bold">{row.points}</td>
                       </tr>
                     );
                   })}
