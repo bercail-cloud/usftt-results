@@ -321,6 +321,64 @@ function getUsfttMatches(rencontres: Rencontre[]): Rencontre[] {
 // Sub-components
 // ---------------------------------------------------------------------------
 
+function MatchBadge({ r, mi }: { r: Rencontre; mi: number }) {
+  const isDom = r.equipe_a.toUpperCase().includes("FONTENAY");
+  const opponent = isDom ? r.equipe_b : r.equipe_a;
+  const shortOpp = truncateOpponent(opponent);
+  const played = r.score_a !== null && r.score_b !== null;
+
+  if (played) {
+    const scoreUs = isDom ? r.score_a! : r.score_b!;
+    const scoreThem = isDom ? r.score_b! : r.score_a!;
+    const won = scoreUs > scoreThem;
+    const draw = scoreUs === scoreThem;
+    const bg = won ? "bg-green-50" : draw ? "bg-amber-50" : "bg-red-50";
+    const color = won ? "text-green-700" : draw ? "text-amber-700" : "text-red-700";
+    const colorSub = won ? "text-green-600" : draw ? "text-amber-600" : "text-red-600";
+    return (
+      <div
+        key={mi}
+        className={`${bg} rounded-md px-1 py-1.5 text-center`}
+        title={`${r.date_prevue} - ${opponent} (${isDom ? "Dom" : "Ext"})`}
+      >
+        <div className={`text-xs font-extrabold ${color} flex items-center justify-center gap-0.5`}>
+          {isDom ? <Home size={9} /> : <Car size={9} />}
+          {scoreUs}-{scoreThem}
+        </div>
+        <div className={`text-[7px] ${colorSub} truncate`}>{shortOpp}</div>
+      </div>
+    );
+  }
+
+  // No opponent = exempt
+  if (!opponent || opponent.trim() === "") {
+    return (
+      <div
+        key={mi}
+        className="bg-[#f7f9fb] rounded-md px-1 py-1.5 text-center border border-dashed border-[#e2e8f0]"
+      >
+        <div className="text-[9px] text-[#94a3b8] font-medium">Exempt</div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      key={mi}
+      className="bg-[#f7f9fb] rounded-md px-1 py-1.5 text-center border border-dashed border-[#e2e8f0]"
+      title={`${r.date_prevue} - ${opponent}`}
+    >
+      <div className="text-[10px] text-[#94a3b8] flex items-center justify-center gap-0.5">
+        {isDom ? <Home size={10} /> : <Car size={10} />}
+        {formatShortDate(r.date_prevue)}
+      </div>
+      <div className="text-[7px] text-[#94a3b8] truncate">
+        {shortOpp}
+      </div>
+    </div>
+  );
+}
+
 function LevelGroupTable({
   levelGroup,
   onRowClick,
@@ -328,22 +386,76 @@ function LevelGroupTable({
   levelGroup: LevelGroup;
   onRowClick: (id: number) => void;
 }) {
-  // No longer using journee columns
-
   return (
     <div
       className={`bg-white rounded-xl overflow-hidden shadow-[0_2px_12px_rgba(0,0,0,0.04)] ${getLevelAccentBar(levelGroup.level)}`}
     >
       {/* Level header */}
       <div
-        className={`px-6 py-3 font-extrabold text-sm ${getLevelHeaderColor(levelGroup.level)}`}
+        className={`px-4 md:px-6 py-3 font-extrabold text-sm ${getLevelHeaderColor(levelGroup.level)}`}
         style={{ fontFamily: "Manrope, sans-serif" }}
       >
         {formatLevelName(levelGroup.level)}
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Mobile card layout (hidden on md+) */}
+      <div className="md:hidden divide-y divide-[#f1f5f9]">
+        {levelGroup.equipes.map((item) => {
+          const classement = item.classements.find(
+            (c) => c.nom_equipe?.toUpperCase().includes("FONTENAY")
+          ) ?? item.classements[0];
+          const matches = getUsfttMatches(item.rencontres);
+          const badgeCode = item.parsed.badgeCode;
+
+          return (
+            <div
+              key={item.equipe.id}
+              className="px-4 py-3 cursor-pointer hover:bg-[#eff6ff] transition-colors"
+              onClick={() => onRowClick(item.equipe.id)}
+            >
+              {/* Card header: name + division badge + rank/points */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded min-w-[28px] text-center flex-shrink-0 ${
+                      item.parsed.gender === "Dames"
+                        ? "bg-pink-100 text-pink-700"
+                        : getBadgeColor(badgeCode)
+                    }`}
+                  >
+                    {badgeCode}{item.parsed.gender === "Dames" ? " F" : ""}
+                  </span>
+                  <span className="font-semibold text-[#191c1e] truncate">
+                    {formatTeamName(item.equipe.lib_equipe)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                  {classement ? (
+                    classement.position <= 4 ? (
+                      <RankCircle rank={classement.position} />
+                    ) : (
+                      <span className="text-sm text-[#64748b]">{classement.position}e</span>
+                    )
+                  ) : null}
+                  {classement && (
+                    <span className="text-sm font-bold text-[#191c1e]">{classement.points} pts</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Match badges */}
+              <div className="flex flex-wrap gap-1">
+                {matches.map((r, mi) => (
+                  <MatchBadge key={mi} r={r} mi={mi} />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop table layout (hidden on mobile) */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[#f7f9fb]">
@@ -403,61 +515,9 @@ function LevelGroupTable({
                   </td>
                   <td className="px-3 py-2">
                     <div className="grid grid-cols-7 gap-1" style={{ minWidth: "350px" }}>
-                      {matches.map((r, mi) => {
-                        // Determine domicile from equipe_a containing FONTENAY
-                        const isDom = r.equipe_a.toUpperCase().includes("FONTENAY");
-                        const opponent = isDom ? r.equipe_b : r.equipe_a;
-                        const shortOpp = truncateOpponent(opponent);
-                        const played = r.score_a !== null && r.score_b !== null;
-
-                        if (played) {
-                          const scoreUs = isDom ? r.score_a! : r.score_b!;
-                          const scoreThem = isDom ? r.score_b! : r.score_a!;
-                          const won = scoreUs > scoreThem;
-                          const draw = scoreUs === scoreThem;
-                          const bg = won ? "bg-green-50" : draw ? "bg-amber-50" : "bg-red-50";
-                          const color = won ? "text-green-700" : draw ? "text-amber-700" : "text-red-700";
-                          const colorSub = won ? "text-green-600" : draw ? "text-amber-600" : "text-red-600";
-                          return (
-                            <div
-                              key={mi}
-                              className={`${bg} rounded-md px-1 py-1.5 text-center`}
-                              title={`${r.date_prevue} - ${opponent} (${isDom ? "Dom" : "Ext"})`}
-                            >
-                              <div className={`text-xs font-extrabold ${color}`}>{scoreUs}-{scoreThem}</div>
-                              <div className={`text-[7px] ${colorSub} truncate`}>{shortOpp}</div>
-                            </div>
-                          );
-                        }
-
-                        // No opponent = exempt
-                        if (!opponent || opponent.trim() === "") {
-                          return (
-                            <div
-                              key={mi}
-                              className="bg-[#f7f9fb] rounded-md px-1 py-1.5 text-center border border-dashed border-[#e2e8f0]"
-                            >
-                              <div className="text-[9px] text-[#94a3b8] font-medium">Exempt</div>
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <div
-                            key={mi}
-                            className="bg-[#f7f9fb] rounded-md px-1 py-1.5 text-center border border-dashed border-[#e2e8f0]"
-                            title={`${r.date_prevue} - ${opponent}`}
-                          >
-                            <div className="text-[10px] text-[#94a3b8] flex items-center justify-center gap-0.5">
-                              {isDom ? <Home size={10} /> : <Car size={10} />}
-                              {formatShortDate(r.date_prevue)}
-                            </div>
-                            <div className="text-[7px] text-[#94a3b8] truncate">
-                              {shortOpp}
-                            </div>
-                          </div>
-                        );
-                      })}
+                      {matches.map((r, mi) => (
+                        <MatchBadge key={mi} r={r} mi={mi} />
+                      ))}
                     </div>
                   </td>
                 </tr>
@@ -523,11 +583,11 @@ export function EquipesOverview() {
   const sections = groupEquipes(allEquipes);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+    <div className="max-w-7xl mx-auto px-3 md:px-4 py-6 md:py-8 space-y-10">
       {/* Title */}
       <div>
         <h1
-          className="text-2xl font-extrabold text-[#191c1e]"
+          className="text-xl md:text-2xl font-extrabold text-[#191c1e]"
           style={{ fontFamily: "Manrope, sans-serif" }}
         >
           Résultats par équipes

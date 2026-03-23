@@ -104,7 +104,7 @@ describe("EquipesOverview", () => {
     });
     renderPage();
     expect(screen.getByText("Phase 2")).toBeInTheDocument();
-    expect(screen.getByText("Équipe 1")).toBeInTheDocument();
+    expect(screen.getAllByText("Équipe 1").length).toBeGreaterThan(0);
   });
 
   it("displays last sync timestamp when available", () => {
