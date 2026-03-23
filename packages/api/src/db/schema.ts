@@ -101,6 +101,7 @@ export const parties_individuelles = pgTable("parties_individuelles", {
   adversaire_licence: varchar("adversaire_licence").notNull(),
   adversaire_nom: varchar("adversaire_nom").notNull(),
   adversaire_classement: integer("adversaire_classement").notNull(),
+  adversaire_rang: varchar("adversaire_rang"),
   victoire: boolean("victoire").notNull(),
   points_resultat: real("points_resultat").notNull(),
   coefficient: real("coefficient").notNull(),

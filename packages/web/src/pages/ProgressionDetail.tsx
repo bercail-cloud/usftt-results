@@ -34,6 +34,7 @@ interface Partie {
   date_partie: string;
   adversaire_nom: string;
   adversaire_classement: number;
+  adversaire_rang: string | null;
   victoire: boolean;
   points_resultat: number;
   epreuve: string;
@@ -187,12 +188,24 @@ export function ProgressionDetail() {
         parseDDMMYYYY(a.date_partie).getTime()
     );
 
-  // --- Statistics computation ---
+  // Filter to current season only (July 1 to June 30)
+  const currentSeasonStart = (() => {
+    const now = new Date();
+    const year = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
+    return new Date(year, 6, 1); // July 1
+  })();
+
+  const currentSeasonParties = sortedParties.filter((p) => {
+    const d = parseDDMMYYYY(p.date_partie);
+    return !isNaN(d.getTime()) && d >= currentSeasonStart;
+  });
+
+  // --- Statistics computation (current season only) ---
 
   // Bilan général
-  const totalVictoires = sortedParties.filter((p) => p.victoire).length;
-  const totalDefaites = sortedParties.filter((p) => !p.victoire).length;
-  const totalMatchs = sortedParties.length;
+  const totalVictoires = currentSeasonParties.filter((p) => p.victoire).length;
+  const totalDefaites = currentSeasonParties.filter((p) => !p.victoire).length;
+  const totalMatchs = currentSeasonParties.length;
   const pctVictoires = totalMatchs > 0 ? Math.round((totalVictoires / totalMatchs) * 100) : 0;
 
   // Par type de compétition
@@ -218,7 +231,7 @@ export function ProgressionDetail() {
     "Autres": { v: 0, d: 0, pts: 0 },
   };
 
-  for (const p of sortedParties) {
+  for (const p of currentSeasonParties) {
     const t = getCompType(p.epreuve, p.epreuve_libelle);
     if (p.victoire) byType[t].v++;
     else byType[t].d++;
@@ -231,7 +244,7 @@ export function ProgressionDetail() {
   // Adversaires
   const biggestUpset = (() => {
     // Victory with the most points gained
-    const victories = sortedParties.filter((p) => p.victoire && p.points_resultat > 0);
+    const victories = currentSeasonParties.filter((p) => p.victoire && p.points_resultat > 0);
     if (victories.length === 0) return null;
     return victories.reduce((best, p) =>
       p.points_resultat > best.points_resultat ? p : best
@@ -240,7 +253,7 @@ export function ProgressionDetail() {
 
   const biggestUpset2 = (() => {
     // Defeat with the most points lost
-    const defeats = sortedParties.filter((p) => !p.victoire && p.points_resultat < 0);
+    const defeats = currentSeasonParties.filter((p) => !p.victoire && p.points_resultat < 0);
     if (defeats.length === 0) return null;
     return defeats.reduce((worst, p) =>
       p.points_resultat < worst.points_resultat ? p : worst
@@ -248,9 +261,9 @@ export function ProgressionDetail() {
   })();
 
   const mostFacedOpponent = (() => {
-    if (sortedParties.length === 0) return null;
+    if (currentSeasonParties.length === 0) return null;
     const counts: Record<string, { nom: string; v: number; d: number }> = {};
-    for (const p of sortedParties) {
+    for (const p of currentSeasonParties) {
       const key = p.adversaire_nom;
       if (!counts[key]) counts[key] = { nom: p.adversaire_nom, v: 0, d: 0 };
       if (p.victoire) counts[key].v++;
@@ -366,7 +379,7 @@ export function ProgressionDetail() {
             {/* Bilan général */}
             <div className="bg-[#f7f9fb] rounded-lg p-4">
               <p className="text-xs font-semibold text-[#737686] uppercase tracking-wide mb-3">
-                Bilan général
+                Bilan saison
               </p>
               <div className="flex items-baseline gap-3 mb-3">
                 <span className="text-3xl font-extrabold text-success">{totalVictoires}V</span>
@@ -442,7 +455,7 @@ export function ProgressionDetail() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-success">V</span>
                       <span className="text-sm font-semibold text-[#191c1e]">{biggestUpset.adversaire_nom}</span>
-                      <span className="text-xs text-[#94a3b8]">({biggestUpset.adversaire_classement})</span>
+                      <span className="text-xs text-[#94a3b8]">({biggestUpset.adversaire_classement || "?"})</span>
                       <span className="ml-auto text-sm font-semibold text-success">+{biggestUpset.points_resultat}</span>
                     </div>
                   </div>
@@ -453,7 +466,7 @@ export function ProgressionDetail() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-error">D</span>
                       <span className="text-sm font-semibold text-[#191c1e]">{biggestUpset2.adversaire_nom}</span>
-                      <span className="text-xs text-[#94a3b8]">({biggestUpset2.adversaire_classement})</span>
+                      <span className="text-xs text-[#94a3b8]">({biggestUpset2.adversaire_classement || "?"})</span>
                       <span className="ml-auto text-sm font-semibold text-error">{biggestUpset2.points_resultat}</span>
                     </div>
                   </div>
@@ -607,8 +620,11 @@ export function ProgressionDetail() {
                       {/* Player info */}
                       <div className="ml-4 flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-primary">{partie.adversaire_classement}</span>
+                          <span className="text-sm font-semibold text-primary">{partie.adversaire_rang && partie.epreuve && partie.adversaire_classement >= 100 ? String(partie.adversaire_classement).slice(0, 2) : (partie.adversaire_classement || "?")}</span>
                           <span className="text-[#191c1e] font-medium">- {partie.adversaire_nom}</span>
+                          {partie.adversaire_rang && (
+                            <span className="text-xs text-[#94a3b8]">(N°{partie.adversaire_rang.replace(/^N/, "")})</span>
+                          )}
                         </div>
                         <div className="text-xs text-[#94a3b8]">
                           Coef: {partie.coefficient || "1"}

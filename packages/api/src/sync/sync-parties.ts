@@ -64,6 +64,22 @@ function estimatePoints(
   return Math.round(base * coefficient * 10) / 10;
 }
 
+/**
+ * Parse SPID classement field.
+ * Formats: "N718 - 2130" (rank - points), "1999" (just points)
+ */
+function parseSpidClassement(raw: string): { points: number; rang: string | null } {
+  if (!raw) return { points: 0, rang: null };
+  const dashIdx = raw.lastIndexOf(" - ");
+  if (dashIdx >= 0) {
+    const rangPart = raw.slice(0, dashIdx).trim();
+    const n = parseInt(raw.slice(dashIdx + 3), 10);
+    return { points: Number.isNaN(n) ? 0 : n, rang: rangPart || null };
+  }
+  const n = parseInt(raw, 10);
+  return { points: Number.isNaN(n) ? 0 : n, rang: null };
+}
+
 export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
   const { appId, serie, password } = ffttConfig;
 
@@ -105,19 +121,24 @@ export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<n
     } catch {
       // xml_partie may fail for some players, continue without
     }
-    const spidEpreuveMap = new Map(
-      spidParties.map((p) => [p.idpartie, p.epreuve])
+    // Build SPID lookup maps by idpartie
+    const spidByIdPartie = new Map(
+      spidParties.map((p) => [p.idpartie, p])
     );
 
     const rows = parties.map((partie) => {
       const idPartie = partie.idpartie || "";
-      const epreuveLibelle = spidEpreuveMap.get(idPartie) || null;
+      const spid = spidByIdPartie.get(idPartie);
+      const epreuveLibelle = spid?.epreuve || null;
+      const spidClt = spid ? parseSpidClassement(spid.classement) : null;
+      const mysqlClt = safeInt(partie.advclaof);
 
       return {
         licence: partie.licence,
         adversaire_licence: partie.advlic || "",
         adversaire_nom: partie.advnompre || "",
-        adversaire_classement: safeInt(partie.advclaof),
+        adversaire_classement: mysqlClt || spidClt?.points || 0,
+        adversaire_rang: spidClt?.rang || null,
         victoire: partie.vd === "V",
         points_resultat: safeFloat(partie.pointres),
         coefficient: safeFloat(partie.coefchamp),
@@ -138,16 +159,17 @@ export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<n
       .filter((sp) => sp.idpartie && !mysqlIdParties.has(sp.idpartie))
       .map((sp) => {
         const victoire = sp.victoire === "V";
-        const advClt = safeInt(sp.classement);
+        const parsed = parseSpidClassement(sp.classement);
         const coef = safeFloat(sp.coefchamp);
         const isForfait = sp.forfait === "1";
-        const estimated = estimatePoints(playerClt, advClt, victoire, coef, isForfait);
+        const estimated = estimatePoints(playerClt, parsed.points, victoire, coef, isForfait);
 
         return {
           licence: joueur.licence,
           adversaire_licence: "",
           adversaire_nom: sp.nom || "",
-          adversaire_classement: advClt,
+          adversaire_classement: parsed.points,
+          adversaire_rang: parsed.rang,
           victoire,
           points_resultat: estimated,
           coefficient: coef,
