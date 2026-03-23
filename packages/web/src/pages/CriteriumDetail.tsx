@@ -96,7 +96,7 @@ export function CriteriumDetail() {
   const defaites = matches.filter((m) => !m.victoire).length;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-3 md:px-4 py-6 md:py-8 space-y-8">
       {/* Breadcrumb */}
       <button
         onClick={() => navigate(`/criterium?tour=${tour}`)}
@@ -107,7 +107,7 @@ export function CriteriumDetail() {
 
       {/* Player header */}
       <div>
-        <h1 className="text-2xl font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>
+        <h1 className="text-xl md:text-2xl font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>
           {player.nom}
         </h1>
         <div className="flex items-center gap-2 mt-1">
@@ -131,11 +131,11 @@ export function CriteriumDetail() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-[#f2f4f6] text-[#64748b]">
-                  <th className="text-center px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Rang</th>
-                  <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Joueur</th>
-                  <th className="text-left px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Club</th>
-                  <th className="text-center px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Clt</th>
-                  <th className="text-center px-4 py-3 font-semibold text-[11px] uppercase tracking-widest">Points</th>
+                  <th className="text-center px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Rang</th>
+                  <th className="text-left px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Joueur</th>
+                  <th className="hidden md:table-cell text-left px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Club</th>
+                  <th className="text-center px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Clt</th>
+                  <th className="text-center px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Points</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,13 +150,13 @@ export function CriteriumDetail() {
                           : idx % 2 === 0 ? "bg-[#f7f9fb]" : "bg-white"
                       }`}
                     >
-                      <td className="px-4 py-3 text-center">{row.rang}</td>
-                      <td className="px-4 py-3 font-medium text-[#191c1e]">{row.nom}</td>
-                      <td className="px-4 py-3 text-[#64748b]">{row.club}</td>
-                      <td className="px-4 py-3 text-center text-[#64748b]">
+                      <td className="px-2 md:px-4 py-2 md:py-3 text-center">{row.rang}</td>
+                      <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-[#191c1e]">{row.nom}</td>
+                      <td className="hidden md:table-cell px-2 md:px-4 py-2 md:py-3 text-[#64748b]">{row.club}</td>
+                      <td className="px-2 md:px-4 py-2 md:py-3 text-center text-[#64748b]">
                         {row.classement}
                       </td>
-                      <td className="px-4 py-3 text-center font-bold">
+                      <td className="px-2 md:px-4 py-2 md:py-3 text-center font-bold">
                         {row.points}
                       </td>
                     </tr>
