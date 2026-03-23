@@ -285,15 +285,22 @@ export function ProgressionDetail() {
                       className={`flex items-center px-6 py-3 ${idx % 2 === 0 ? "bg-white" : "bg-[#f7f9fb]"}`}
                     >
                       {/* Points badge */}
-                      <div className={`w-14 h-8 rounded-md flex items-center justify-center font-bold text-xs text-white flex-shrink-0 ${
-                        partie.points_resultat > 0
+                      {(() => {
+                        const isEstimated = !partie.epreuve && partie.points_resultat !== 0;
+                        const bg = partie.points_resultat > 0
                           ? "bg-green-500"
                           : partie.points_resultat < 0
                             ? "bg-red-500"
-                            : "bg-[#475569]"
-                      }`}>
-                        {partie.points_resultat > 0 ? "+" : ""}{partie.points_resultat || "0"}
-                      </div>
+                            : "bg-[#475569]";
+                        return (
+                          <div
+                            className={`w-14 h-8 rounded-md flex items-center justify-center font-bold text-xs text-white flex-shrink-0 ${bg} ${isEstimated ? "opacity-70" : ""}`}
+                            title={isEstimated ? "Estimation (en attente de validation FFTT)" : ""}
+                          >
+                            {isEstimated ? "~" : ""}{partie.points_resultat > 0 ? "+" : ""}{partie.points_resultat || "0"}
+                          </div>
+                        );
+                      })()}
 
                       {/* Player info */}
                       <div className="ml-4 flex-1 min-w-0">
