@@ -36,12 +36,24 @@ describe("GET /api/joueurs", () => {
     (mockDb.select as ReturnType<typeof vi.fn>).mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
+        // joueurs query: select().from().where().orderBy()
         return {
           from: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue(joueurs),
+            where: vi.fn().mockReturnValue({
+              orderBy: vi.fn().mockResolvedValue(joueurs),
+            }),
           }),
         };
       }
+      if (callCount === 2) {
+        // parties_individuelles count query: select().from().groupBy()
+        return {
+          from: vi.fn().mockReturnValue({
+            groupBy: vi.fn().mockResolvedValue([]),
+          }),
+        };
+      }
+      // sync_status query: select().from().orderBy()
       return {
         from: vi.fn().mockReturnValue({
           orderBy: vi.fn().mockResolvedValue(syncRows),
@@ -64,12 +76,24 @@ describe("GET /api/joueurs", () => {
     (mockDb.select as ReturnType<typeof vi.fn>).mockImplementation(() => {
       callCount++;
       if (callCount === 1) {
+        // joueurs query: select().from().where().orderBy()
         return {
           from: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue([]),
+            where: vi.fn().mockReturnValue({
+              orderBy: vi.fn().mockResolvedValue([]),
+            }),
           }),
         };
       }
+      if (callCount === 2) {
+        // parties_individuelles count query: select().from().groupBy()
+        return {
+          from: vi.fn().mockReturnValue({
+            groupBy: vi.fn().mockResolvedValue([]),
+          }),
+        };
+      }
+      // sync_status query: select().from().orderBy()
       return {
         from: vi.fn().mockReturnValue({
           orderBy: vi.fn().mockResolvedValue([]),
