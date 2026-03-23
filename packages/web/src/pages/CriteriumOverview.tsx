@@ -261,7 +261,7 @@ function TourResultsTable({
       )}
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl p-6 text-center shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
           <p className="text-xs text-[#64748b] mb-1">Joueurs engagés</p>
           <p className="text-3xl font-bold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>{joueurs.length}</p>
@@ -384,9 +384,9 @@ export function CriteriumOverview() {
   const currentTourData = availableTours.find((t) => t.tour === currentTour);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-5xl mx-auto px-3 md:px-4 py-6 md:py-8 space-y-8">
       <div>
-        <h1 className="text-2xl font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>
+        <h1 className="text-xl md:text-2xl font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>
           Critérium Fédéral
         </h1>
       </div>
