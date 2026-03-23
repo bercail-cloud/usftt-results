@@ -208,7 +208,6 @@ export function ProgressionDetail() {
                 const divShort = eq.lib_division
                   .replace(/^FED_/, "")
                   .replace(/^L\d+_/, "")
-                  .replace(/^D\d+[-_]?/, "D")
                   .replace(/\s*(Phase|phase)\s*\d\s*/g, "")
                   .replace(/\s*Poule\s*\d+/g, "")
                   .trim();
