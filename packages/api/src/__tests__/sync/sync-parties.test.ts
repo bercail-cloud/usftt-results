@@ -45,7 +45,8 @@ describe("syncParties", () => {
   });
 
   it("gets all joueurs licences from DB", async () => {
-    const fromMock = vi.fn().mockResolvedValue([]);
+    const whereMock = vi.fn().mockResolvedValue([]);
+    const fromMock = vi.fn().mockReturnValue({ where: whereMock });
     const selectMock = vi.fn().mockReturnValue({ from: fromMock });
     const db = { select: selectMock };
 
@@ -54,7 +55,8 @@ describe("syncParties", () => {
   });
 
   it("returns 0 when no joueurs in DB", async () => {
-    const fromMock = vi.fn().mockResolvedValue([]);
+    const whereMock = vi.fn().mockResolvedValue([]);
+    const fromMock = vi.fn().mockReturnValue({ where: whereMock });
     const db = { select: vi.fn().mockReturnValue({ from: fromMock }) };
 
     const count = await syncParties(db as SyncDb, FFTT_CONFIG);
@@ -66,7 +68,9 @@ describe("syncParties", () => {
     const licences = ["11111111", "22222222"];
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue(licences.map((l) => ({ licence: l }))),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(licences.map((l) => ({ licence: l }))),
+        }),
       }),
       insert: vi.fn().mockReturnValue({
         values: vi.fn().mockReturnValue({
@@ -98,7 +102,9 @@ describe("syncParties", () => {
   it("maps V to victoire=true and D to victoire=false", async () => {
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        }),
       }),
       delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
       insert: vi.fn().mockReturnValue({
@@ -131,7 +137,9 @@ describe("syncParties", () => {
   it("maps API fields correctly to DB columns", async () => {
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        }),
       }),
       delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
       insert: vi.fn(),
@@ -166,7 +174,9 @@ describe("syncParties", () => {
   it("parses numeric fields correctly", async () => {
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        }),
       }),
       delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
       insert: vi.fn(),
@@ -200,10 +210,12 @@ describe("syncParties", () => {
   it("returns total count of synced parties across all joueurs", async () => {
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue([
-          { licence: "11111111" },
-          { licence: "22222222" },
-        ]),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([
+            { licence: "11111111" },
+            { licence: "22222222" },
+          ]),
+        }),
       }),
       delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
       insert: vi.fn().mockReturnValue({
@@ -222,7 +234,9 @@ describe("syncParties", () => {
   it("skips insert when joueur has no parties", async () => {
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue([{ licence: "11111111" }]),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ licence: "11111111" }]),
+        }),
       }),
       delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
       insert: vi.fn(),

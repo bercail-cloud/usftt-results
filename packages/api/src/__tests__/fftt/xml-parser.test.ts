@@ -537,6 +537,7 @@ describe("parseParties", () => {
       pointres: "+3",
       coefchamp: "1.0",
       advclaof: "1200",
+      idpartie: "",
     });
   });
 

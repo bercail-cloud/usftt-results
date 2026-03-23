@@ -36,7 +36,9 @@ describe("syncHistorique", () => {
   it("returns 0 when no joueurs in DB", async () => {
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue([]),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+        }),
       }),
     };
 
@@ -49,7 +51,9 @@ describe("syncHistorique", () => {
     const licences = ["11111111", "22222222"];
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue(licences.map((l) => ({ licence: l }))),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(licences.map((l) => ({ licence: l }))),
+        }),
       }),
       insert: vi.fn().mockReturnValue({
         values: vi.fn().mockReturnValue({
@@ -82,7 +86,9 @@ describe("syncHistorique", () => {
   it("maps API fields correctly to DB columns", async () => {
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        }),
       }),
       insert: vi.fn(),
     };
@@ -114,7 +120,9 @@ describe("syncHistorique", () => {
   it("parses phase and points as integers", async () => {
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        }),
       }),
       insert: vi.fn(),
     };
@@ -147,7 +155,9 @@ describe("syncHistorique", () => {
   it("uses onConflictDoNothing (append-only, no overwrite)", async () => {
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        }),
       }),
       insert: vi.fn(),
     };
@@ -173,10 +183,12 @@ describe("syncHistorique", () => {
   it("returns count of newly inserted rows", async () => {
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue([
-          { licence: "11111111" },
-          { licence: "22222222" },
-        ]),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([
+            { licence: "11111111" },
+            { licence: "22222222" },
+          ]),
+        }),
       }),
       insert: vi.fn().mockReturnValue({
         values: vi.fn().mockReturnValue({
@@ -198,7 +210,9 @@ describe("syncHistorique", () => {
   it("handles duplicate data gracefully (DO NOTHING means no error)", async () => {
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        }),
       }),
       insert: vi.fn().mockReturnValue({
         values: vi.fn().mockReturnValue({
@@ -222,7 +236,9 @@ describe("syncHistorique", () => {
   it("skips insert when joueur has no historique", async () => {
     const db = {
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ licence: "12345678" }]),
+        }),
       }),
       insert: vi.fn(),
     };
