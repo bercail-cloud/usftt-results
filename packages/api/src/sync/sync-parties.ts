@@ -5,27 +5,60 @@ import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
 /**
  * Estimate points gained/lost using the FFTT formula.
- * This is an approximation — the real calculation happens server-side at FFTT.
+ * Uses classement officiel (debut de phase).
+ * The FFTT uses a step-based table where points depend on the
+ * ecart (gap) between player and opponent in tranches of 25 pts.
+ * Formula derived from observed FFTT results.
  */
 function estimatePoints(
   playerClassement: number,
   adversaireClassement: number,
   victoire: boolean,
-  coefficient: number
+  coefficient: number,
+  forfait: boolean = false
 ): number {
-  // Ensure classements are in points (not hundreds)
+  if (forfait) return 0;
+
+  // Ensure classements are in real points
   const pClt = playerClassement < 50 ? playerClassement * 100 : playerClassement;
   const aClt = adversaireClassement < 50 ? adversaireClassement * 100 : adversaireClassement;
 
-  const diff = pClt - aClt;
+  const ecart = aClt - pClt; // positive = adversaire plus fort
 
+  // FFTT points table (approximate, per tranche of ~50pts)
+  // Victory: gain depends on opponent strength relative to player
+  // Defeat: loss depends on opponent weakness relative to player
   if (victoire) {
-    // Victory: more points if opponent is stronger
-    const base = Math.max(0, 6 - diff / 25);
+    let base: number;
+    if (ecart >= 200) base = 40;
+    else if (ecart >= 150) base = 20;
+    else if (ecart >= 100) base = 10;
+    else if (ecart >= 50) base = 7;
+    else if (ecart >= 25) base = 6;
+    else if (ecart >= 0) base = 5.5;
+    else if (ecart >= -25) base = 5;
+    else if (ecart >= -50) base = 4;
+    else if (ecart >= -100) base = 3;
+    else if (ecart >= -150) base = 2;
+    else if (ecart >= -200) base = 1;
+    else if (ecart >= -300) base = 0.5;
+    else base = 0;
     return Math.round(base * coefficient * 10) / 10;
   } else {
-    // Defeat: lose more points if opponent is weaker
-    const base = Math.min(0, -6 + (-diff) / 25);
+    let base: number;
+    if (ecart <= -200) base = -40;
+    else if (ecart <= -150) base = -20;
+    else if (ecart <= -100) base = -10;
+    else if (ecart <= -50) base = -7;
+    else if (ecart <= -25) base = -6;
+    else if (ecart <= 0) base = -5.5;
+    else if (ecart <= 25) base = -5;
+    else if (ecart <= 50) base = -4;
+    else if (ecart <= 100) base = -3;
+    else if (ecart <= 150) base = -2;
+    else if (ecart <= 200) base = -1;
+    else if (ecart <= 300) base = -0.5;
+    else base = 0;
     return Math.round(base * coefficient * 10) / 10;
   }
 }
@@ -34,8 +67,8 @@ export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<n
   const { appId, serie, password } = ffttConfig;
 
   // Only sync parties for active players (licence T or A)
-  const joueursInDb: Array<{ licence: string; points_mensuels: number | null }> = await db
-    .select({ licence: joueurs.licence, points_mensuels: joueurs.points_mensuels })
+  const joueursInDb: Array<{ licence: string; points_officiels: number | null }> = await db
+    .select({ licence: joueurs.licence, points_officiels: joueurs.points_officiels })
     .from(joueurs)
     .where(sql`${joueurs.type_licence} IN ('T', 'A')`);
 
@@ -97,7 +130,7 @@ export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<n
     // Add SPID-only matches (recent matches not yet in mysql)
     const mysqlIdParties = new Set(parties.map((p) => p.idpartie).filter(Boolean));
 
-    const playerClt = joueur.points_mensuels ?? 500;
+    const playerClt = joueur.points_officiels ?? 500;
 
     const spidOnlyRows = spidParties
       .filter((sp) => sp.idpartie && !mysqlIdParties.has(sp.idpartie))
@@ -105,7 +138,8 @@ export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<n
         const victoire = sp.victoire === "V";
         const advClt = safeInt(sp.classement);
         const coef = safeFloat(sp.coefchamp);
-        const estimated = estimatePoints(playerClt, advClt, victoire, coef);
+        const isForfait = sp.forfait === "1";
+        const estimated = estimatePoints(playerClt, advClt, victoire, coef, isForfait);
 
         return {
           licence: joueur.licence,
