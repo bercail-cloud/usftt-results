@@ -104,9 +104,12 @@ app.get("/joueurs/:licence/equipes", async (c) => {
   // Build rencontre → equipe mapping
   const rencToEquipe = new Map(allRencontres.map((r) => [r.id, r]));
 
-  // Find parties where joueur played
+  // Find parties where joueur played (exclude doubles: names containing " et ")
   const playerParties = allParties.filter(
-    (p) => isPlayerMatch(p.joueur_a, p.classement_a) || isPlayerMatch(p.joueur_b, p.classement_b)
+    (p) =>
+      !p.joueur_a.includes(" et ") &&
+      !p.joueur_b.includes(" et ") &&
+      (isPlayerMatch(p.joueur_a, p.classement_a) || isPlayerMatch(p.joueur_b, p.classement_b))
   );
 
   // Group by equipe
