@@ -225,10 +225,17 @@ export function ProgressionDetail() {
 
   // Par type de compétition
   type CompType = "Équipes" | "Critérium" | "Tournoi" | "Autres";
-  const getCompType = (epreuve: string): CompType => {
+  const getCompType = (epreuve: string, epreuveLibelle: string | null): CompType => {
     if (epreuve === "1" || epreuve === "2") return "Équipes";
     if (epreuve === "I") return "Critérium";
     if (epreuve === "T") return "Tournoi";
+    // Fallback: use epreuve_libelle for SPID-only matches (epreuve is empty)
+    if (!epreuve && epreuveLibelle) {
+      const lib = epreuveLibelle.toLowerCase();
+      if (lib.includes("equipe") || lib.includes("équipe")) return "Équipes";
+      if (lib.includes("crit")) return "Critérium";
+      if (lib.includes("tournoi")) return "Tournoi";
+    }
     return "Autres";
   };
 
@@ -240,7 +247,7 @@ export function ProgressionDetail() {
   };
 
   for (const p of sortedParties) {
-    const t = getCompType(p.epreuve);
+    const t = getCompType(p.epreuve, p.epreuve_libelle);
     if (p.victoire) byType[t].v++;
     else byType[t].d++;
     byType[t].pts += p.points_resultat;
