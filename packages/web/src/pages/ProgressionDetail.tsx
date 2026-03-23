@@ -37,6 +37,7 @@ interface Partie {
   adversaire_rang: string | null;
   victoire: boolean;
   points_resultat: number;
+  coefficient: number;
   epreuve: string;
   epreuve_libelle: string | null;
 }
