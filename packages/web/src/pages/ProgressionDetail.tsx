@@ -361,7 +361,7 @@ export function ProgressionDetail() {
                             className={`w-14 h-8 rounded-md flex items-center justify-center font-bold text-xs text-white flex-shrink-0 ${bg} ${isEstimated ? "opacity-70" : ""}`}
                             title={isEstimated ? "Estimation (en attente de validation FFTT)" : ""}
                           >
-                            {isEstimated ? "~" : ""}{partie.points_resultat > 0 ? "+" : ""}{partie.points_resultat || "0"}
+                            {isEstimated ? "~ " : ""}{partie.points_resultat > 0 ? "+" : ""}{partie.points_resultat || "0"}
                           </div>
                         );
                       })()}
