@@ -145,10 +145,37 @@ export function ProgressionDetail() {
   const progression = progressionData?.data ?? [];
   const parties = partiesData?.data ?? [];
 
-  const chartData = progression.map((p) => ({
-    label: formatChartLabel(p),
-    points: p.points,
-  }));
+  // Build chart data with gap detection
+  const chartData: Array<{ label: string; points: number | null }> = [];
+
+  function extractYear(saison: string): number {
+    const match = saison.match(/(\d{4})\s*[/-]\s*\d{4}/);
+    return match ? parseInt(match[1]!, 10) : 0;
+  }
+
+  for (let i = 0; i < progression.length; i++) {
+    const p = progression[i]!;
+
+    // Detect gap: if previous entry exists and there's a jump > 1 year
+    if (i > 0) {
+      const prev = progression[i - 1]!;
+      const prevYear = extractYear(prev.saison);
+      const currYear = extractYear(p.saison);
+      const prevPhase = prev.phase;
+      const currPhase = p.phase;
+
+      // Expected next: same year P2 or next year P1
+      const expectedNextYear = prevPhase === 2 ? prevYear + 1 : prevYear;
+      const expectedNextPhase = prevPhase === 2 ? 1 : 2;
+
+      if (currYear > expectedNextYear || (currYear === expectedNextYear && currPhase > expectedNextPhase)) {
+        // Insert a gap marker
+        chartData.push({ label: "...", points: null });
+      }
+    }
+
+    chartData.push({ label: formatChartLabel(p), points: p.points });
+  }
 
   const sortedParties = parties
     .slice()
@@ -282,6 +309,7 @@ export function ProgressionDetail() {
                 dataKey="points"
                 stroke="#2563eb"
                 strokeWidth={2}
+                connectNulls={false}
                 dot={{ fill: "#2563eb", r: 4, strokeWidth: 0 }}
                 activeDot={{ r: 6, strokeWidth: 0 }}
               />
