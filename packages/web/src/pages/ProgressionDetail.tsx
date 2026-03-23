@@ -18,6 +18,8 @@ interface Joueur {
   prenom: string;
   points_officiels: number | null;
   points_mensuels: number | null;
+  ancien_points_mensuels: number | null;
+  points_initm: number | null;
   categorie: string | null;
   sexe: string;
 }
@@ -185,6 +187,113 @@ export function ProgressionDetail() {
         parseDDMMYYYY(a.date_partie).getTime()
     );
 
+  // --- Statistics computation ---
+
+  // Bilan général
+  const totalVictoires = sortedParties.filter((p) => p.victoire).length;
+  const totalDefaites = sortedParties.filter((p) => !p.victoire).length;
+  const totalMatchs = sortedParties.length;
+  const pctVictoires = totalMatchs > 0 ? Math.round((totalVictoires / totalMatchs) * 100) : 0;
+
+  // Current streak (sortedParties is DESC by date, so index 0 is latest)
+  const currentStreak = (() => {
+    if (sortedParties.length === 0) return null;
+    const firstResult = sortedParties[0]!.victoire;
+    let count = 0;
+    for (const p of sortedParties) {
+      if (p.victoire === firstResult) count++;
+      else break;
+    }
+    return { type: firstResult ? "V" : "D", count };
+  })();
+
+  // Best consecutive wins streak (need chronological order)
+  const chronoParties = sortedParties.slice().reverse();
+  const bestWinStreak = (() => {
+    let best = 0;
+    let current = 0;
+    for (const p of chronoParties) {
+      if (p.victoire) {
+        current++;
+        if (current > best) best = current;
+      } else {
+        current = 0;
+      }
+    }
+    return best;
+  })();
+
+  // Par type de compétition
+  type CompType = "Équipes" | "Critérium" | "Tournoi" | "Autres";
+  const getCompType = (epreuve: string): CompType => {
+    if (epreuve === "1" || epreuve === "2") return "Équipes";
+    if (epreuve === "I") return "Critérium";
+    if (epreuve === "T") return "Tournoi";
+    return "Autres";
+  };
+
+  const byType: Record<CompType, { v: number; d: number; pts: number }> = {
+    "Équipes": { v: 0, d: 0, pts: 0 },
+    "Critérium": { v: 0, d: 0, pts: 0 },
+    "Tournoi": { v: 0, d: 0, pts: 0 },
+    "Autres": { v: 0, d: 0, pts: 0 },
+  };
+
+  for (const p of sortedParties) {
+    const t = getCompType(p.epreuve);
+    if (p.victoire) byType[t].v++;
+    else byType[t].d++;
+    byType[t].pts += p.points_resultat;
+  }
+
+  const activeTypes = (Object.entries(byType) as Array<[CompType, { v: number; d: number; pts: number }]>)
+    .filter(([, stats]) => stats.v + stats.d > 0);
+
+  // Adversaires
+  const biggestUpset = (() => {
+    // Victory with biggest positive gap (player beat someone much stronger)
+    // gap = adversaire_classement - player_classement, more positive = bigger upset
+    // We don't have player classement here easily, so use points_mensuels as proxy
+    // Actually: biggest upset = won against highest-ranked opponent (lowest adversaire_classement number = higher rank)
+    // We pick the victory with the highest adversaire_classement (strongest opponent beaten)
+    const victories = sortedParties.filter((p) => p.victoire && p.adversaire_classement > 0);
+    if (victories.length === 0) return null;
+    return victories.reduce((best, p) =>
+      p.adversaire_classement > best.adversaire_classement ? p : best
+    );
+  })();
+
+  const biggestUpset2 = (() => {
+    // Defeat with most negative points_resultat (lost and dropped most points)
+    const defeats = sortedParties.filter((p) => !p.victoire);
+    if (defeats.length === 0) return null;
+    return defeats.reduce((worst, p) =>
+      p.points_resultat < worst.points_resultat ? p : worst
+    );
+  })();
+
+  const mostFacedOpponent = (() => {
+    if (sortedParties.length === 0) return null;
+    const counts: Record<string, { nom: string; v: number; d: number }> = {};
+    for (const p of sortedParties) {
+      const key = p.adversaire_nom;
+      if (!counts[key]) counts[key] = { nom: p.adversaire_nom, v: 0, d: 0 };
+      if (p.victoire) counts[key].v++;
+      else counts[key].d++;
+    }
+    const sorted = Object.values(counts).sort((a, b) => (b.v + b.d) - (a.v + a.d));
+    return sorted[0] ?? null;
+  })();
+
+  // Progression points
+  const pointsSaison = joueur && joueur.points_mensuels != null && joueur.points_initm != null
+    ? Math.round(joueur.points_mensuels - joueur.points_initm)
+    : null;
+
+  const pointsMois = joueur && joueur.points_mensuels != null && joueur.ancien_points_mensuels != null
+    ? Math.round(joueur.points_mensuels - joueur.ancien_points_mensuels)
+    : null;
+
   const playerName = joueur ? `${joueur.nom} ${joueur.prenom}` : "Joueur";
   const playerInfo = joueur
     ? `${joueur.categorie ?? ""} | ${joueur.sexe} | ${joueur.points_officiels ?? "—"} pts`
@@ -263,6 +372,148 @@ export function ProgressionDetail() {
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Statistics card */}
+      {!partiesLoading && sortedParties.length > 0 && (
+        <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-6">
+          <h2
+            className="font-extrabold text-[#191c1e] mb-5"
+            style={{ fontFamily: "Manrope, sans-serif" }}
+          >
+            Statistiques
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {/* Bilan général */}
+            <div className="bg-[#f7f9fb] rounded-lg p-4">
+              <p className="text-xs font-semibold text-[#737686] uppercase tracking-wide mb-3">
+                Bilan général
+              </p>
+              <div className="flex items-baseline gap-3 mb-3">
+                <span className="text-3xl font-extrabold text-success">{totalVictoires}V</span>
+                <span className="text-[#94a3b8] text-lg font-semibold">-</span>
+                <span className="text-3xl font-extrabold text-error">{totalDefaites}D</span>
+                <span className="ml-auto text-2xl font-extrabold text-[#191c1e]">{pctVictoires}%</span>
+              </div>
+              <div className="flex gap-4 text-sm">
+                {currentStreak && (
+                  <div>
+                    <span className="text-[#94a3b8]">Série en cours </span>
+                    <span className={`font-bold ${currentStreak.type === "V" ? "text-success" : "text-error"}`}>
+                      {currentStreak.count}{currentStreak.type}
+                    </span>
+                  </div>
+                )}
+                {bestWinStreak > 0 && (
+                  <div>
+                    <span className="text-[#94a3b8]">Meilleure série </span>
+                    <span className="font-bold text-success">{bestWinStreak}V</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Progression points */}
+            <div className="bg-[#f7f9fb] rounded-lg p-4">
+              <p className="text-xs font-semibold text-[#737686] uppercase tracking-wide mb-3">
+                Progression
+              </p>
+              <div className="space-y-2">
+                {pointsSaison !== null && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-[#737686]">Saison</span>
+                    <span className={`text-2xl font-extrabold ${pointsSaison >= 0 ? "text-success" : "text-error"}`}>
+                      {pointsSaison > 0 ? "+" : ""}{pointsSaison} pts
+                    </span>
+                  </div>
+                )}
+                {pointsMois !== null && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-[#737686]">Ce mois</span>
+                    <span className={`text-2xl font-extrabold ${pointsMois >= 0 ? "text-success" : "text-error"}`}>
+                      {pointsMois > 0 ? "+" : ""}{pointsMois} pts
+                    </span>
+                  </div>
+                )}
+                {pointsSaison === null && pointsMois === null && (
+                  <p className="text-sm text-[#94a3b8]">Données non disponibles</p>
+                )}
+              </div>
+            </div>
+
+            {/* Par type de compétition */}
+            {activeTypes.length > 0 && (
+              <div className="bg-[#f7f9fb] rounded-lg p-4">
+                <p className="text-xs font-semibold text-[#737686] uppercase tracking-wide mb-3">
+                  Par type de compétition
+                </p>
+                <div className="space-y-2">
+                  {activeTypes.map(([type, stats]) => (
+                    <div key={type} className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-[#191c1e] w-24 flex-shrink-0">{type}</span>
+                      <span className="text-sm">
+                        <span className="text-success font-bold">{stats.v}V</span>
+                        <span className="text-[#94a3b8] mx-1">-</span>
+                        <span className="text-error font-bold">{stats.d}D</span>
+                      </span>
+                      <span className="ml-auto text-sm font-semibold">
+                        <span className={stats.pts >= 0 ? "text-success" : "text-error"}>
+                          {stats.pts > 0 ? "+" : ""}{Math.round(stats.pts)} pts
+                        </span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Adversaires notables */}
+            <div className="bg-[#f7f9fb] rounded-lg p-4">
+              <p className="text-xs font-semibold text-[#737686] uppercase tracking-wide mb-3">
+                Adversaires notables
+              </p>
+              <div className="space-y-3">
+                {biggestUpset && (
+                  <div>
+                    <p className="text-xs text-[#94a3b8] mb-0.5">Plus grosse perf</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-success">V</span>
+                      <span className="text-sm font-semibold text-[#191c1e]">{biggestUpset.adversaire_nom}</span>
+                      <span className="text-xs text-[#94a3b8]">{biggestUpset.adversaire_classement} pts</span>
+                    </div>
+                  </div>
+                )}
+                {biggestUpset2 && (
+                  <div>
+                    <p className="text-xs text-[#94a3b8] mb-0.5">Plus grosse contre-perf</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-error">D</span>
+                      <span className="text-sm font-semibold text-[#191c1e]">{biggestUpset2.adversaire_nom}</span>
+                      <span className="text-xs text-[#94a3b8]">{biggestUpset2.adversaire_classement} pts</span>
+                      <span className="ml-auto text-xs font-semibold text-error">{biggestUpset2.points_resultat} pts</span>
+                    </div>
+                  </div>
+                )}
+                {mostFacedOpponent && (mostFacedOpponent.v + mostFacedOpponent.d) > 1 && (
+                  <div>
+                    <p className="text-xs text-[#94a3b8] mb-0.5">Adversaire le plus affronté</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-[#191c1e]">{mostFacedOpponent.nom}</span>
+                      <span className="text-xs">
+                        <span className="text-success font-bold">{mostFacedOpponent.v}V</span>
+                        <span className="text-[#94a3b8] mx-1">-</span>
+                        <span className="text-error font-bold">{mostFacedOpponent.d}D</span>
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
       )}
