@@ -230,21 +230,17 @@ export function ProgressionDetail() {
 
   // Adversaires
   const biggestUpset = (() => {
-    // Victory with biggest positive gap (player beat someone much stronger)
-    // gap = adversaire_classement - player_classement, more positive = bigger upset
-    // We don't have player classement here easily, so use points_mensuels as proxy
-    // Actually: biggest upset = won against highest-ranked opponent (lowest adversaire_classement number = higher rank)
-    // We pick the victory with the highest adversaire_classement (strongest opponent beaten)
-    const victories = sortedParties.filter((p) => p.victoire && p.adversaire_classement > 0);
+    // Victory with the most points gained
+    const victories = sortedParties.filter((p) => p.victoire && p.points_resultat > 0);
     if (victories.length === 0) return null;
     return victories.reduce((best, p) =>
-      p.adversaire_classement > best.adversaire_classement ? p : best
+      p.points_resultat > best.points_resultat ? p : best
     );
   })();
 
   const biggestUpset2 = (() => {
-    // Defeat with most negative points_resultat (lost and dropped most points)
-    const defeats = sortedParties.filter((p) => !p.victoire);
+    // Defeat with the most points lost
+    const defeats = sortedParties.filter((p) => !p.victoire && p.points_resultat < 0);
     if (defeats.length === 0) return null;
     return defeats.reduce((worst, p) =>
       p.points_resultat < worst.points_resultat ? p : worst
@@ -446,7 +442,8 @@ export function ProgressionDetail() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-success">V</span>
                       <span className="text-sm font-semibold text-[#191c1e]">{biggestUpset.adversaire_nom}</span>
-                      <span className="text-xs text-[#94a3b8]">{biggestUpset.adversaire_classement} pts</span>
+                      <span className="text-xs text-[#94a3b8]">({biggestUpset.adversaire_classement})</span>
+                      <span className="ml-auto text-sm font-semibold text-success">+{biggestUpset.points_resultat}</span>
                     </div>
                   </div>
                 )}
@@ -456,8 +453,8 @@ export function ProgressionDetail() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-error">D</span>
                       <span className="text-sm font-semibold text-[#191c1e]">{biggestUpset2.adversaire_nom}</span>
-                      <span className="text-xs text-[#94a3b8]">{biggestUpset2.adversaire_classement} pts</span>
-                      <span className="ml-auto text-xs font-semibold text-error">{biggestUpset2.points_resultat} pts</span>
+                      <span className="text-xs text-[#94a3b8]">({biggestUpset2.adversaire_classement})</span>
+                      <span className="ml-auto text-sm font-semibold text-error">{biggestUpset2.points_resultat}</span>
                     </div>
                   </div>
                 )}
