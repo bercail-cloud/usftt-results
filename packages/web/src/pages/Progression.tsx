@@ -161,19 +161,19 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
         <table className="w-full text-sm" role="table" aria-label="Liste des joueurs">
           <thead>
             <tr className="bg-[#f2f4f6]">
-              <th className="text-center px-3 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
+              <th className="hidden md:table-cell text-center px-3 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
                 Cat
               </th>
               <th className="text-left px-5 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
-                Nom Prénom
+                <span className="hidden md:inline">Nom Prénom</span><span className="md:hidden">Joueur</span>
               </th>
               <th className={thClass} onClick={() => handleSort("points_mensuels")}>
                 Mensuel<SortIndicator col="points_mensuels" />
               </th>
-              <th className={thClass} onClick={() => handleSort("points_officiels")}>
+              <th className={`${thClass} hidden md:table-cell`} onClick={() => handleSort("points_officiels")}>
                 Officiel<SortIndicator col="points_officiels" />
               </th>
-              <th className={thClass} onClick={() => handleSort("points_initm")}>
+              <th className={`${thClass} hidden md:table-cell`} onClick={() => handleSort("points_initm")}>
                 Début<SortIndicator col="points_initm" />
               </th>
               <th className={thClass} onClick={() => handleSort("progression_mensuelle")}>
@@ -204,19 +204,22 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
                   }`}
                   aria-selected={isSelected}
                 >
-                  <td className={`px-3 py-3 text-center text-[#737686] border-l-[4px] ${j.sexe === "F" ? "border-l-pink-400" : "border-l-blue-400"}`} title={CATEGORIE_LABELS[j.categorie ?? ""] ?? ""}>
+                  <td className={`hidden md:table-cell px-3 py-3 text-center text-[#737686] border-l-[4px] ${j.sexe === "F" ? "border-l-pink-400" : "border-l-blue-400"}`} title={CATEGORIE_LABELS[j.categorie ?? ""] ?? ""}>
                     {j.categorie ?? "—"}
                   </td>
-                  <td className="px-5 py-3 font-semibold text-[#191c1e] whitespace-nowrap">
+                  <td className={`px-5 py-3 font-semibold text-[#191c1e] whitespace-nowrap border-l-[4px] md:border-l-0 ${j.sexe === "F" ? "border-l-pink-400" : "border-l-blue-400"}`}>
                     {j.nom} {j.prenom}
+                    <div className="md:hidden text-[10px] text-muted font-normal">
+                      {j.categorie} | {j.points_officiels} pts
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-right text-[#191c1e] font-mono tabular-nums">
                     {j.points_mensuels != null ? Math.round(j.points_mensuels) : "—"}
                   </td>
-                  <td className="px-4 py-3 text-right text-[#191c1e] font-mono tabular-nums">
+                  <td className="hidden md:table-cell px-4 py-3 text-right text-[#191c1e] font-mono tabular-nums">
                     {j.points_officiels ?? "—"}
                   </td>
-                  <td className="px-4 py-3 text-right text-[#737686] font-mono tabular-nums">
+                  <td className="hidden md:table-cell px-4 py-3 text-right text-[#737686] font-mono tabular-nums">
                     {j.points_initm ?? "—"}
                   </td>
                   <td className={`px-4 py-3 text-right font-semibold font-mono tabular-nums ${getPointsColor(prog)}`}>
@@ -266,11 +269,11 @@ export function Progression() {
     .sort((a, b) => (b.points_officiels ?? 0) - (a.points_officiels ?? 0));
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-5xl mx-auto px-3 md:px-4 py-6 md:py-8 space-y-8">
       {/* Title */}
       <div>
         <h1
-          className="text-2xl font-extrabold text-[#191c1e]"
+          className="text-xl md:text-2xl font-extrabold text-[#191c1e]"
           style={{ fontFamily: "Manrope, sans-serif" }}
         >
           Progression individuelle
