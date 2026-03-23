@@ -195,34 +195,6 @@ export function ProgressionDetail() {
   const totalMatchs = sortedParties.length;
   const pctVictoires = totalMatchs > 0 ? Math.round((totalVictoires / totalMatchs) * 100) : 0;
 
-  // Current streak (sortedParties is DESC by date, so index 0 is latest)
-  const currentStreak = (() => {
-    if (sortedParties.length === 0) return null;
-    const firstResult = sortedParties[0]!.victoire;
-    let count = 0;
-    for (const p of sortedParties) {
-      if (p.victoire === firstResult) count++;
-      else break;
-    }
-    return { type: firstResult ? "V" : "D", count };
-  })();
-
-  // Best consecutive wins streak (need chronological order)
-  const chronoParties = sortedParties.slice().reverse();
-  const bestWinStreak = (() => {
-    let best = 0;
-    let current = 0;
-    for (const p of chronoParties) {
-      if (p.victoire) {
-        current++;
-        if (current > best) best = current;
-      } else {
-        current = 0;
-      }
-    }
-    return best;
-  })();
-
   // Par type de compétition
   type CompType = "Équipes" | "Critérium" | "Tournoi" | "Autres";
   const getCompType = (epreuve: string, epreuveLibelle: string | null): CompType => {
@@ -405,22 +377,6 @@ export function ProgressionDetail() {
                 <span className="text-[#94a3b8] text-lg font-semibold">-</span>
                 <span className="text-3xl font-extrabold text-error">{totalDefaites}D</span>
                 <span className="ml-auto text-2xl font-extrabold text-[#191c1e]">{pctVictoires}%</span>
-              </div>
-              <div className="flex gap-4 text-sm">
-                {currentStreak && (
-                  <div>
-                    <span className="text-[#94a3b8]">Série en cours </span>
-                    <span className={`font-bold ${currentStreak.type === "V" ? "text-success" : "text-error"}`}>
-                      {currentStreak.count}{currentStreak.type}
-                    </span>
-                  </div>
-                )}
-                {bestWinStreak > 0 && (
-                  <div>
-                    <span className="text-[#94a3b8]">Meilleure série </span>
-                    <span className="font-bold text-success">{bestWinStreak}V</span>
-                  </div>
-                )}
               </div>
             </div>
 
