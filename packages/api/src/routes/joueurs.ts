@@ -71,9 +71,9 @@ app.get("/joueurs/:licence", async (c) => {
 app.get("/joueurs/:licence/equipes", async (c) => {
   const licence = c.req.param("licence");
 
-  // Get joueur name
+  // Get joueur info for matching
   const joueurRows = await db
-    .select({ nom: joueurs.nom, prenom: joueurs.prenom })
+    .select({ nom: joueurs.nom, prenom: joueurs.prenom, points_officiels: joueurs.points_officiels })
     .from(joueurs)
     .where(eq(joueurs.licence, licence))
     .limit(1);
@@ -83,6 +83,18 @@ app.get("/joueurs/:licence/equipes", async (c) => {
   }
 
   const joueurNom = joueurRows[0]!.nom.toUpperCase();
+  const joueurPrenom = joueurRows[0]!.prenom.toUpperCase();
+  const joueurClt = joueurRows[0]!.points_officiels;
+
+  // Match player in parties_rencontre by "NOM Prenom" and classement
+  function isPlayerMatch(name: string, classement: string): boolean {
+    const upper = name.toUpperCase();
+    // Match "NOM Prenom" exactly
+    if (upper.startsWith(joueurNom + " " + joueurPrenom)) return true;
+    // Fallback: match nom + classement contains player's points
+    if (upper.startsWith(joueurNom) && joueurClt && classement.includes(String(joueurClt))) return true;
+    return false;
+  }
 
   // Find all equipes where this player has played (via parties_rencontre)
   const allEquipes = await db.select().from(equipes);
@@ -94,7 +106,7 @@ app.get("/joueurs/:licence/equipes", async (c) => {
 
   // Find parties where joueur played
   const playerParties = allParties.filter(
-    (p) => p.joueur_a.toUpperCase().includes(joueurNom) || p.joueur_b.toUpperCase().includes(joueurNom)
+    (p) => isPlayerMatch(p.joueur_a, p.classement_a) || isPlayerMatch(p.joueur_b, p.classement_b)
   );
 
   // Group by equipe
@@ -110,9 +122,7 @@ app.get("/joueurs/:licence/equipes", async (c) => {
 
     const stats = equipeStats.get(renc.equipe_id)!;
 
-    // Determine if player won: player could be joueur_a or joueur_b
-    // But FFTT API inverts sides, so use detail_equa/equb
-    const isPlayerA = partie.joueur_a.toUpperCase().includes(joueurNom);
+    const isPlayerA = isPlayerMatch(partie.joueur_a, partie.classement_a);
     const playerWon = isPlayerA ? partie.score_a > partie.score_b : partie.score_b > partie.score_a;
 
     if (playerWon) {
