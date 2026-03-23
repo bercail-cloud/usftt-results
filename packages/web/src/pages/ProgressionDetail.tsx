@@ -289,7 +289,7 @@ export function ProgressionDetail() {
     : "";
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-5xl mx-auto px-3 md:px-4 py-6 md:py-8 space-y-8">
       {/* Breadcrumb */}
       <button
         onClick={() => {
@@ -304,7 +304,7 @@ export function ProgressionDetail() {
       {/* Player header */}
       <div>
         <h1
-          className="text-2xl font-extrabold text-[#191c1e]"
+          className="text-xl md:text-2xl font-extrabold text-[#191c1e]"
           style={{ fontFamily: "Manrope, sans-serif" }}
         >
           {playerName}
@@ -505,7 +505,8 @@ export function ProgressionDetail() {
         ) : progression.length === 0 ? (
           <EmptyState message="Aucune donnée de progression disponible" />
         ) : (
-          <ResponsiveContainer width="100%" height={260}>
+          <div className="h-[200px] md:h-[260px]">
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f2f4f6" />
               <XAxis
@@ -540,6 +541,7 @@ export function ProgressionDetail() {
               />
             </LineChart>
           </ResponsiveContainer>
+          </div>
         )}
       </div>
 
@@ -598,7 +600,7 @@ export function ProgressionDetail() {
                   {group.parties.map((partie, idx) => (
                     <div
                       key={idx}
-                      className={`flex items-center px-6 py-3 ${idx % 2 === 0 ? "bg-white" : "bg-[#f7f9fb]"}`}
+                      className={`flex items-center px-6 py-2 md:py-3 ${idx % 2 === 0 ? "bg-white" : "bg-[#f7f9fb]"}`}
                     >
                       {/* Points badge */}
                       {(() => {
