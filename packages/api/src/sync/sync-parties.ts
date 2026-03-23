@@ -4,12 +4,37 @@ import { eq, sql } from "drizzle-orm";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
 /**
- * Estimate points gained/lost using the FFTT formula.
- * Uses classement officiel (debut de phase).
- * The FFTT uses a step-based table where points depend on the
- * ecart (gap) between player and opponent in tranches of 25 pts.
- * Formula derived from observed FFTT results.
+ * FFTT official points table (coefficient = 1)
+ * Source: https://cauxtt.fr/comprendre-calcul-classement-points-fftt-tennis-de-table/
+ *
+ * Ecart = abs(classement_joueur - classement_adversaire)
+ * "Normal" = expected result (stronger wins or weaker loses)
+ * "Upset"  = unexpected result (weaker wins or stronger loses)
+ *
+ * | Ecart     | V normal | D normal | V upset | D upset |
+ * |-----------|----------|----------|---------|---------|
+ * | 0-24      | +6       | -5       | +6      | -5      |
+ * | 25-49     | +5.5     | -4.5     | +7      | -6      |
+ * | 50-99     | +5       | -4       | +8      | -7      |
+ * | 100-149   | +4       | -3       | +10     | -8      |
+ * | 150-199   | +3       | -2       | +13     | -10     |
+ * | 200-299   | +2       | -1       | +17     | -12.5   |
+ * | 300-399   | +1       | -0.5     | +22     | -16     |
+ * | 400-499   | +0.5     | 0        | +28     | -20     |
+ * | 500+      | 0        | 0        | +40     | -29     |
  */
+const FFTT_TABLE: Array<{ maxEcart: number; vNormal: number; dNormal: number; vUpset: number; dUpset: number }> = [
+  { maxEcart: 24,  vNormal: 6,   dNormal: -5,    vUpset: 6,   dUpset: -5 },
+  { maxEcart: 49,  vNormal: 5.5, dNormal: -4.5,  vUpset: 7,   dUpset: -6 },
+  { maxEcart: 99,  vNormal: 5,   dNormal: -4,    vUpset: 8,   dUpset: -7 },
+  { maxEcart: 149, vNormal: 4,   dNormal: -3,    vUpset: 10,  dUpset: -8 },
+  { maxEcart: 199, vNormal: 3,   dNormal: -2,    vUpset: 13,  dUpset: -10 },
+  { maxEcart: 299, vNormal: 2,   dNormal: -1,    vUpset: 17,  dUpset: -12.5 },
+  { maxEcart: 399, vNormal: 1,   dNormal: -0.5,  vUpset: 22,  dUpset: -16 },
+  { maxEcart: 499, vNormal: 0.5, dNormal: 0,     vUpset: 28,  dUpset: -20 },
+  { maxEcart: Infinity, vNormal: 0, dNormal: 0,   vUpset: 40,  dUpset: -29 },
+];
+
 function estimatePoints(
   playerClassement: number,
   adversaireClassement: number,
@@ -19,56 +44,33 @@ function estimatePoints(
 ): number {
   if (forfait) return 0;
 
-  // Ensure classements are in real points
   const pClt = playerClassement < 50 ? playerClassement * 100 : playerClassement;
   const aClt = adversaireClassement < 50 ? adversaireClassement * 100 : adversaireClassement;
 
-  const ecart = aClt - pClt; // positive = adversaire plus fort
+  const ecart = Math.abs(pClt - aClt);
+  const playerIsStronger = pClt >= aClt;
 
-  // FFTT points table (approximate, per tranche of ~50pts)
-  // Victory: gain depends on opponent strength relative to player
-  // Defeat: loss depends on opponent weakness relative to player
+  const row = FFTT_TABLE.find((r) => ecart <= r.maxEcart)!;
+
+  let base: number;
   if (victoire) {
-    let base: number;
-    if (ecart >= 200) base = 40;
-    else if (ecart >= 150) base = 20;
-    else if (ecart >= 100) base = 10;
-    else if (ecart >= 50) base = 7;
-    else if (ecart >= 25) base = 6;
-    else if (ecart >= 0) base = 5.5;
-    else if (ecart >= -25) base = 5;
-    else if (ecart >= -50) base = 4;
-    else if (ecart >= -100) base = 3;
-    else if (ecart >= -150) base = 2;
-    else if (ecart >= -200) base = 1;
-    else if (ecart >= -300) base = 0.5;
-    else base = 0;
-    return Math.round(base * coefficient * 10) / 10;
+    // Stronger player wins = normal, weaker player wins = upset
+    base = playerIsStronger ? row.vNormal : row.vUpset;
   } else {
-    let base: number;
-    if (ecart <= -200) base = -40;
-    else if (ecart <= -150) base = -20;
-    else if (ecart <= -100) base = -10;
-    else if (ecart <= -50) base = -7;
-    else if (ecart <= -25) base = -6;
-    else if (ecart <= 0) base = -5.5;
-    else if (ecart <= 25) base = -5;
-    else if (ecart <= 50) base = -4;
-    else if (ecart <= 100) base = -3;
-    else if (ecart <= 150) base = -2;
-    else if (ecart <= 200) base = -1;
-    else if (ecart <= 300) base = -0.5;
-    else base = 0;
-    return Math.round(base * coefficient * 10) / 10;
+    // Weaker player loses = normal, stronger player loses = upset
+    base = playerIsStronger ? row.dUpset : row.dNormal;
   }
+
+  return Math.round(base * coefficient * 10) / 10;
 }
 
 export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
   const { appId, serie, password } = ffttConfig;
 
   // Only sync parties for active players (licence T or A)
-  const joueursInDb: Array<{ licence: string; points_officiels: number | null }> = await db
-    .select({ licence: joueurs.licence, points_officiels: joueurs.points_officiels })
+  // Use points_mensuels for estimation (FFTT uses monthly ranking for calculations)
+  const joueursInDb: Array<{ licence: string; points_mensuels: number | null }> = await db
+    .select({ licence: joueurs.licence, points_mensuels: joueurs.points_mensuels })
     .from(joueurs)
     .where(sql`${joueurs.type_licence} IN ('T', 'A')`);
 
@@ -130,7 +132,7 @@ export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<n
     // Add SPID-only matches (recent matches not yet in mysql)
     const mysqlIdParties = new Set(parties.map((p) => p.idpartie).filter(Boolean));
 
-    const playerClt = joueur.points_officiels ?? 500;
+    const playerClt = joueur.points_mensuels ?? 500;
 
     const spidOnlyRows = spidParties
       .filter((sp) => sp.idpartie && !mysqlIdParties.has(sp.idpartie))
