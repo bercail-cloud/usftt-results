@@ -321,7 +321,7 @@ function getUsfttMatches(rencontres: Rencontre[]): Rencontre[] {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function MatchBadge({ r, mi }: { r: Rencontre; mi: number }) {
+function MatchBadge({ r, mi, compact }: { r: Rencontre; mi: number; compact?: boolean }) {
   const isDom = r.equipe_a.toUpperCase().includes("FONTENAY");
   const opponent = isDom ? r.equipe_b : r.equipe_a;
   const shortOpp = truncateOpponent(opponent);
@@ -339,13 +339,12 @@ function MatchBadge({ r, mi }: { r: Rencontre; mi: number }) {
       <div
         key={mi}
         className={`${bg} rounded-md px-1 py-1.5 text-center`}
-        title={`${r.date_prevue} - ${opponent} (${isDom ? "Dom" : "Ext"})`}
       >
         <div className={`text-xs font-extrabold ${color} flex items-center justify-center gap-0.5`}>
           {isDom ? <Home size={9} /> : <Car size={9} />}
           {scoreUs}-{scoreThem}
         </div>
-        <div className={`text-[7px] ${colorSub} truncate`}>{shortOpp}</div>
+        {!compact && <div className={`text-[7px] ${colorSub} truncate`}>{shortOpp}</div>}
       </div>
     );
   }
@@ -366,15 +365,12 @@ function MatchBadge({ r, mi }: { r: Rencontre; mi: number }) {
     <div
       key={mi}
       className="bg-[#f7f9fb] rounded-md px-1 py-1.5 text-center border border-dashed border-[#e2e8f0]"
-      title={`${r.date_prevue} - ${opponent}`}
     >
       <div className="text-[10px] text-[#94a3b8] flex items-center justify-center gap-0.5">
         {isDom ? <Home size={10} /> : <Car size={10} />}
         {formatShortDate(r.date_prevue)}
       </div>
-      <div className="text-[7px] text-[#94a3b8] truncate">
-        {shortOpp}
-      </div>
+      {!compact && <div className="text-[7px] text-[#94a3b8] truncate">{shortOpp}</div>}
     </div>
   );
 }
@@ -443,10 +439,10 @@ function LevelGroupTable({
                 </div>
               </div>
 
-              {/* Match badges */}
-              <div className="flex flex-wrap gap-1">
+              {/* Match badges - compact on mobile, no wrap */}
+              <div className="flex gap-1 overflow-x-auto">
                 {matches.map((r, mi) => (
-                  <MatchBadge key={mi} r={r} mi={mi} />
+                  <MatchBadge key={mi} r={r} mi={mi} compact />
                 ))}
               </div>
             </div>
