@@ -11,7 +11,7 @@ export function App() {
   return (
     <div className="min-h-screen bg-bg-page">
       <NavBar />
-      <main>
+      <main className="pb-16 sm:pb-0">
         <Routes>
           <Route path="/" element={<Navigate to="/equipes" replace />} />
           <Route path="/equipes" element={<EquipesOverview />} />
