@@ -4,7 +4,7 @@ import { SyncButton } from "./SyncButton.js";
 const NAV_LINKS = [
   {
     to: "/equipes",
-    label: "Equipes",
+    label: "\u00c9quipes",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -25,7 +25,7 @@ const NAV_LINKS = [
   },
   {
     to: "/criterium",
-    label: "Criterium",
+    label: "Crit\u00e9rium",
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -89,7 +89,7 @@ export function NavBar() {
       <nav className="bg-bg-card border-b border-border">
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-14">
           <span className="font-bold text-primary text-lg">
-            USFTT Resultats
+            {"USFTT R\u00e9sultats"}
           </span>
 
           {/* Desktop links */}
