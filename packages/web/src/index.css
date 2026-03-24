@@ -19,3 +19,8 @@
   --color-border-light: #f1f5f9;
   --color-border-ghost: rgba(67, 70, 85, 0.08);
 }
+
+/* Safe area for bottom tab bar on notched devices */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
