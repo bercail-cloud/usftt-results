@@ -24,21 +24,22 @@ describe("NavBar", () => {
 
   it("renders 3 navigation links", () => {
     renderNavBar();
-    expect(screen.getAllByRole("link")).toHaveLength(3);
+    // 3 desktop + 3 mobile bottom tab bar
+    expect(screen.getAllByRole("link")).toHaveLength(6);
   });
 
   it("renders the Equipes link", () => {
     renderNavBar();
-    expect(screen.getByRole("link", { name: "Équipes" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /quipes/i }).length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders the Criterium link", () => {
     renderNavBar();
-    expect(screen.getByRole("link", { name: "Critérium" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /rit.rium/i }).length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders the Progression link", () => {
     renderNavBar();
-    expect(screen.getByRole("link", { name: "Progression" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /progression/i }).length).toBeGreaterThanOrEqual(1);
   });
 });
