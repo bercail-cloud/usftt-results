@@ -341,7 +341,7 @@ function MatchBadge({ r, mi, compact }: { r: Rencontre; mi: number; compact?: bo
         className={`${bg} rounded-md px-1 py-1.5 text-center`}
       >
         <div className={`text-xs font-extrabold ${color} flex items-center justify-center gap-0.5`}>
-          {isDom ? <Home size={9} /> : <Car size={9} />}
+          {!compact && (isDom ? <Home size={9} /> : <Car size={9} />)}
           {scoreUs}-{scoreThem}
         </div>
         {!compact && <div className={`text-[7px] ${colorSub} truncate`}>{shortOpp}</div>}
