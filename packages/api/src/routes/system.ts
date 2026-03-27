@@ -3,7 +3,7 @@ import { desc } from "drizzle-orm";
 import { db } from "../db/connection.js";
 import { sync_status } from "../db/schema.js";
 import { syncCriterium } from "../sync/sync-criterium.js";
-import { syncFull } from "../sync/scheduler.js";
+import { syncFull, runJob } from "../sync/scheduler.js";
 import { syncPartiesMysql, syncPartiesSpid } from "../sync/sync-parties.js";
 import type { CriteriumFfttConfig } from "../sync/sync-criterium.js";
 import type { SyncDb } from "../sync/sync-equipes.js";
@@ -45,11 +45,12 @@ export function createSystemRoutes(ffttConfig: CriteriumFfttConfig | null) {
 
     const module = c.req.param("module");
 
+    const d = db as SyncDb;
     const syncModules: Record<string, () => Promise<unknown>> = {
-      full: () => syncFull(db as SyncDb, ffttConfig),
-      criterium: () => syncCriterium(db as SyncDb, ffttConfig),
-      "parties-spid": () => syncPartiesSpid(db as SyncDb, ffttConfig),
-      "parties-mysql": () => syncPartiesMysql(db as SyncDb, ffttConfig),
+      full: () => syncFull(d, ffttConfig),
+      criterium: () => runJob(d, "sync-criterium", () => syncCriterium(d, ffttConfig)),
+      "parties-spid": () => runJob(d, "sync-parties-spid", () => syncPartiesSpid(d, ffttConfig)),
+      "parties-mysql": () => runJob(d, "sync-parties-mysql", () => syncPartiesMysql(d, ffttConfig)),
     };
 
     if (!syncModules[module]) {
