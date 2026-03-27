@@ -38,7 +38,7 @@ async function logSyncStatus(
     .returning();
 }
 
-async function runJob(
+export async function runJob(
   db: SyncDb,
   name: string,
   fn: () => Promise<unknown>
