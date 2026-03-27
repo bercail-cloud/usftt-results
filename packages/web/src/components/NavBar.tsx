@@ -1,5 +1,4 @@
 import { NavLink } from "react-router";
-import { SyncButton } from "./SyncButton.js";
 
 const NAV_LINKS = [
   {
@@ -99,12 +98,9 @@ export function NavBar() {
                 {label}
               </NavLink>
             ))}
-            <SyncButton />
-          </div>
-
-          {/* Mobile sync button in top bar */}
-          <div className="sm:hidden">
-            <SyncButton />
+            <NavLink to="/sync" className={desktopLinkClass}>
+              Sync
+            </NavLink>
           </div>
         </div>
       </nav>

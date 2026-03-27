@@ -35,7 +35,7 @@ const FFTT_TABLE: Array<{ maxEcart: number; vNormal: number; dNormal: number; vU
   { maxEcart: Infinity, vNormal: 0, dNormal: 0,   vUpset: 40,  dUpset: -29 },
 ];
 
-function estimatePoints(
+export function estimatePoints(
   playerClassement: number,
   adversaireClassement: number,
   victoire: boolean,
@@ -54,10 +54,8 @@ function estimatePoints(
 
   let base: number;
   if (victoire) {
-    // Stronger player wins = normal, weaker player wins = upset
     base = playerIsStronger ? row.vNormal : row.vUpset;
   } else {
-    // Weaker player loses = normal, stronger player loses = upset
     base = playerIsStronger ? row.dUpset : row.dNormal;
   }
 
@@ -68,7 +66,7 @@ function estimatePoints(
  * Parse SPID classement field.
  * Formats: "N718 - 2130" (rank - points), "1999" (just points)
  */
-function parseSpidClassement(raw: string): { points: number; rang: string | null } {
+export function parseSpidClassement(raw: string): { points: number; rang: string | null } {
   if (!raw) return { points: 0, rang: null };
   const dashIdx = raw.lastIndexOf(" - ");
   if (dashIdx >= 0) {
@@ -80,83 +78,121 @@ function parseSpidClassement(raw: string): { points: number; rang: string | null
   return { points: Number.isNaN(n) ? 0 : n, rang: null };
 }
 
-export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
-  const { appId, serie, password } = ffttConfig;
+const safeInt = (val: string | undefined): number => {
+  if (!val) return 0;
+  const n = parseInt(val, 10);
+  return Number.isNaN(n) ? 0 : n;
+};
 
-  // Only sync parties for active players (licence T or A)
-  // Use points_mensuels for estimation (FFTT uses monthly ranking for calculations)
-  const joueursInDb: Array<{ licence: string; points_mensuels: number | null }> = await db
+const safeFloat = (val: string | undefined): number => {
+  if (!val) return 0;
+  const n = parseFloat(val);
+  return Number.isNaN(n) ? 0 : n;
+};
+
+async function getActiveJoueurs(db: SyncDb) {
+  return db
     .select({ licence: joueurs.licence, points_mensuels: joueurs.points_mensuels })
     .from(joueurs)
     .where(sql`${joueurs.type_licence} IN ('T', 'A')`);
+}
 
-  if (joueursInDb.length === 0) {
-    return 0;
-  }
+/**
+ * Sync parties from mysql source (xml_partie_mysql).
+ * Updated monthly (between 12th and 20th).
+ */
+export async function syncPartiesMysql(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
+  const { appId, serie, password } = ffttConfig;
+  const joueursInDb = await getActiveJoueurs(db);
 
-  const safeInt = (val: string | undefined): number => {
-    if (!val) return 0;
-    const n = parseInt(val, 10);
-    return Number.isNaN(n) ? 0 : n;
-  };
-  const safeFloat = (val: string | undefined): number => {
-    if (!val) return 0;
-    const n = parseFloat(val);
-    return Number.isNaN(n) ? 0 : n;
-  };
+  if (joueursInDb.length === 0) return 0;
 
   let totalCount = 0;
 
   for (const joueur of joueursInDb) {
     const parties = await getPartieMysql(joueur.licence, appId, serie, password);
+    if (parties.length === 0) continue;
 
-    if (parties.length === 0) {
-      continue;
-    }
+    const rows = parties.map((partie) => ({
+      licence: partie.licence,
+      adversaire_licence: partie.advlic || "",
+      adversaire_nom: partie.advnompre || "",
+      adversaire_classement: safeInt(partie.advclaof),
+      adversaire_rang: null as string | null,
+      victoire: partie.vd === "V",
+      points_resultat: safeFloat(partie.pointres),
+      coefficient: safeFloat(partie.coefchamp),
+      date_partie: partie.date || "",
+      epreuve: partie.codechamp || "",
+      epreuve_libelle: null as string | null,
+      id_partie: partie.idpartie || null,
+      journee: safeInt(partie.numjourn),
+    }));
 
-    // Get SPID parties for epreuve libelle + recent matches not yet in mysql
+    await db
+      .delete(parties_individuelles)
+      .where(eq(parties_individuelles.licence, joueur.licence));
+
+    await db.insert(parties_individuelles).values(rows);
+    totalCount += rows.length;
+  }
+
+  return totalCount;
+}
+
+/**
+ * Sync parties from SPID source (xml_partie).
+ * Can be updated at any time. Enriches existing mysql rows and adds SPID-only matches.
+ */
+export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
+  const { appId, serie, password } = ffttConfig;
+  const joueursInDb = await getActiveJoueurs(db);
+
+  if (joueursInDb.length === 0) return 0;
+
+  let totalCount = 0;
+
+  for (const joueur of joueursInDb) {
     let spidParties: Array<{ date: string; nom: string; classement: string; epreuve: string; victoire: string; forfait: string; idpartie: string; coefchamp: string }> = [];
     try {
       spidParties = await getPartieSpid(joueur.licence, appId, serie, password);
     } catch {
-      // xml_partie may fail for some players, continue without
+      continue;
     }
-    // Build SPID lookup maps by idpartie
-    const spidByIdPartie = new Map(
-      spidParties.map((p) => [p.idpartie, p])
+
+    if (spidParties.length === 0) continue;
+
+    // Get existing mysql-sourced parties for this player
+    const existingParties = await db
+      .select({ id_partie: parties_individuelles.id_partie })
+      .from(parties_individuelles)
+      .where(eq(parties_individuelles.licence, joueur.licence));
+
+    const existingIdParties = new Set(
+      existingParties.map((p: { id_partie: string | null }) => p.id_partie).filter(Boolean)
     );
 
-    const rows = parties.map((partie) => {
-      const idPartie = partie.idpartie || "";
-      const spid = spidByIdPartie.get(idPartie);
-      const epreuveLibelle = spid?.epreuve || null;
-      const spidClt = spid ? parseSpidClassement(spid.classement) : null;
-      const mysqlClt = safeInt(partie.advclaof);
+    // Enrich existing rows with SPID data (epreuve_libelle, adversaire_rang)
+    for (const sp of spidParties) {
+      if (!sp.idpartie || !existingIdParties.has(sp.idpartie)) continue;
 
-      return {
-        licence: partie.licence,
-        adversaire_licence: partie.advlic || "",
-        adversaire_nom: partie.advnompre || "",
-        adversaire_classement: mysqlClt || spidClt?.points || 0,
-        adversaire_rang: spidClt?.rang || null,
-        victoire: partie.vd === "V",
-        points_resultat: safeFloat(partie.pointres),
-        coefficient: safeFloat(partie.coefchamp),
-        date_partie: partie.date || "",
-        epreuve: partie.codechamp || "",
-        epreuve_libelle: epreuveLibelle,
-        id_partie: idPartie || null,
-        journee: safeInt(partie.numjourn),
-      };
-    });
+      const parsed = parseSpidClassement(sp.classement);
+      await db
+        .update(parties_individuelles)
+        .set({
+          epreuve_libelle: sp.epreuve || null,
+          adversaire_rang: parsed.rang,
+        })
+        .where(
+          sql`${parties_individuelles.licence} = ${joueur.licence} AND ${parties_individuelles.id_partie} = ${sp.idpartie}`
+        );
+    }
 
-    // Add SPID-only matches (recent matches not yet in mysql)
-    const mysqlIdParties = new Set(parties.map((p) => p.idpartie).filter(Boolean));
-
+    // Add SPID-only matches (not yet in mysql)
     const playerClt = joueur.points_mensuels ?? 500;
 
     const spidOnlyRows = spidParties
-      .filter((sp) => sp.idpartie && !mysqlIdParties.has(sp.idpartie))
+      .filter((sp) => sp.idpartie && !existingIdParties.has(sp.idpartie))
       .map((sp) => {
         const victoire = sp.victoire === "V";
         const parsed = parseSpidClassement(sp.classement);
@@ -174,24 +210,18 @@ export async function syncParties(db: SyncDb, ffttConfig: FfttConfig): Promise<n
           points_resultat: estimated,
           coefficient: coef,
           date_partie: sp.date || "",
-          epreuve: "", // No codechamp in SPID
+          epreuve: "",
           epreuve_libelle: sp.epreuve || null,
           id_partie: sp.idpartie || null,
           journee: 0,
         };
       });
 
-    // Delete existing parties for this player, then re-insert all
-    await db
-      .delete(parties_individuelles)
-      .where(eq(parties_individuelles.licence, joueur.licence));
-
-    const allRows = [...rows, ...spidOnlyRows];
-    if (allRows.length > 0) {
-      await db.insert(parties_individuelles).values(allRows);
+    if (spidOnlyRows.length > 0) {
+      await db.insert(parties_individuelles).values(spidOnlyRows);
     }
 
-    totalCount += allRows.length;
+    totalCount += spidOnlyRows.length;
   }
 
   return totalCount;

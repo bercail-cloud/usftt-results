@@ -4,7 +4,7 @@ import * as schema from "../src/db/schema.js";
 import { syncEquipes } from "../src/sync/sync-equipes.js";
 import { syncClassementsPoule, syncRencontres } from "../src/sync/sync-rencontres.js";
 import { syncJoueurs } from "../src/sync/sync-joueurs.js";
-import { syncParties } from "../src/sync/sync-parties.js";
+import { syncPartiesMysql, syncPartiesSpid } from "../src/sync/sync-parties.js";
 import { syncHistorique } from "../src/sync/sync-historique.js";
 import { syncCriterium } from "../src/sync/sync-criterium.js";
 
@@ -41,10 +41,16 @@ async function run() {
       console.log(`Historique synced: ${h}`);
     }
 
-    if (!arg || arg === "all" || arg === "parties") {
-      console.log("Syncing parties (715 joueurs, takes a while)...");
-      const p = await syncParties(db, config);
-      console.log(`Parties synced: ${p}`);
+    if (!arg || arg === "all" || arg === "parties-mysql") {
+      console.log("Syncing parties mysql...");
+      const pm = await syncPartiesMysql(db, config);
+      console.log(`Parties mysql synced: ${pm}`);
+    }
+
+    if (!arg || arg === "all" || arg === "parties-spid") {
+      console.log("Syncing parties spid...");
+      const ps = await syncPartiesSpid(db, config);
+      console.log(`Parties spid synced: ${ps}`);
     }
 
     if (!arg || arg === "all" || arg === "criterium") {

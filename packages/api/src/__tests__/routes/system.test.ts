@@ -59,7 +59,7 @@ describe("GET /api/sync/status", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toHaveProperty("jobs");
-    expect(body).toHaveProperty("isSyncing", false);
+    expect(body).toHaveProperty("activeSyncs");
     expect(Array.isArray(body.jobs)).toBe(true);
   });
 
@@ -72,6 +72,6 @@ describe("GET /api/sync/status", () => {
     const res = await app.request("/api/sync/status");
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toEqual({ jobs: [], isSyncing: false });
+    expect(body).toEqual({ jobs: [], activeSyncs: [] });
   });
 });
