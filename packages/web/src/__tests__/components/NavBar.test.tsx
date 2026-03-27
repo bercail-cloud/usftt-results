@@ -22,10 +22,10 @@ describe("NavBar", () => {
     expect(screen.getByText("USFTT Résultats")).toBeInTheDocument();
   });
 
-  it("renders 3 navigation links", () => {
+  it("renders navigation links", () => {
     renderNavBar();
-    // 3 desktop + 3 mobile bottom tab bar
-    expect(screen.getAllByRole("link")).toHaveLength(6);
+    // 3 main + 1 sync (desktop only) + 3 mobile bottom tab bar = 7
+    expect(screen.getAllByRole("link")).toHaveLength(7);
   });
 
   it("renders the Equipes link", () => {
