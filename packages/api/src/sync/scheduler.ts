@@ -6,10 +6,10 @@ import {
   syncDetailsRencontres,
 } from "./sync-rencontres.js";
 import { syncJoueurs } from "./sync-joueurs.js";
-import { syncParties } from "./sync-parties.js";
+import { syncPartiesMysql, syncPartiesSpid } from "./sync-parties.js";
 import { syncHistorique } from "./sync-historique.js";
-import { syncCriterium } from "./sync-criterium.js";
-import { sync_status, equipes as equipesTable } from "../db/schema.js";
+import { sql } from "drizzle-orm";
+import { sync_status, equipes as equipesTable, rencontres } from "../db/schema.js";
 import type { CriteriumFfttConfig } from "./sync-criterium.js";
 import type { SyncDb } from "./sync-equipes.js";
 
@@ -71,33 +71,73 @@ export async function syncFull(
   await runJob(db, "sync-equipes", () => syncEquipes(db, ffttConfig));
   await runJob(db, "sync-joueurs", () => syncJoueurs(db, ffttConfig));
   await runJob(db, "sync-classements", () => syncAllClassements(db, ffttConfig));
-  await runJob(db, "sync-parties", () => syncParties(db, ffttConfig));
-  await runJob(db, "sync-criterium", () => syncCriterium(db, ffttConfig));
+  await runJob(db, "sync-parties-spid", () => syncPartiesSpid(db, ffttConfig));
 }
 
-export async function syncMatchDay(
+export async function syncQuotidienEtJourDeMatch(
+  db: SyncDb,
+  ffttConfig: CriteriumFfttConfig
+): Promise<void> {
+  await runJob(db, "sync-classements", () => syncAllClassements(db, ffttConfig));
+  await runJob(db, "sync-parties-spid", () => syncPartiesSpid(db, ffttConfig));
+}
+
+export async function syncHebdoEtDebutPhaseBiQuotidien(
   db: SyncDb,
   ffttConfig: CriteriumFfttConfig
 ): Promise<void> {
   await runJob(db, "sync-equipes", () => syncEquipes(db, ffttConfig));
-  await runJob(db, "sync-classements", () => syncAllClassements(db, ffttConfig));
+  await runJob(db, "sync-joueurs", () => syncJoueurs(db, ffttConfig));
+  await runJob(db, "sync-historique", () => syncHistorique(db, ffttConfig));
 }
 
-async function syncHistoriqueJob(
+export function todayAsDDMMYYYY(): string {
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2, "0");
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const yyyy = now.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+async function hasMatchToday(db: SyncDb): Promise<boolean> {
+  const today = todayAsDDMMYYYY();
+  const rows = await db
+    .select({ id: rencontres.id })
+    .from(rencontres)
+    .where(sql`${rencontres.date_prevue} = ${today}`)
+    .limit(1);
+  return rows.length > 0;
+}
+
+async function syncPartiesMysqlJob(
   db: SyncDb,
   ffttConfig: CriteriumFfttConfig
 ): Promise<void> {
-  await runJob(db, "sync-historique", () => syncHistorique(db, ffttConfig));
+  await runJob(db, "sync-parties-mysql", () => syncPartiesMysql(db, ffttConfig));
 }
 
 export function startScheduler(
   db: SyncDb,
   ffttConfig: CriteriumFfttConfig
 ): void {
-  cron.schedule("0 8,20 * * *", () => syncFull(db, ffttConfig));
-  cron.schedule("0 18-23 * * 5", () => syncMatchDay(db, ffttConfig));
-  cron.schedule("0 9-20 * * 6", () => syncMatchDay(db, ffttConfig));
-  cron.schedule("0 6 * * 1", () => syncHistoriqueJob(db, ffttConfig));
+  // Daily at 7am and 19pm + extra frequency on match days
+  cron.schedule("0 7,19 * * *", () => syncQuotidienEtJourDeMatch(db, ffttConfig));
+  // Match day: every hour on Saturday, only if a match is scheduled today
+  cron.schedule("0 * * * 6", async () => {
+    if (await hasMatchToday(db)) {
+      await syncQuotidienEtJourDeMatch(db, ffttConfig);
+    }
+  });
+  // Every 2 days at 6am in January and September (new phase rankings)
+  cron.schedule("0 6 1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31 1,9 *", () =>
+    syncHebdoEtDebutPhaseBiQuotidien(db, ffttConfig)
+  );
+  // Weekly on Mondays at 6am the rest of the year
+  cron.schedule("0 6 * 2-8,10-12 1", () =>
+    syncHebdoEtDebutPhaseBiQuotidien(db, ffttConfig)
+  );
+  // Mysql parties: daily from 12th to 20th of each month at 6am
+  cron.schedule("0 6 12-20 * *", () => syncPartiesMysqlJob(db, ffttConfig));
 
   console.log("Scheduler started");
 }

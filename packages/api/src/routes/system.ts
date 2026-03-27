@@ -2,13 +2,19 @@ import { Hono } from "hono";
 import { desc } from "drizzle-orm";
 import { db } from "../db/connection.js";
 import { sync_status } from "../db/schema.js";
+import { syncCriterium } from "../sync/sync-criterium.js";
 import { syncFull } from "../sync/scheduler.js";
 import type { CriteriumFfttConfig } from "../sync/sync-criterium.js";
 import type { SyncDb } from "../sync/sync-equipes.js";
 
-let isSyncing = false;
-let syncStartedAt = 0;
+const activeSyncs = new Set<string>();
 const SYNC_TIMEOUT_MS = 15 * 60 * 1000; // 15 min max
+const syncStartedAt = new Map<string, number>();
+
+function isSyncStale(jobName: string): boolean {
+  const startedAt = syncStartedAt.get(jobName);
+  return startedAt !== undefined && Date.now() - startedAt > SYNC_TIMEOUT_MS;
+}
 
 export function createSystemRoutes(ffttConfig: CriteriumFfttConfig | null) {
   const app = new Hono();
@@ -27,30 +33,48 @@ export function createSystemRoutes(ffttConfig: CriteriumFfttConfig | null) {
 
     return c.json({
       jobs: Array.from(latestByJob.values()),
-      isSyncing,
+      activeSyncs: Array.from(activeSyncs),
     });
   });
 
-  app.post("/sync/trigger", async (c) => {
+  app.post("/sync/trigger/:module", async (c) => {
     if (!ffttConfig) {
       return c.json({ error: "FFTT config not available" }, 503);
     }
-    // Reset stale sync flag (e.g., after a crash)
-    if (isSyncing && Date.now() - syncStartedAt > SYNC_TIMEOUT_MS) {
-      isSyncing = false;
+
+    const module = c.req.param("module");
+
+    const syncModules: Record<string, () => Promise<unknown>> = {
+      full: () => syncFull(db as SyncDb, ffttConfig),
+      criterium: () => syncCriterium(db as SyncDb, ffttConfig),
+    };
+
+    if (!syncModules[module]) {
+      return c.json(
+        { error: `Unknown sync module: ${module}`, available: Object.keys(syncModules) },
+        400
+      );
     }
 
-    if (isSyncing) {
-      return c.json({ error: "Sync already in progress" }, 409);
+    // Reset stale sync flag
+    if (activeSyncs.has(module) && isSyncStale(module)) {
+      activeSyncs.delete(module);
+      syncStartedAt.delete(module);
     }
 
-    isSyncing = true;
-    syncStartedAt = Date.now();
-    // Run sync in background, don't block the response
-    syncFull(db as SyncDb, ffttConfig)
-      .finally(() => { isSyncing = false; });
+    if (activeSyncs.has(module)) {
+      return c.json({ error: `Sync ${module} already in progress` }, 409);
+    }
 
-    return c.json({ message: "Sync started" });
+    activeSyncs.add(module);
+    syncStartedAt.set(module, Date.now());
+
+    syncModules[module]!().finally(() => {
+      activeSyncs.delete(module);
+      syncStartedAt.delete(module);
+    });
+
+    return c.json({ message: `Sync ${module} started` });
   });
 
   return app;
