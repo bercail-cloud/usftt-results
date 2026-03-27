@@ -153,7 +153,7 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
   let totalCount = 0;
 
   for (const joueur of joueursInDb) {
-    let spidParties: Array<{ date: string; nom: string; classement: string; epreuve: string; victoire: string; forfait: string; idpartie: string; coefchamp: string }> = [];
+    let spidParties;
     try {
       spidParties = await getPartieSpid(joueur.licence, appId, serie, password);
     } catch {
