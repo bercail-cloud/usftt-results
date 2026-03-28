@@ -376,6 +376,26 @@ export async function syncCriterium(
     }
   }
 
+  // Cleanup: remove tours where no classement entry belongs to the club
+  if (clubNom) {
+    const allTours = await db.select({ id: criterium_tours.id }).from(criterium_tours);
+    for (const tour of allTours) {
+      const clubEntries = await db
+        .select({ id: criterium_classement.id })
+        .from(criterium_classement)
+        .where(
+          sql`${criterium_classement.criterium_tour_id} = ${tour.id} AND UPPER(${criterium_classement.club}) LIKE ${"%" + clubNom.toUpperCase() + "%"}`
+        )
+        .limit(1);
+
+      if (clubEntries.length === 0) {
+        await db.delete(criterium_parties).where(sql`${criterium_parties.criterium_tour_id} = ${tour.id}`);
+        await db.delete(criterium_classement).where(sql`${criterium_classement.criterium_tour_id} = ${tour.id}`);
+        await db.delete(criterium_tours).where(sql`${criterium_tours.id} = ${tour.id}`);
+      }
+    }
+  }
+
   console.log(`Criterium sync complete: ${totalCount} rows`);
   return totalCount;
 }
