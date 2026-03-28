@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import { desc } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import { db } from "../db/connection.js";
-import { sync_status } from "../db/schema.js";
+import { sync_status, sync_logs } from "../db/schema.js";
 import { syncCriterium } from "../sync/sync-criterium.js";
 import { syncFull, runJob } from "../sync/scheduler.js";
 import { syncPartiesMysql, syncPartiesSpid } from "../sync/sync-parties.js";
@@ -79,6 +79,16 @@ export function createSystemRoutes(ffttConfig: CriteriumFfttConfig | null) {
     });
 
     return c.json({ message: `Sync ${module} started` });
+  });
+
+  app.get("/sync/logs/:jobName", async (c) => {
+    const jobName = c.req.param("jobName");
+    const rows = await db
+      .select()
+      .from(sync_logs)
+      .where(sql`${sync_logs.job_name} = ${jobName}`)
+      .orderBy(desc(sync_logs.created_at));
+    return c.json({ logs: rows });
   });
 
   return app;

@@ -1,0 +1,1036 @@
+{
+  "id": "333261a5-dcf7-4809-81f3-f58963b95f29",
+  "prevId": "582a9ba1-1181-4c22-9a3c-5037b6fe3fca",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.classements_poule": {
+      "name": "classements_poule",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "equipe_id": {
+          "name": "equipe_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "club_numero": {
+          "name": "club_numero",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nom_equipe": {
+          "name": "nom_equipe",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "points": {
+          "name": "points",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "joue": {
+          "name": "joue",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "victoires": {
+          "name": "victoires",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "defaites": {
+          "name": "defaites",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nuls": {
+          "name": "nuls",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parties_gagnees": {
+          "name": "parties_gagnees",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parties_perdues": {
+          "name": "parties_perdues",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "classements_poule_equipe_id_equipes_id_fk": {
+          "name": "classements_poule_equipe_id_equipes_id_fk",
+          "tableFrom": "classements_poule",
+          "tableTo": "equipes",
+          "columnsFrom": [
+            "equipe_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.criterium_classement": {
+      "name": "criterium_classement",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "criterium_tour_id": {
+          "name": "criterium_tour_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rang": {
+          "name": "rang",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "licence": {
+          "name": "licence",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nom": {
+          "name": "nom",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "club": {
+          "name": "club",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "classement": {
+          "name": "classement",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "points": {
+          "name": "points",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "criterium_classement_criterium_tour_id_criterium_tours_id_fk": {
+          "name": "criterium_classement_criterium_tour_id_criterium_tours_id_fk",
+          "tableFrom": "criterium_classement",
+          "tableTo": "criterium_tours",
+          "columnsFrom": [
+            "criterium_tour_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "criterium_classement_licence_joueurs_licence_fk": {
+          "name": "criterium_classement_licence_joueurs_licence_fk",
+          "tableFrom": "criterium_classement",
+          "tableTo": "joueurs",
+          "columnsFrom": [
+            "licence"
+          ],
+          "columnsTo": [
+            "licence"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "criterium_classement_criterium_tour_id_nom_unique": {
+          "name": "criterium_classement_criterium_tour_id_nom_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "criterium_tour_id",
+            "nom"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.criterium_parties": {
+      "name": "criterium_parties",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "criterium_tour_id": {
+          "name": "criterium_tour_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vainqueur": {
+          "name": "vainqueur",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "perdant": {
+          "name": "perdant",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "forfait": {
+          "name": "forfait",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "criterium_parties_criterium_tour_id_criterium_tours_id_fk": {
+          "name": "criterium_parties_criterium_tour_id_criterium_tours_id_fk",
+          "tableFrom": "criterium_parties",
+          "tableTo": "criterium_tours",
+          "columnsFrom": [
+            "criterium_tour_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.criterium_tours": {
+      "name": "criterium_tours",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "epreuve_id": {
+          "name": "epreuve_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "epreuve_libelle": {
+          "name": "epreuve_libelle",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "division_id": {
+          "name": "division_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "division_libelle": {
+          "name": "division_libelle",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tour": {
+          "name": "tour",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "groupe": {
+          "name": "groupe",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cx_tableau": {
+          "name": "cx_tableau",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date_tour": {
+          "name": "date_tour",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "niveau": {
+          "name": "niveau",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "criterium_tours_division_id_cx_tableau_unique": {
+          "name": "criterium_tours_division_id_cx_tableau_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "division_id",
+            "cx_tableau"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.equipes": {
+      "name": "equipes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "lib_equipe": {
+          "name": "lib_equipe",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lib_division": {
+          "name": "lib_division",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_poule": {
+          "name": "id_poule",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_division": {
+          "name": "id_division",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id_epreuve": {
+          "name": "id_epreuve",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lib_epreuve": {
+          "name": "lib_epreuve",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type_epreuve": {
+          "name": "type_epreuve",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "equipes_lib_equipe_id_epreuve_unique": {
+          "name": "equipes_lib_equipe_id_epreuve_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "lib_equipe",
+            "id_epreuve"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.historique_classement": {
+      "name": "historique_classement",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "licence": {
+          "name": "licence",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "saison": {
+          "name": "saison",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phase": {
+          "name": "phase",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "points": {
+          "name": "points",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "historique_classement_licence_joueurs_licence_fk": {
+          "name": "historique_classement_licence_joueurs_licence_fk",
+          "tableFrom": "historique_classement",
+          "tableTo": "joueurs",
+          "columnsFrom": [
+            "licence"
+          ],
+          "columnsTo": [
+            "licence"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "historique_classement_licence_saison_phase_unique": {
+          "name": "historique_classement_licence_saison_phase_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "licence",
+            "saison",
+            "phase"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.joueurs": {
+      "name": "joueurs",
+      "schema": "",
+      "columns": {
+        "licence": {
+          "name": "licence",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nom": {
+          "name": "nom",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prenom": {
+          "name": "prenom",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "club_numero": {
+          "name": "club_numero",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "points_officiels": {
+          "name": "points_officiels",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "points_mensuels": {
+          "name": "points_mensuels",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ancien_points_mensuels": {
+          "name": "ancien_points_mensuels",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "points_initm": {
+          "name": "points_initm",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "categorie": {
+          "name": "categorie",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type_licence": {
+          "name": "type_licence",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rang_departemental": {
+          "name": "rang_departemental",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rang_regional": {
+          "name": "rang_regional",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sexe": {
+          "name": "sexe",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.parties_individuelles": {
+      "name": "parties_individuelles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "licence": {
+          "name": "licence",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "adversaire_licence": {
+          "name": "adversaire_licence",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "adversaire_nom": {
+          "name": "adversaire_nom",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "adversaire_classement": {
+          "name": "adversaire_classement",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "adversaire_rang": {
+          "name": "adversaire_rang",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "victoire": {
+          "name": "victoire",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "points_resultat": {
+          "name": "points_resultat",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coefficient": {
+          "name": "coefficient",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date_partie": {
+          "name": "date_partie",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "epreuve": {
+          "name": "epreuve",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "epreuve_libelle": {
+          "name": "epreuve_libelle",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_partie": {
+          "name": "id_partie",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "journee": {
+          "name": "journee",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "parties_individuelles_licence_joueurs_licence_fk": {
+          "name": "parties_individuelles_licence_joueurs_licence_fk",
+          "tableFrom": "parties_individuelles",
+          "tableTo": "joueurs",
+          "columnsFrom": [
+            "licence"
+          ],
+          "columnsTo": [
+            "licence"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.parties_rencontre": {
+      "name": "parties_rencontre",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "rencontre_id": {
+          "name": "rencontre_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "joueur_a": {
+          "name": "joueur_a",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "classement_a": {
+          "name": "classement_a",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "joueur_b": {
+          "name": "joueur_b",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "classement_b": {
+          "name": "classement_b",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score_a": {
+          "name": "score_a",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score_b": {
+          "name": "score_b",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "detail_sets": {
+          "name": "detail_sets",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "parties_rencontre_rencontre_id_rencontres_id_fk": {
+          "name": "parties_rencontre_rencontre_id_rencontres_id_fk",
+          "tableFrom": "parties_rencontre",
+          "tableTo": "rencontres",
+          "columnsFrom": [
+            "rencontre_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.rencontres": {
+      "name": "rencontres",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "equipe_id": {
+          "name": "equipe_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "libelle": {
+          "name": "libelle",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "equipe_a": {
+          "name": "equipe_a",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "equipe_b": {
+          "name": "equipe_b",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score_a": {
+          "name": "score_a",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "score_b": {
+          "name": "score_b",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date_prevue": {
+          "name": "date_prevue",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date_reelle": {
+          "name": "date_reelle",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lien_detail": {
+          "name": "lien_detail",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_domicile": {
+          "name": "is_domicile",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "detail_equa": {
+          "name": "detail_equa",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "detail_equb": {
+          "name": "detail_equb",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "rencontres_equipe_id_equipes_id_fk": {
+          "name": "rencontres_equipe_id_equipes_id_fk",
+          "tableFrom": "rencontres",
+          "tableTo": "equipes",
+          "columnsFrom": [
+            "equipe_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sync_logs": {
+      "name": "sync_logs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "job_name": {
+          "name": "job_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "level": {
+          "name": "level",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "details": {
+          "name": "details",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sync_status": {
+      "name": "sync_status",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "job_name": {
+          "name": "job_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_run": {
+          "name": "last_run",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "error_message": {
+          "name": "error_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "sync_status_job_name_unique": {
+          "name": "sync_status_job_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "job_name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

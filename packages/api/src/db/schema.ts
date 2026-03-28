@@ -176,3 +176,12 @@ export const sync_status = pgTable("sync_status", {
   status: varchar("status").notNull(),
   error_message: text("error_message"),
 });
+
+export const sync_logs = pgTable("sync_logs", {
+  id: serial("id").primaryKey(),
+  job_name: varchar("job_name").notNull(),
+  level: varchar("level").notNull(), // info, warn, error
+  message: text("message").notNull(),
+  details: text("details"),
+  created_at: timestamp("created_at").notNull().defaultNow(),
+});

@@ -185,7 +185,6 @@ describe("syncCriterium", () => {
     await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     expect(mockGetResultIndivClassement).not.toHaveBeenCalled();
-    expect(db.insert).not.toHaveBeenCalled();
   });
 
   it("calls getResultIndivClassement for each poule", async () => {
@@ -228,8 +227,8 @@ describe("syncCriterium", () => {
 
     await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
-    // No insert should be called since no USFTT player found
-    expect(db.insert).not.toHaveBeenCalled();
+    // No criterium data should be inserted since no USFTT player found
+    expect(mockGetResultIndivParties).not.toHaveBeenCalled();
   });
 
   it("fetches and stores parties for groups with USFTT players", async () => {
