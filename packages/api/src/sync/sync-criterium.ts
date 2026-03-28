@@ -252,11 +252,11 @@ export async function syncCriterium(
           if (standings.length === 0) continue;
 
           // Check if any USFTT player is in this group
+          // Only match players whose club contains the club name to avoid homonyms from other clubs
           const hasClubPlayer = standings.some(
             (s) =>
-              findLicence(s.nom) !== null ||
-              (clubNom &&
-                s.club.toUpperCase().includes(clubNom.toUpperCase()))
+              clubNom &&
+              s.club.toUpperCase().includes(clubNom.toUpperCase())
           );
 
           if (!hasClubPlayer) continue;
