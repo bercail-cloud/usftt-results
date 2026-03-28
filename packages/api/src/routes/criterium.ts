@@ -236,7 +236,8 @@ app.get("/criterium/tours/:tour", async (c) => {
       .where(
         and(
           eq(joueurs.club_numero, "08940073"),
-          sql`${parties_individuelles.date_partie} IN (${sql.raw(dateList)})`
+          sql`${parties_individuelles.date_partie} IN (${sql.raw(dateList)})`,
+          sql`(${parties_individuelles.epreuve_libelle} ILIKE '%crit%' OR ${parties_individuelles.epreuve_libelle} ILIKE '%fédéral%' OR ${parties_individuelles.epreuve_libelle} ILIKE '%federal%')`
         )
       );
 
