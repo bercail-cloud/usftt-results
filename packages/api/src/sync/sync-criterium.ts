@@ -10,6 +10,7 @@ import {
   criterium_classement,
   criterium_parties,
   joueurs,
+  sync_logs,
 } from "../db/schema.js";
 import { sql } from "drizzle-orm";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
@@ -66,11 +67,28 @@ function getOrganismeIds(): string[] {
   return ["1", "8", "16", "112"];
 }
 
+async function syncLog(
+  db: SyncDb,
+  level: "info" | "warn" | "error",
+  message: string,
+  details?: string
+): Promise<void> {
+  await db.insert(sync_logs).values({
+    job_name: "sync-criterium",
+    level,
+    message,
+    details: details ?? null,
+  });
+}
+
 export async function syncCriterium(
   db: SyncDb,
   ffttConfig: CriteriumFfttConfig
 ): Promise<number> {
   const { appId, serie, password, clubNom } = ffttConfig;
+
+  // Clear previous logs for this job
+  await db.delete(sync_logs).where(sql`${sync_logs.job_name} = 'sync-criterium'`);
 
   const organismeIds = getOrganismeIds();
 
@@ -139,7 +157,7 @@ export async function syncCriterium(
   let totalCount = 0;
 
   for (const orgId of organismeIds) {
-    console.log(`Fetching criterium epreuves for organisme ${orgId}...`);
+    await syncLog(db, "info", `Organisme ${orgId} (${niveauFromOrganisme(orgId)}): debut`);
     const niveau = niveauFromOrganisme(orgId);
 
     let allEpreuves;
@@ -259,7 +277,16 @@ export async function syncCriterium(
               s.club.toUpperCase().includes(clubNom.toUpperCase())
           );
 
-          if (!hasClubPlayer) continue;
+          if (!hasClubPlayer) {
+            const playerNames = standings.map((s) => `${s.nom} (${s.club})`).join(", ");
+            await syncLog(db, "info", `Skip ${poule.libelle} ${division.libelle}: aucun joueur USFTT`, playerNames);
+            continue;
+          }
+
+          const clubPlayers = standings.filter((s) => clubNom && s.club.toUpperCase().includes(clubNom.toUpperCase()));
+          await syncLog(db, "info", `Match ${poule.libelle} ${division.libelle}: ${clubPlayers.length} joueur(s) USFTT`,
+            clubPlayers.map((s) => `${s.nom} (${s.club}, clt: ${s.clt})`).join(", ")
+          );
 
           // Upsert criterium_tours row
           const tourRows = await db
@@ -312,6 +339,19 @@ export async function syncCriterium(
               classement: parseClassementFromClt(String(s.clt ?? "")),
               points: s.points,
             }));
+
+          const matched = classementRows.filter((r) => r.licence !== null);
+          const unmatched = classementRows.filter((r) => r.licence === null);
+          if (unmatched.length > 0) {
+            await syncLog(db, "warn", `findLicence: ${unmatched.length} non-matche(s) dans ${poule.libelle}`,
+              unmatched.map((r) => `${r.nom} (${r.club}, clt: ${r.classement})`).join(", ")
+            );
+          }
+          if (matched.length > 0) {
+            await syncLog(db, "info", `findLicence: ${matched.length} matche(s) dans ${poule.libelle}`,
+              matched.map((r) => `${r.nom} -> ${r.licence}`).join(", ")
+            );
+          }
 
           const upserted = await db
             .insert(criterium_classement)
@@ -389,6 +429,7 @@ export async function syncCriterium(
         .limit(1);
 
       if (clubEntries.length === 0) {
+        await syncLog(db, "warn", `Cleanup: suppression tour id=${tour.id} (aucun joueur du club)`);
         await db.delete(criterium_parties).where(sql`${criterium_parties.criterium_tour_id} = ${tour.id}`);
         await db.delete(criterium_classement).where(sql`${criterium_classement.criterium_tour_id} = ${tour.id}`);
         await db.delete(criterium_tours).where(sql`${criterium_tours.id} = ${tour.id}`);

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api.js";
 
@@ -6,6 +7,19 @@ interface SyncJob {
   last_run: string;
   status: string;
   error_message?: string | null;
+}
+
+interface SyncLog {
+  id: number;
+  job_name: string;
+  level: string;
+  message: string;
+  details: string | null;
+  created_at: string;
+}
+
+interface SyncLogsResponse {
+  logs: SyncLog[];
 }
 
 interface SyncStatusResponse {
@@ -118,7 +132,49 @@ function timeSince(iso: string): string {
   return `${days}j`;
 }
 
+function levelColor(level: string): string {
+  if (level === "error") return "text-red-700 bg-red-50";
+  if (level === "warn") return "text-amber-700 bg-amber-50";
+  return "text-blue-700 bg-blue-50";
+}
+
+function SyncLogs({ jobName }: { jobName: string }) {
+  const { data, isLoading } = useQuery<SyncLogsResponse>({
+    queryKey: ["sync-logs", jobName],
+    queryFn: () => api.get(`/api/sync/logs/${jobName}`),
+    refetchInterval: 5000,
+  });
+
+  if (isLoading) return <div className="text-text-secondary text-sm p-4">Chargement...</div>;
+
+  const logs = data?.logs ?? [];
+  if (logs.length === 0) return <div className="text-text-secondary text-sm p-4">Aucun log</div>;
+
+  return (
+    <div className="max-h-96 overflow-y-auto divide-y divide-border">
+      {logs.map((log) => (
+        <div key={log.id} className="px-4 py-2 text-xs space-y-0.5">
+          <div className="flex items-center gap-2">
+            <span className={`px-1.5 py-0.5 rounded font-medium ${levelColor(log.level)}`}>
+              {log.level}
+            </span>
+            <span className="text-text-secondary">{formatDate(log.created_at)}</span>
+          </div>
+          <div className="text-text-primary">{log.message}</div>
+          {log.details && (
+            <details className="text-text-secondary">
+              <summary className="cursor-pointer hover:text-text-primary">Details</summary>
+              <pre className="mt-1 whitespace-pre-wrap text-[10px] bg-bg-card p-2 rounded">{log.details}</pre>
+            </details>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function Sync() {
+  const [showLogs, setShowLogs] = useState<string | null>(null);
   const { data, isLoading } = useQuery<SyncStatusResponse>({
     queryKey: ["sync-status"],
     queryFn: () => api.get("/api/sync/status"),
@@ -213,6 +269,31 @@ export function Sync() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Logs */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold text-text-primary">Logs</h2>
+        <div className="flex gap-2">
+          {["sync-criterium"].map((job) => (
+            <button
+              key={job}
+              onClick={() => setShowLogs(showLogs === job ? null : job)}
+              className={`px-3 py-1.5 text-xs rounded-md border transition-colors ${
+                showLogs === job
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-text-secondary hover:text-text-primary hover:bg-border-light"
+              }`}
+            >
+              {job}
+            </button>
+          ))}
+        </div>
+        {showLogs && (
+          <div className="border border-border rounded-lg overflow-hidden">
+            <SyncLogs jobName={showLogs} />
+          </div>
+        )}
       </section>
     </div>
   );
