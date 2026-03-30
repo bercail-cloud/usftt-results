@@ -164,17 +164,14 @@ app.get("/criterium/tours/:tour", async (c) => {
         (p) => matchesName(p.perdant)
       ).length;
 
-      // Build set of elimination adversary full names for dedup
-      const elimAdversaries = new Set(
-        allParties
-          .filter(
-            (p) => matchesName(p.vainqueur) || matchesName(p.perdant)
-          )
-          .map((p) => {
-            const isWinner = matchesName(p.vainqueur);
-            return (isWinner ? p.perdant : p.vainqueur).toUpperCase();
-          })
-      );
+      // Build dedup bag for pool matches
+      const elimMatchBag = new Map<string, number>();
+      for (const p of allParties.filter((p) => matchesName(p.vainqueur) || matchesName(p.perdant))) {
+        const isWinner = matchesName(p.vainqueur);
+        const advName = (isWinner ? p.perdant : p.vainqueur).toUpperCase();
+        const key = `${advName}|${isWinner ? "V" : "D"}`;
+        elimMatchBag.set(key, (elimMatchBag.get(key) ?? 0) + 1);
+      }
 
       // 2. Count from parties_individuelles (pool matches, deduplicated)
       let poolVictoires = 0;
@@ -195,7 +192,13 @@ app.get("/criterium/tours/:tour", async (c) => {
           );
 
         const dedupedPool = poolParties.filter((p) => {
-          return !elimAdversaries.has(p.adversaire_nom.toUpperCase());
+          const key = `${p.adversaire_nom.toUpperCase()}|${p.victoire ? "V" : "D"}`;
+          const remaining = elimMatchBag.get(key);
+          if (remaining && remaining > 0) {
+            elimMatchBag.set(key, remaining - 1);
+            return false;
+          }
+          return true;
         });
 
         poolVictoires = dedupedPool.filter((p) => p.victoire).length;
@@ -441,18 +444,26 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
         )
       );
 
-    // Build set of elimination phase adversary full names (to deduplicate)
-    const elimAdversaries = new Set(
-      playerMatches.map((m) => {
-        const isWinner = matchesPlayerName(m.vainqueur);
-        return (isWinner ? m.perdant : m.vainqueur).toUpperCase();
-      })
-    );
+    // Build dedup bag: for each elimination match, track one adversaire+result to remove from pool
+    // Uses a count-based approach so playing the same opponent in pool AND elimination both show
+    const elimMatchBag = new Map<string, number>();
+    for (const m of playerMatches) {
+      const isWinner = matchesPlayerName(m.vainqueur);
+      const advName = (isWinner ? m.perdant : m.vainqueur).toUpperCase();
+      const key = `${advName}|${isWinner ? "V" : "D"}`;
+      elimMatchBag.set(key, (elimMatchBag.get(key) ?? 0) + 1);
+    }
 
     poolMatches = allPoolParties
       .filter((p) => {
-        // Exclude matches that are already in elimination phases
-        return !elimAdversaries.has(p.adversaire_nom.toUpperCase());
+        // Remove one pool match per matching elimination match (same opponent + same result)
+        const key = `${p.adversaire_nom.toUpperCase()}|${p.victoire ? "V" : "D"}`;
+        const remaining = elimMatchBag.get(key);
+        if (remaining && remaining > 0) {
+          elimMatchBag.set(key, remaining - 1);
+          return false;
+        }
+        return true;
       })
       .map((p) => ({
         libelle: "Poule",
