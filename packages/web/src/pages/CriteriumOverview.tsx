@@ -97,8 +97,8 @@ function parseDivision(raw: string): {
   else if (/[Jj]unior/i.test(raw) || /-?\s*19\s*ans/i.test(raw)) { ageCategory = "Juniors (-19 ans)"; ageOrder = 3; }
   else if (/[Cc]adet/i.test(raw) || /-?\s*15\s*ans/i.test(raw)) { ageCategory = "Cadets (-15 ans)"; ageOrder = 4; }
   else if (/[Mm]inime/i.test(raw)) { ageCategory = "Minimes"; ageOrder = 5; }
-  else if (/-?\s*13\s*ans/i.test(raw)) { ageCategory = "Benjamins (-13 ans)"; ageOrder = 6; }
-  else if (/-?\s*11\s*ans/i.test(raw)) { ageCategory = "Poussins (-11 ans)"; ageOrder = 7; }
+  else if (/[Bb]enjamin/i.test(raw) || /-?\s*13\s*ans/i.test(raw)) { ageCategory = "Benjamins (-13 ans)"; ageOrder = 6; }
+  else if (/[Pp]oussin/i.test(raw) || /-?\s*11\s*ans/i.test(raw)) { ageCategory = "Poussins (-11 ans)"; ageOrder = 7; }
 
   const genderLabel = gender.includes("F")
     ? gender === "F" ? "Dames" : "Mixte"
