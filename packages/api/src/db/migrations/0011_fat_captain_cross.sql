@@ -1,0 +1,1 @@
+ALTER TABLE "parties_individuelles" ADD COLUMN "forfait" boolean DEFAULT false NOT NULL;

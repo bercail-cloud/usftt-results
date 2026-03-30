@@ -416,6 +416,7 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
     adversaireClassement: number;
     pointsResultat: number;
     forfait: boolean;
+    estimated: boolean;
   }> = [];
 
   if (tourDates.length > 0) {
@@ -449,7 +450,8 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
         adversaire: p.adversaire_nom,
         adversaireClassement: p.adversaire_classement,
         pointsResultat: p.points_resultat,
-        forfait: false,
+        forfait: p.forfait,
+        estimated: p.adversaire_licence === "",
       }));
   }
 
@@ -483,6 +485,7 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
       adversaireClassement: partieInfo?.adversaire_classement ?? 0,
       pointsResultat: partieInfo?.points_resultat ?? 0,
       forfait: m.forfait,
+      estimated: partieInfo ? partieInfo.adversaire_licence === "" : true,
     };
   });
 
