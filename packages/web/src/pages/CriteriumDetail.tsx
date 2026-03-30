@@ -93,8 +93,8 @@ export function CriteriumDetail() {
 
   const { player, divisionStandings, matches } = data;
 
-  const victoires = matches.filter((m) => m.victoire).length;
-  const defaites = matches.filter((m) => !m.victoire).length;
+  const victoires = matches.filter((m) => m.victoire && !m.forfait).length;
+  const defaites = matches.filter((m) => !m.victoire && !m.forfait).length;
 
   return (
     <div className="max-w-4xl mx-auto px-3 md:px-4 py-6 md:py-8 space-y-8">
@@ -173,8 +173,8 @@ export function CriteriumDetail() {
       {matches && matches.length > 0 && (() => {
         const poolMatches = matches.filter((m) => m.libelle === "Poule");
         const elimMatches = matches.filter((m) => m.libelle !== "Poule");
-        const poolV = poolMatches.filter((m) => m.victoire).length;
-        const poolD = poolMatches.filter((m) => !m.victoire).length;
+        const poolV = poolMatches.filter((m) => m.victoire && !m.forfait).length;
+        const poolD = poolMatches.filter((m) => !m.victoire && !m.forfait).length;
         const poolPoints = poolMatches.reduce((s, m) => s + (m.pointsResultat ?? 0), 0);
 
         return (
@@ -231,8 +231,8 @@ export function CriteriumDetail() {
 
             {/* Elimination matches */}
             {elimMatches.length > 0 && (() => {
-              const elimV = elimMatches.filter((m) => m.victoire).length;
-              const elimD = elimMatches.filter((m) => !m.victoire).length;
+              const elimV = elimMatches.filter((m) => m.victoire && !m.forfait).length;
+              const elimD = elimMatches.filter((m) => !m.victoire && !m.forfait).length;
               const elimPoints = elimMatches.reduce((s, m) => s + (m.pointsResultat ?? 0), 0);
               return (
               <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
