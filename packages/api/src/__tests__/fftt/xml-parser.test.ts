@@ -828,7 +828,7 @@ describe("parseResultIndivParties", () => {
     const xml = `<?xml version="1.0"?>
 <liste>
   <partie><libelle>Finale</libelle><vain>GREMILLON-BACHELET Mathys</vain><perd>BUO Quentin</perd><forfait/></partie>
-  <partie><libelle>1/2 Finale</libelle><vain>BUO Quentin</vain><perd>BAHUAUD Mathieu</perd><forfait/></partie>
+  <partie><libelle>1/2 Finale</libelle><vain>BUO Quentin</vain><perd>BAHUAUD Mathieu</perd><forfait>1</forfait></partie>
 </liste>`;
 
     const result = parseResultIndivParties(xml);
@@ -837,9 +837,14 @@ describe("parseResultIndivParties", () => {
       libelle: "Finale",
       vain: "GREMILLON-BACHELET Mathys",
       perd: "BUO Quentin",
-      forfait: true,
+      forfait: false, // <forfait/> = empty tag = not a forfait
     });
-    expect(result[1]!.vain).toBe("BUO Quentin");
+    expect(result[1]).toEqual({
+      libelle: "1/2 Finale",
+      vain: "BUO Quentin",
+      perd: "BAHUAUD Mathieu",
+      forfait: true, // <forfait>1</forfait> = real forfait
+    });
   });
 
   it("returns empty array when no parties", () => {

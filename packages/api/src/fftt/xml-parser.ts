@@ -415,7 +415,7 @@ export function parseResultIndivParties(xml: string): ResultIndivPartie[] {
     libelle: getString(raw.libelle),
     vain: getString(raw.vain),
     perd: getString(raw.perd),
-    forfait: raw.forfait !== undefined && raw.forfait !== null,
+    forfait: raw.forfait !== undefined && raw.forfait !== null && raw.forfait !== "" && raw.forfait !== "0",
   }));
 }
 
