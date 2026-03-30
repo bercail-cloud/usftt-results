@@ -1,0 +1,2 @@
+ALTER TABLE "criterium_classement" DROP CONSTRAINT "criterium_classement_criterium_tour_id_nom_unique";--> statement-breakpoint
+ALTER TABLE "criterium_classement" ADD CONSTRAINT "criterium_classement_criterium_tour_id_nom_classement_unique" UNIQUE("criterium_tour_id","nom","classement");
