@@ -55,16 +55,18 @@ function parseLienParams(lien: string): Record<string, string> {
 
 function niveauFromOrganisme(orgId: string): string {
   if (orgId === "1") return "National";
-  if (orgId === "8") return "National"; // Zone 1 CVL-IDF
+  if (orgId === "7") return "National"; // Zone 1+2 CVL-IDF (jeunes)
+  if (orgId === "8") return "National"; // Zone 1+2 CVL-IDF (seniors)
   if (orgId === "16") return "Regional"; // Ligue IDF
   if (orgId === "112") return "Departemental"; // Val-de-Marne
   return "Departemental";
 }
 
 // Organismes to search for criterium epreuves:
-// 1 = Federation (national), 8 = Zone 1 CVL-IDF, 16 = Ligue IDF (regional), 112 = Val-de-Marne (dept)
+// 1 = Federation (national), 7 = Zone 1+2 jeunes, 8 = Zone 1+2 seniors,
+// 16 = Ligue IDF (regional), 112 = Val-de-Marne (dept)
 function getOrganismeIds(): string[] {
-  return ["1", "8", "16", "112"];
+  return ["1", "7", "8", "16", "112"];
 }
 
 async function syncLog(

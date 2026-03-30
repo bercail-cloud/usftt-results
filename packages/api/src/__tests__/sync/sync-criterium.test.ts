@@ -133,8 +133,8 @@ describe("syncCriterium", () => {
 
     await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
-    // 4 organismes: federal (1), zone (8), regional (16), departemental (112)
-    expect(mockGetEpreuves).toHaveBeenCalledTimes(4);
+    // 5 organismes: federal (1), zone jeunes (7), zone seniors (8), regional (16), departemental (112)
+    expect(mockGetEpreuves).toHaveBeenCalledTimes(5);
     expect(mockGetEpreuves).toHaveBeenCalledWith(
       "1", "I", FFTT_CONFIG.appId, FFTT_CONFIG.serie, FFTT_CONFIG.password
     );
@@ -151,8 +151,8 @@ describe("syncCriterium", () => {
 
     await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
-    // 4 organismes (federal + zone + regional + dept), each keeping only 1 most recent C epreuve = 4 calls
-    expect(mockGetDivisions).toHaveBeenCalledTimes(4);
+    // 5 organismes, each keeping only 1 most recent C epreuve = 5 calls
+    expect(mockGetDivisions).toHaveBeenCalledTimes(5);
   });
 
   it("calls getResultIndivPoules for each division", async () => {
@@ -166,7 +166,7 @@ describe("syncCriterium", () => {
     await syncCriterium(db as SyncDb, FFTT_CONFIG);
 
     // 3 organismes, each with 1 division = 3 calls
-    expect(mockGetResultIndivPoules).toHaveBeenCalledTimes(4);
+    expect(mockGetResultIndivPoules).toHaveBeenCalledTimes(5);
     expect(mockGetResultIndivPoules).toHaveBeenCalledWith(
       "EP1",
       "DIV1",
