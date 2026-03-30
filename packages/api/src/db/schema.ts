@@ -156,7 +156,7 @@ export const criterium_classement = pgTable("criterium_classement", {
   points: varchar("points").notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
-  unique().on(table.criterium_tour_id, table.nom),
+  unique().on(table.criterium_tour_id, table.nom, table.classement),
 ]);
 
 export const criterium_parties = pgTable("criterium_parties", {

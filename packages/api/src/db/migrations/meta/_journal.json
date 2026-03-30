@@ -85,6 +85,13 @@
       "when": 1774859274910,
       "tag": "0011_fat_captain_cross",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1774862137768,
+      "tag": "0012_flippant_lizard",
+      "breakpoints": true
     }
   ]
 }

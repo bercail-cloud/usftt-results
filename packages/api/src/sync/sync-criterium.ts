@@ -324,23 +324,28 @@ export async function syncCriterium(
 
           const tourId = tourRows[0]!.id;
 
-          // Upsert classement rows (deduplicate by nom within same tour)
-          const seenNoms = new Set<string>();
+          // Upsert classement rows (deduplicate by nom+classement within same tour)
+          const seenKeys = new Set<string>();
           const classementRows = standings
             .filter((s) => {
-              if (seenNoms.has(s.nom)) return false;
-              seenNoms.add(s.nom);
+              const clt = parseClassementFromClt(String(s.clt ?? ""));
+              const key = `${s.nom}|${clt}`;
+              if (seenKeys.has(key)) return false;
+              seenKeys.add(key);
               return true;
             })
-            .map((s) => ({
-              criterium_tour_id: tourId,
-              rang: si(s.rang),
-              licence: findLicence(s.nom, parseClassementFromClt(String(s.clt ?? ""))),
-              nom: s.nom,
-              club: s.club,
-              classement: parseClassementFromClt(String(s.clt ?? "")),
-              points: s.points,
-            }));
+            .map((s) => {
+              const clt = parseClassementFromClt(String(s.clt ?? ""));
+              return {
+                criterium_tour_id: tourId,
+                rang: si(s.rang),
+                licence: findLicence(s.nom, clt),
+                nom: s.nom,
+                club: s.club,
+                classement: clt,
+                points: s.points,
+              };
+            });
 
           const matched = classementRows.filter((r) => r.licence !== null);
           const unmatched = classementRows.filter((r) => r.licence === null);
@@ -362,6 +367,7 @@ export async function syncCriterium(
               target: [
                 criterium_classement.criterium_tour_id,
                 criterium_classement.nom,
+                criterium_classement.classement,
               ],
               set: {
                 rang: sql`excluded.rang`,
