@@ -127,6 +127,7 @@ export async function syncPartiesMysql(db: SyncDb, ffttConfig: FfttConfig): Prom
       epreuve_libelle: null as string | null,
       id_partie: partie.idpartie || null,
       journee: safeInt(partie.numjourn),
+      forfait: false,
     }));
 
     await db
@@ -182,6 +183,7 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
         .set({
           epreuve_libelle: sp.epreuve || null,
           adversaire_rang: parsed.rang,
+          forfait: sp.forfait === "1",
         })
         .where(
           sql`${parties_individuelles.licence} = ${joueur.licence} AND ${parties_individuelles.id_partie} = ${sp.idpartie}`
@@ -214,6 +216,7 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
           epreuve_libelle: sp.epreuve || null,
           id_partie: sp.idpartie || null,
           journee: 0,
+          forfait: isForfait,
         };
       });
 

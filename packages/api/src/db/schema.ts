@@ -110,6 +110,7 @@ export const parties_individuelles = pgTable("parties_individuelles", {
   epreuve_libelle: varchar("epreuve_libelle"),
   id_partie: varchar("id_partie"),
   journee: integer("journee").notNull(),
+  forfait: boolean("forfait").notNull().default(false),
 });
 
 export const historique_classement = pgTable(

@@ -30,6 +30,7 @@ interface Match {
   adversaireClassement?: number;
   pointsResultat?: number;
   forfait: boolean;
+  estimated: boolean;
 }
 
 interface CriteriumDetailResponse {
@@ -209,16 +210,16 @@ export function CriteriumDetail() {
                       {poolMatches.map((match, idx) => (
                         <tr key={idx} className={idx % 2 === 0 ? "bg-[#f7f9fb]" : "bg-white"}>
                           <td className="px-4 py-3.5 text-center">
-                            <span className={`font-bold text-base ${match.victoire ? "text-success" : "text-error"}`}>
-                              {match.victoire ? "V" : "D"}
+                            <span className={`font-bold text-base ${match.forfait ? "text-[#94a3b8]" : match.victoire ? "text-success" : "text-error"}`}>
+                              {match.forfait ? "F" : match.victoire ? "V" : "D"}
                             </span>
                           </td>
                           <td className="px-4 py-3.5 text-[#191c1e] font-medium">{match.adversaire}</td>
                           <td className="px-4 py-3.5 text-center text-[#64748b]">
                             {match.adversaireClassement || ""}
                           </td>
-                          <td className={`px-4 py-3.5 text-center font-semibold ${(match.pointsResultat ?? 0) >= 0 ? "text-success" : "text-error"}`}>
-                            {(match.pointsResultat ?? 0) > 0 ? "+" : ""}{match.pointsResultat?.toFixed(1) ?? ""}
+                          <td className={`px-4 py-3.5 text-center font-semibold ${match.forfait ? "text-[#94a3b8]" : (match.pointsResultat ?? 0) >= 0 ? "text-success" : "text-error"}`}>
+                            {match.estimated ? "~ " : ""}{(match.pointsResultat ?? 0) > 0 ? "+" : ""}{match.pointsResultat?.toFixed(1) ?? ""}
                           </td>
                         </tr>
                       ))}
@@ -262,8 +263,8 @@ export function CriteriumDetail() {
                       {elimMatches.map((match, idx) => (
                         <tr key={idx} className={idx % 2 === 0 ? "bg-[#f7f9fb]" : "bg-white"}>
                           <td className="px-4 py-3.5 text-center">
-                            <span className={`font-bold text-base ${match.victoire ? "text-success" : "text-error"}`}>
-                              {match.victoire ? "V" : "D"}
+                            <span className={`font-bold text-base ${match.forfait ? "text-[#94a3b8]" : match.victoire ? "text-success" : "text-error"}`}>
+                              {match.forfait ? "F" : match.victoire ? "V" : "D"}
                             </span>
                           </td>
                           <td className="px-4 py-3.5 text-[#64748b]">{match.libelle}</td>
@@ -271,8 +272,8 @@ export function CriteriumDetail() {
                           <td className="px-4 py-3.5 text-center text-[#64748b]">
                             {match.adversaireClassement || ""}
                           </td>
-                          <td className={`px-4 py-3.5 text-center font-semibold ${(match.pointsResultat ?? 0) >= 0 ? "text-success" : "text-error"}`}>
-                            {(match.pointsResultat ?? 0) > 0 ? "+" : ""}{match.pointsResultat ? match.pointsResultat.toFixed(1) : ""}
+                          <td className={`px-4 py-3.5 text-center font-semibold ${match.forfait ? "text-[#94a3b8]" : (match.pointsResultat ?? 0) >= 0 ? "text-success" : "text-error"}`}>
+                            {match.estimated ? "~ " : ""}{(match.pointsResultat ?? 0) > 0 ? "+" : ""}{match.pointsResultat ? match.pointsResultat.toFixed(1) : ""}
                           </td>
                         </tr>
                       ))}
