@@ -143,8 +143,11 @@ app.get("/criterium/tours/:tour", async (c) => {
   const playerResults = await Promise.all(
     players.map(async (player) => {
       const tourInfo = tourLookup.get(player.criterium_tour_id);
-      // Bug #3 fix: match by full name instead of prefix
       const playerName = player.nom.toUpperCase();
+      const matchesName = (name: string) => {
+        const upper = name.toUpperCase();
+        return upper === playerName || upper.startsWith(playerName + " ");
+      };
 
       // 1. Count from criterium_parties (elimination phases)
       const allParties = await db
@@ -155,22 +158,20 @@ app.get("/criterium/tours/:tour", async (c) => {
         );
 
       const elimVictoires = allParties.filter(
-        (p) => p.vainqueur.toUpperCase() === playerName
+        (p) => matchesName(p.vainqueur)
       ).length;
       const elimDefaites = allParties.filter(
-        (p) => p.perdant.toUpperCase() === playerName
+        (p) => matchesName(p.perdant)
       ).length;
 
       // Build set of elimination adversary full names for dedup
       const elimAdversaries = new Set(
         allParties
           .filter(
-            (p) =>
-              p.vainqueur.toUpperCase() === playerName ||
-              p.perdant.toUpperCase() === playerName
+            (p) => matchesName(p.vainqueur) || matchesName(p.perdant)
           )
           .map((p) => {
-            const isWinner = p.vainqueur.toUpperCase() === playerName;
+            const isWinner = matchesName(p.vainqueur);
             return (isWinner ? p.perdant : p.vainqueur).toUpperCase();
           })
       );
@@ -403,12 +404,14 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
       eq(criterium_parties.criterium_tour_id, player.criterium_tour_id)
     );
 
-  // Bug #3 fix: match by full name instead of prefix to avoid false positives with siblings
+  // Match player name: exact match or "NOM " prefix (handles "CUENOT" vs "CUENOT Damien")
   const playerName = player.nom.toUpperCase();
+  const matchesPlayerName = (name: string) => {
+    const upper = name.toUpperCase();
+    return upper === playerName || upper.startsWith(playerName + " ");
+  };
   const playerMatches = matches.filter(
-    (m) =>
-      m.vainqueur.toUpperCase() === playerName ||
-      m.perdant.toUpperCase() === playerName
+    (m) => matchesPlayerName(m.vainqueur) || matchesPlayerName(m.perdant)
   );
 
   // Bug #4 fix: use only the date of the player's specific tour/division, not all dates
@@ -441,7 +444,7 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
     // Build set of elimination phase adversary full names (to deduplicate)
     const elimAdversaries = new Set(
       playerMatches.map((m) => {
-        const isWinner = m.vainqueur.toUpperCase() === playerName;
+        const isWinner = matchesPlayerName(m.vainqueur);
         return (isWinner ? m.perdant : m.vainqueur).toUpperCase();
       })
     );
@@ -469,7 +472,7 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
 
   // Combine: pool matches first, then elimination phase matches
   const eliminationMatches = playerMatches.map((m) => {
-    const isWinner = m.vainqueur.toUpperCase() === playerName;
+    const isWinner = matchesPlayerName(m.vainqueur);
     const adversaire = isWinner ? m.perdant : m.vainqueur;
     const partieInfo = partiesByAdv.get(adversaire.toUpperCase());
     return {
