@@ -7,6 +7,7 @@ import { DivisionBadge } from "../components/DivisionBadge.js";
 interface Player {
   licence: string;
   nom: string;
+  prenom?: string;
   club: string;
   classement: number;
   division: string;
@@ -113,7 +114,7 @@ export function CriteriumDetail() {
       {/* Player header */}
       <div>
         <h1 className="text-xl md:text-2xl font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>
-          {player.nom}
+          {player.nom}{player.prenom ? ` ${player.prenom}` : ""}
         </h1>
         <div className="flex items-center gap-2 mt-1">
           <DivisionBadge division={player.division} />
@@ -125,53 +126,6 @@ export function CriteriumDetail() {
           <span className="text-error">{defaites}D</span>
         </p>
       </div>
-
-      {/* Division standings */}
-      {divisionStandings && divisionStandings.length > 0 && (
-        <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
-          <div className="px-6 py-4 border-b border-[rgba(67,70,85,0.08)]">
-            <h2 className="font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>Classement division</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-[#f2f4f6] text-[#64748b]">
-                  <th className="text-center px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Rang</th>
-                  <th className="text-left px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Joueur</th>
-                  <th className="hidden md:table-cell text-left px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Club</th>
-                  <th className="text-center px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Clt</th>
-                  <th className="text-center px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Points</th>
-                </tr>
-              </thead>
-              <tbody>
-                {divisionStandings.map((row, idx) => {
-                  const isPlayer = row.licence === player.licence;
-                  return (
-                    <tr
-                      key={row.licence ?? idx}
-                      className={`transition-colors ${
-                        isPlayer
-                          ? "bg-[#eff6ff] text-primary font-semibold"
-                          : idx % 2 === 0 ? "bg-[#f7f9fb]" : "bg-white"
-                      }`}
-                    >
-                      <td className="px-2 md:px-4 py-2 md:py-3 text-center">{row.rang}</td>
-                      <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-[#191c1e]">{row.nom}</td>
-                      <td className="hidden md:table-cell px-2 md:px-4 py-2 md:py-3 text-[#64748b]">{row.club}</td>
-                      <td className="px-2 md:px-4 py-2 md:py-3 text-center text-[#64748b]">
-                        {row.classement}
-                      </td>
-                      <td className="px-2 md:px-4 py-2 md:py-3 text-center font-bold">
-                        {row.points}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
       {/* Matches */}
       {matches && matches.length > 0 && (() => {
@@ -290,6 +244,53 @@ export function CriteriumDetail() {
           </div>
         );
       })()}
+
+      {/* Division standings */}
+      {divisionStandings && divisionStandings.length > 0 && (
+        <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
+          <div className="px-6 py-4 border-b border-[rgba(67,70,85,0.08)]">
+            <h2 className="font-extrabold text-[#191c1e]" style={{ fontFamily: "Manrope, sans-serif" }}>Classement division</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-[#f2f4f6] text-[#64748b]">
+                  <th className="text-center px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Rang</th>
+                  <th className="text-left px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Joueur</th>
+                  <th className="hidden md:table-cell text-left px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Club</th>
+                  <th className="text-center px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Clt</th>
+                  <th className="text-center px-2 md:px-4 py-2 md:py-3 font-semibold text-[11px] uppercase tracking-widest">Points</th>
+                </tr>
+              </thead>
+              <tbody>
+                {divisionStandings.map((row, idx) => {
+                  const isPlayer = row.licence === player.licence;
+                  return (
+                    <tr
+                      key={row.licence ?? idx}
+                      className={`transition-colors ${
+                        isPlayer
+                          ? "bg-[#eff6ff] text-primary font-semibold"
+                          : idx % 2 === 0 ? "bg-[#f7f9fb]" : "bg-white"
+                      }`}
+                    >
+                      <td className="px-2 md:px-4 py-2 md:py-3 text-center">{row.rang}</td>
+                      <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-[#191c1e]">{row.nom}</td>
+                      <td className="hidden md:table-cell px-2 md:px-4 py-2 md:py-3 text-[#64748b]">{row.club}</td>
+                      <td className="px-2 md:px-4 py-2 md:py-3 text-center text-[#64748b]">
+                        {row.classement}
+                      </td>
+                      <td className="px-2 md:px-4 py-2 md:py-3 text-center font-bold">
+                        {row.points}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {(!divisionStandings || divisionStandings.length === 0) &&
         (!matches || matches.length === 0) && (

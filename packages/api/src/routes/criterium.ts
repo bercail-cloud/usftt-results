@@ -370,6 +370,7 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
       player: {
         licence,
         nom: joueurInfo ? joueurInfo.nom : licence,
+        prenom: joueurInfo?.prenom ?? "",
         club: joueurInfo?.club_numero ?? "",
         classement: joueurInfo?.points_officiels ?? 0,
         division: "Resultats non trouves sur la FFTT",
@@ -392,6 +393,12 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
 
   const player = playerRows[0]!;
   const tourInfo = tourRows.find((t) => t.id === player.criterium_tour_id);
+
+  // Get player prenom from joueurs table
+  const joueurForPrenom = player.licence
+    ? await db.select({ prenom: joueurs.prenom }).from(joueurs).where(eq(joueurs.licence, player.licence)).limit(1)
+    : [];
+  const playerPrenom = joueurForPrenom[0]?.prenom ?? "";
 
   // Get full division standings
   const divisionStandings = await db
@@ -509,6 +516,7 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
     player: {
       licence: player.licence,
       nom: player.nom,
+      prenom: playerPrenom,
       club: player.club,
       classement: player.classement,
       division: tourInfo?.division_libelle ?? "",
