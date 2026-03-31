@@ -164,23 +164,24 @@ export async function syncDetailsRencontres(
       continue;
     }
 
-    const joueurMap = new Map(
-      chpRenc.joueurs.map((j) => [j.xja, { classement_a: j.xca, classement_b: j.xcb }])
-    );
+    // Build independent lookups: player name -> classement for each side
+    const classementA = new Map<string, string>();
+    const classementB = new Map<string, string>();
+    for (const j of chpRenc.joueurs) {
+      if (j.xja && j.xca) classementA.set(j.xja, j.xca);
+      if (j.xjb && j.xcb) classementB.set(j.xjb, j.xcb);
+    }
 
-    const partyRows = chpRenc.parties.map((partie) => {
-      const joueurInfo = joueurMap.get(partie.ja);
-      return {
-        rencontre_id: rencontre.id,
-        joueur_a: partie.ja,
-        classement_a: joueurInfo?.classement_a ?? "",
-        joueur_b: partie.jb,
-        classement_b: joueurInfo?.classement_b ?? "",
-        score_a: si(partie.scorea),
-        score_b: si(partie.scoreb),
-        detail_sets: partie.detail,
-      };
-    });
+    const partyRows = chpRenc.parties.map((partie) => ({
+      rencontre_id: rencontre.id,
+      joueur_a: partie.ja,
+      classement_a: classementA.get(partie.ja) ?? "",
+      joueur_b: partie.jb,
+      classement_b: classementB.get(partie.jb) ?? "",
+      score_a: si(partie.scorea),
+      score_b: si(partie.scoreb),
+      detail_sets: partie.detail,
+    }));
 
     await db.insert(parties_rencontre).values(partyRows);
   }
