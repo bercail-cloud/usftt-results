@@ -209,6 +209,7 @@ app.get("/criterium/tours/:tour", async (c) => {
 
       return {
         licence: player.licence,
+        criteriumTourId: player.criterium_tour_id,
         nom: player.nom,
         prenom,
         club: player.club,
@@ -284,6 +285,7 @@ app.get("/criterium/tours/:tour", async (c) => {
     for (const [, entry] of missingByLicence) {
       playerResults.push({
         licence: entry.licence,
+        criteriumTourId: 0,
         nom: entry.nom,
         prenom: entry.prenom,
         club: USFTT_CLUB,
@@ -316,13 +318,16 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
 
   const tourIds = tourRows.map((t) => t.id);
 
-  // Find the player in any of these tours
+  // Find the player - use specific tourId if provided (for players in multiple categories)
+  const specificTourId = c.req.query("tourId");
   const playerRows = await db
     .select()
     .from(criterium_classement)
     .where(
       and(
-        sql`${criterium_classement.criterium_tour_id} IN (${sql.raw(tourIds.join(","))})`,
+        specificTourId
+          ? sql`${criterium_classement.criterium_tour_id} = ${parseInt(specificTourId, 10)}`
+          : sql`${criterium_classement.criterium_tour_id} IN (${sql.raw(tourIds.join(","))})`,
         eq(criterium_classement.licence, licence)
       )
     )
