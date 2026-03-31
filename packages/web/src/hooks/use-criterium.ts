@@ -15,9 +15,9 @@ export function useCriteriumTour(tour: number) {
   });
 }
 
-export function useCriteriumDetail(tour: number, licence: string) {
+export function useCriteriumDetail(tour: number, licence: string, tourId?: string) {
   return useQuery({
-    queryKey: ["criterium", tour, licence],
-    queryFn: () => api.get(`/api/criterium/tours/${tour}/joueurs/${licence}`),
+    queryKey: ["criterium", tour, licence, tourId],
+    queryFn: () => api.get(`/api/criterium/tours/${tour}/joueurs/${licence}${tourId ? `?tourId=${tourId}` : ""}`),
   });
 }

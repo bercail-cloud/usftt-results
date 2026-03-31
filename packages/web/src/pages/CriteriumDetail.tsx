@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, useSearchParams } from "react-router";
 import { useCriteriumDetail } from "../hooks/use-criterium.js";
 import { LoadingSkeleton } from "../components/LoadingSkeleton.js";
 import { EmptyState } from "../components/EmptyState.js";
@@ -43,12 +43,15 @@ interface CriteriumDetailResponse {
 export function CriteriumDetail() {
   const { tour, licence } = useParams<{ tour: string; licence: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tourId = searchParams.get("tourId") ?? undefined;
 
   const tourNum = tour ? parseInt(tour, 10) : 1;
 
   const { data, isLoading, isError, error } = useCriteriumDetail(
     tourNum,
-    licence ?? ""
+    licence ?? "",
+    tourId
   ) as {
     data: CriteriumDetailResponse | undefined;
     isLoading: boolean;

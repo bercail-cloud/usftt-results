@@ -14,6 +14,7 @@ interface TourSummary {
 
 interface JoueurResult {
   licence: string;
+  criteriumTourId?: number;
   nom: string;
   prenom?: string;
   club: string;
@@ -230,7 +231,7 @@ function TourResultsTable({
 }: {
   tour: number;
   tourDate?: string;
-  onRowClick: (licence: string) => void;
+  onRowClick: (licence: string, criteriumTourId?: number) => void;
 }) {
   const { data, isLoading, isError } = useCriteriumTour(tour) as {
     data: JoueurResult[] | undefined;
@@ -315,7 +316,7 @@ function TourResultsTable({
                     className={`flex items-center px-5 py-3.5 cursor-pointer transition-colors hover:bg-[#eff6ff] ${
                       idx % 2 === 0 ? "bg-white" : "bg-[#f7f9fb]"
                     }`}
-                    onClick={() => j.licence && onRowClick(j.licence)}
+                    onClick={() => j.licence && onRowClick(j.licence, j.criteriumTourId)}
                   >
                     {/* Level badge */}
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${getLevelBadgeColor(j.levelCode)} mr-3 min-w-[28px] text-center`}>
@@ -425,8 +426,8 @@ export function CriteriumOverview() {
           <TourResultsTable
             tour={currentTour}
             tourDate={currentTourData?.date}
-            onRowClick={(licence) =>
-              navigate(`/criterium/tours/${currentTour}/joueurs/${licence}`)
+            onRowClick={(licence, criteriumTourId) =>
+              navigate(`/criterium/tours/${currentTour}/joueurs/${licence}${criteriumTourId ? `?tourId=${criteriumTourId}` : ""}`)
             }
           />
         </>
