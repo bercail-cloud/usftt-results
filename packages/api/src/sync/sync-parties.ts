@@ -113,12 +113,19 @@ export async function syncPartiesMysql(db: SyncDb, ffttConfig: FfttConfig): Prom
     const parties = await getPartieMysql(joueur.licence, appId, serie, password);
     if (parties.length === 0) continue;
 
-    const rows = parties.map((partie) => ({
+    const rows = parties.map((partie) => {
+      const clt = partie.advclaof || "";
+      // Parse "N352" (ranked player) or "1073" (points)
+      const nMatch = clt.match(/^N(\d+)/);
+      const advClassement = nMatch ? 0 : safeInt(clt);
+      const advRang = nMatch ? `N${nMatch[1]}` : null;
+
+      return {
       licence: partie.licence,
       adversaire_licence: partie.advlic || "",
       adversaire_nom: partie.advnompre || "",
-      adversaire_classement: safeInt(partie.advclaof),
-      adversaire_rang: null as string | null,
+      adversaire_classement: advClassement,
+      adversaire_rang: advRang,
       victoire: partie.vd === "V",
       points_resultat: safeFloat(partie.pointres),
       coefficient: safeFloat(partie.coefchamp),
@@ -128,7 +135,8 @@ export async function syncPartiesMysql(db: SyncDb, ffttConfig: FfttConfig): Prom
       id_partie: partie.idpartie || null,
       journee: safeInt(partie.numjourn),
       forfait: false,
-    }));
+    };
+    });
 
     await db
       .delete(parties_individuelles)
