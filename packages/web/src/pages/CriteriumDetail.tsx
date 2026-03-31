@@ -28,6 +28,7 @@ interface Match {
   victoire: boolean;
   adversaire: string;
   adversaireClassement?: number;
+  adversaireRang?: string | null;
   pointsResultat?: number;
   forfait: boolean;
   estimated: boolean;
@@ -216,7 +217,7 @@ export function CriteriumDetail() {
                           </td>
                           <td className="px-4 py-3.5 text-[#191c1e] font-medium">{match.adversaire}</td>
                           <td className="px-4 py-3.5 text-center text-[#64748b]">
-                            {match.adversaireClassement || ""}
+                            {match.adversaireClassement || match.adversaireRang || ""}
                           </td>
                           <td className={`px-4 py-3.5 text-center font-semibold ${match.forfait ? "text-[#94a3b8]" : (match.pointsResultat ?? 0) >= 0 ? "text-success" : "text-error"}`}>
                             {match.estimated ? "~ " : ""}{(match.pointsResultat ?? 0) > 0 ? "+" : ""}{match.pointsResultat?.toFixed(1) ?? ""}
@@ -270,7 +271,7 @@ export function CriteriumDetail() {
                           <td className="px-4 py-3.5 text-[#64748b]">{match.libelle}</td>
                           <td className="px-4 py-3.5 text-[#191c1e] font-medium">{match.adversaire}</td>
                           <td className="px-4 py-3.5 text-center text-[#64748b]">
-                            {match.adversaireClassement || ""}
+                            {match.adversaireClassement || match.adversaireRang || ""}
                           </td>
                           <td className={`px-4 py-3.5 text-center font-semibold ${match.forfait ? "text-[#94a3b8]" : (match.pointsResultat ?? 0) >= 0 ? "text-success" : "text-error"}`}>
                             {match.estimated ? "~ " : ""}{(match.pointsResultat ?? 0) > 0 ? "+" : ""}{match.pointsResultat ? match.pointsResultat.toFixed(1) : ""}
