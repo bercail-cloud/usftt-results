@@ -57,10 +57,20 @@ async function syncAllClassements(
   ffttConfig: CriteriumFfttConfig
 ): Promise<void> {
   const equipesRows = await db.select().from(equipesTable);
+  const errors: string[] = [];
   for (const eq of equipesRows) {
-    await syncClassementsPoule(db, eq, ffttConfig);
-    await syncRencontres(db, eq, ffttConfig);
-    await syncDetailsRencontres(db, eq.id, ffttConfig);
+    try {
+      await syncClassementsPoule(db, eq, ffttConfig);
+      await syncRencontres(db, eq, ffttConfig);
+      await syncDetailsRencontres(db, eq.id, ffttConfig);
+    } catch (error) {
+      const msg = `Equipe ${eq.lib_equipe} (id=${eq.id}): ${String(error)}`;
+      console.error(`sync-classements error: ${msg}`);
+      errors.push(msg);
+    }
+  }
+  if (errors.length > 0) {
+    throw new Error(`${errors.length} equipe(s) failed:\n${errors.join("\n")}`);
   }
 }
 
