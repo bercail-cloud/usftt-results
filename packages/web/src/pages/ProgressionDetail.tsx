@@ -623,11 +623,14 @@ export function ProgressionDetail() {
                       {/* Player info */}
                       <div className="ml-4 flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-primary">{partie.adversaire_rang && partie.epreuve && partie.adversaire_classement >= 100 ? String(partie.adversaire_classement).slice(0, 2) : (partie.adversaire_classement || "?")}</span>
+                          <span className="text-sm font-semibold text-primary">
+                            {partie.adversaire_classement > 0
+                              ? partie.adversaire_classement
+                              : partie.adversaire_rang
+                                ? `N°${partie.adversaire_rang.replace(/^N/, "")}`
+                                : "?"}
+                          </span>
                           <span className="text-[#191c1e] font-medium">- {partie.adversaire_nom}</span>
-                          {partie.adversaire_rang && (
-                            <span className="text-xs text-[#94a3b8]">(N°{partie.adversaire_rang.replace(/^N/, "")})</span>
-                          )}
                         </div>
                         <div className="text-xs text-[#94a3b8]">
                           Coef: {partie.coefficient || "1"}

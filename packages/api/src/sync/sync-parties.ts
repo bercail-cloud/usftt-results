@@ -115,10 +115,23 @@ export async function syncPartiesMysql(db: SyncDb, ffttConfig: FfttConfig): Prom
 
     const rows = parties.map((partie) => {
       const clt = partie.advclaof || "";
-      // Parse "N352" (ranked player) or "1073" (points)
+      // Parse formats:
+      //  - "N352" (ranked player with N prefix)
+      //  - "12" (ranked player as echelon, small integer)
+      //  - "1073" (points)
       const nMatch = clt.match(/^N(\d+)/);
-      const advClassement = nMatch ? 0 : safeInt(clt);
-      const advRang = nMatch ? `N${nMatch[1]}` : null;
+      let advClassement = 0;
+      let advRang: string | null = null;
+      if (nMatch) {
+        advRang = `N${nMatch[1]}`;
+      } else {
+        const n = safeInt(clt);
+        if (n > 0 && n < 100) {
+          advRang = `N${n}`;
+        } else {
+          advClassement = n;
+        }
+      }
 
       return {
       licence: partie.licence,
@@ -181,7 +194,7 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
       existingParties.map((p: { id_partie: string | null }) => p.id_partie).filter(Boolean)
     );
 
-    // Enrich existing rows with SPID data (epreuve_libelle, adversaire_rang)
+    // Enrich existing rows with SPID data (epreuve_libelle, adversaire_rang, classement)
     for (const sp of spidParties) {
       if (!sp.idpartie || !existingIdParties.has(sp.idpartie)) continue;
 
@@ -191,6 +204,7 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
         .set({
           epreuve_libelle: sp.epreuve || null,
           adversaire_rang: parsed.rang,
+          adversaire_classement: parsed.points,
           forfait: sp.forfait === "1",
         })
         .where(
