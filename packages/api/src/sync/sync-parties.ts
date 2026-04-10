@@ -212,7 +212,7 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
           adversaire_rang: parsed.rang,
           adversaire_classement: parsed.points,
           forfait: isForfait,
-          ...(estimatedPts !== undefined ? { points_resultat: estimatedPts, estimated: true } : {}),
+          ...(estimatedPts !== undefined && estimatedPts !== 0 ? { points_resultat: estimatedPts, estimated: true } : {}),
         })
         .where(
           sql`${parties_individuelles.licence} = ${joueur.licence} AND ${parties_individuelles.id_partie} = ${sp.idpartie}`
