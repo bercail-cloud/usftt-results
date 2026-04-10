@@ -148,7 +148,7 @@ export async function syncPartiesMysql(db: SyncDb, ffttConfig: FfttConfig): Prom
       id_partie: partie.idpartie || null,
       journee: safeInt(partie.numjourn),
       forfait: false,
-      estimated: safeFloat(partie.pointres) === 0,
+      estimated: false,
     };
     });
 
