@@ -111,6 +111,7 @@ export const parties_individuelles = pgTable("parties_individuelles", {
   id_partie: varchar("id_partie"),
   journee: integer("journee").notNull(),
   forfait: boolean("forfait").notNull().default(false),
+  estimated: boolean("estimated").notNull().default(false),
 });
 
 export const historique_classement = pgTable(

@@ -148,6 +148,7 @@ export async function syncPartiesMysql(db: SyncDb, ffttConfig: FfttConfig): Prom
       id_partie: partie.idpartie || null,
       journee: safeInt(partie.numjourn),
       forfait: false,
+      estimated: safeFloat(partie.pointres) === 0,
     };
     });
 
@@ -224,7 +225,7 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
           adversaire_rang: parsed.rang,
           adversaire_classement: parsed.points,
           forfait: isForfait,
-          ...(estimatedPts !== undefined ? { points_resultat: estimatedPts } : {}),
+          ...(estimatedPts !== undefined ? { points_resultat: estimatedPts, estimated: true } : {}),
         })
         .where(
           sql`${parties_individuelles.licence} = ${joueur.licence} AND ${parties_individuelles.id_partie} = ${sp.idpartie}`
@@ -256,6 +257,7 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
           id_partie: sp.idpartie || null,
           journee: 0,
           forfait: isForfait,
+          estimated: true,
         };
       });
 
