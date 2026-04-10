@@ -115,23 +115,10 @@ export async function syncPartiesMysql(db: SyncDb, ffttConfig: FfttConfig): Prom
 
     const rows = parties.map((partie) => {
       const clt = partie.advclaof || "";
-      // Parse formats:
-      //  - "N352" (ranked player with N prefix)
-      //  - "12" (ranked player as echelon, small integer)
-      //  - "1073" (points)
+      // Parse "N352" (ranked player with explicit N prefix) or plain integer (points)
       const nMatch = clt.match(/^N(\d+)/);
-      let advClassement = 0;
-      let advRang: string | null = null;
-      if (nMatch) {
-        advRang = `N${nMatch[1]}`;
-      } else {
-        const n = safeInt(clt);
-        if (n > 0 && n < 100) {
-          advRang = `N${n}`;
-        } else {
-          advClassement = n;
-        }
-      }
+      const advClassement = nMatch ? 0 : safeInt(clt);
+      const advRang = nMatch ? `N${nMatch[1]}` : null;
 
       return {
       licence: partie.licence,
