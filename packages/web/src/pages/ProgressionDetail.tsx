@@ -41,6 +41,7 @@ interface Partie {
   epreuve: string;
   epreuve_libelle: string | null;
   estimated: boolean;
+  forfait: boolean;
 }
 
 function formatEpreuve(code: string): string {
@@ -638,9 +639,9 @@ export function ProgressionDetail() {
                         </div>
                       </div>
 
-                      {/* V/D indicator */}
-                      <span className={`text-lg font-bold flex-shrink-0 ${partie.victoire ? "text-success" : "text-error"}`}>
-                        {partie.victoire ? "V" : "D"}
+                      {/* V/D/F indicator */}
+                      <span className={`text-lg font-bold flex-shrink-0 ${partie.forfait ? "text-[#94a3b8]" : partie.victoire ? "text-success" : "text-error"}`}>
+                        {partie.forfait ? "F" : partie.victoire ? "V" : "D"}
                       </span>
                     </div>
                   ))}
