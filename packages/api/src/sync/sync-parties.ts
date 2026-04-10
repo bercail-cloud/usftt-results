@@ -186,26 +186,45 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
 
     // Get existing mysql-sourced parties for this player
     const existingParties = await db
-      .select({ id_partie: parties_individuelles.id_partie })
+      .select({
+        id_partie: parties_individuelles.id_partie,
+        points_resultat: parties_individuelles.points_resultat,
+        victoire: parties_individuelles.victoire,
+      })
       .from(parties_individuelles)
       .where(eq(parties_individuelles.licence, joueur.licence));
 
+    type ExistingPartie = typeof existingParties[number];
     const existingIdParties = new Set(
-      existingParties.map((p: { id_partie: string | null }) => p.id_partie).filter(Boolean)
+      existingParties.map((p: ExistingPartie) => p.id_partie).filter(Boolean)
+    );
+    const existingByIdPartie = new Map(
+      existingParties.filter((p: ExistingPartie) => p.id_partie).map((p: ExistingPartie) => [p.id_partie!, p])
     );
 
-    // Enrich existing rows with SPID data (epreuve_libelle, adversaire_rang, classement)
+    // Enrich existing rows with SPID data (epreuve_libelle, adversaire_rang, classement, points)
+    const playerClt = joueur.points_mensuels ?? 500;
     for (const sp of spidParties) {
       if (!sp.idpartie || !existingIdParties.has(sp.idpartie)) continue;
 
       const parsed = parseSpidClassement(sp.classement);
+      const existing = existingByIdPartie.get(sp.idpartie) as ExistingPartie | undefined;
+      const isForfait = sp.forfait === "1";
+
+      // Estimate points if mysql returned 0 (not yet calculated by FFTT)
+      const needsEstimation = existing && existing.points_resultat === 0 && !isForfait;
+      const estimatedPts = needsEstimation
+        ? estimatePoints(playerClt, parsed.points, existing.victoire, safeFloat(sp.coefchamp), false)
+        : undefined;
+
       await db
         .update(parties_individuelles)
         .set({
           epreuve_libelle: sp.epreuve || null,
           adversaire_rang: parsed.rang,
           adversaire_classement: parsed.points,
-          forfait: sp.forfait === "1",
+          forfait: isForfait,
+          ...(estimatedPts !== undefined ? { points_resultat: estimatedPts } : {}),
         })
         .where(
           sql`${parties_individuelles.licence} = ${joueur.licence} AND ${parties_individuelles.id_partie} = ${sp.idpartie}`
@@ -213,8 +232,6 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
     }
 
     // Add SPID-only matches (not yet in mysql)
-    const playerClt = joueur.points_mensuels ?? 500;
-
     const spidOnlyRows = spidParties
       .filter((sp) => sp.idpartie && !existingIdParties.has(sp.idpartie))
       .map((sp) => {
