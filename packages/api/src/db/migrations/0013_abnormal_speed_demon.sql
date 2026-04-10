@@ -1,0 +1,1 @@
+ALTER TABLE "parties_individuelles" ADD COLUMN "estimated" boolean DEFAULT false NOT NULL;

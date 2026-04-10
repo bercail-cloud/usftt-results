@@ -40,6 +40,7 @@ interface Partie {
   coefficient: number;
   epreuve: string;
   epreuve_libelle: string | null;
+  estimated: boolean;
 }
 
 function formatEpreuve(code: string): string {
@@ -604,7 +605,7 @@ export function ProgressionDetail() {
                     >
                       {/* Points badge */}
                       {(() => {
-                        const isEstimated = !partie.epreuve && partie.points_resultat !== 0;
+                        const isEstimated = partie.estimated;
                         const bg = partie.points_resultat > 0
                           ? "bg-green-500"
                           : partie.points_resultat < 0
