@@ -106,15 +106,24 @@ export async function syncRencontres(
     };
   });
 
+  // Deduplicate: FFTT API can return duplicate matches for some poules
+  const seen = new Set<string>();
+  const dedupedRows = rows.filter((r) => {
+    const key = `${r.equipe_a}|${r.equipe_b}|${r.date_prevue}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
   // Delete existing parties_rencontre + rencontres for this equipe, then re-insert
   const existingRencontres = await db.select({ id: rencontres.id }).from(rencontres).where(eq(rencontres.equipe_id, equipe.id));
   for (const r of existingRencontres) {
     await db.delete(parties_rencontre).where(eq(parties_rencontre.rencontre_id, r.id));
   }
   await db.delete(rencontres).where(eq(rencontres.equipe_id, equipe.id));
-  await db.insert(rencontres).values(rows);
+  await db.insert(rencontres).values(dedupedRows);
 
-  return rows;
+  return dedupedRows;
 }
 
 export async function syncDetailsRencontres(
