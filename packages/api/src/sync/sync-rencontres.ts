@@ -1,4 +1,4 @@
-import { eq, and, isNotNull } from "drizzle-orm";
+import { eq, and, isNotNull, sql } from "drizzle-orm";
 import {
   getResultEquClassement,
   getResultEquMatches,
@@ -116,9 +116,9 @@ export async function syncRencontres(
   });
 
   // Delete existing parties_rencontre + rencontres for this equipe, then re-insert
-  const existingRencontres = await db.select({ id: rencontres.id }).from(rencontres).where(eq(rencontres.equipe_id, equipe.id));
-  for (const r of existingRencontres) {
-    await db.delete(parties_rencontre).where(eq(parties_rencontre.rencontre_id, r.id));
+  const existingRencontreIds = (await db.select({ id: rencontres.id }).from(rencontres).where(eq(rencontres.equipe_id, equipe.id))).map((r: { id: number }) => r.id);
+  if (existingRencontreIds.length > 0) {
+    await db.delete(parties_rencontre).where(sql`${parties_rencontre.rencontre_id} IN (${sql.raw(existingRencontreIds.join(","))})`);
   }
   await db.delete(rencontres).where(eq(rencontres.equipe_id, equipe.id));
   await db.insert(rencontres).values(dedupedRows);

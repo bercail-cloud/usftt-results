@@ -11,6 +11,26 @@ import {
 
 const USFTT_CLUB = "FONTENAYSIENNE";
 
+/** Match player name: exact match or "NOM " prefix (handles "CUENOT" vs "CUENOT Damien") */
+function nameMatches(candidate: string, playerName: string): boolean {
+  const upper = candidate.toUpperCase();
+  return upper === playerName || upper.startsWith(playerName + " ");
+}
+
+function buildElimMatchBag(
+  parties: Array<{ vainqueur: string; perdant: string }>,
+  playerName: string
+): Map<string, number> {
+  const bag = new Map<string, number>();
+  for (const p of parties.filter((p) => nameMatches(p.vainqueur, playerName) || nameMatches(p.perdant, playerName))) {
+    const isWinner = nameMatches(p.vainqueur, playerName);
+    const advName = (isWinner ? p.perdant : p.vainqueur).toUpperCase();
+    const key = `${advName}|${isWinner ? "V" : "D"}`;
+    bag.set(key, (bag.get(key) ?? 0) + 1);
+  }
+  return bag;
+}
+
 const app = new Hono();
 
 app.get("/criterium/tours", async (c) => {
@@ -144,12 +164,7 @@ app.get("/criterium/tours/:tour", async (c) => {
     players.map(async (player) => {
       const tourInfo = tourLookup.get(player.criterium_tour_id);
       const playerName = player.nom.toUpperCase();
-      const matchesName = (name: string) => {
-        const upper = name.toUpperCase();
-        return upper === playerName || upper.startsWith(playerName + " ");
-      };
 
-      // 1. Count from criterium_parties (elimination phases)
       const allParties = await db
         .select()
         .from(criterium_parties)
@@ -158,20 +173,13 @@ app.get("/criterium/tours/:tour", async (c) => {
         );
 
       const elimVictoires = allParties.filter(
-        (p) => matchesName(p.vainqueur)
+        (p) => nameMatches(p.vainqueur, playerName)
       ).length;
       const elimDefaites = allParties.filter(
-        (p) => matchesName(p.perdant)
+        (p) => nameMatches(p.perdant, playerName)
       ).length;
 
-      // Build dedup bag for pool matches
-      const elimMatchBag = new Map<string, number>();
-      for (const p of allParties.filter((p) => matchesName(p.vainqueur) || matchesName(p.perdant))) {
-        const isWinner = matchesName(p.vainqueur);
-        const advName = (isWinner ? p.perdant : p.vainqueur).toUpperCase();
-        const key = `${advName}|${isWinner ? "V" : "D"}`;
-        elimMatchBag.set(key, (elimMatchBag.get(key) ?? 0) + 1);
-      }
+      const elimMatchBag = buildElimMatchBag(allParties, playerName);
 
       // 2. Count from parties_individuelles (pool matches, deduplicated)
       let poolVictoires = 0;
@@ -420,14 +428,9 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
       eq(criterium_parties.criterium_tour_id, player.criterium_tour_id)
     );
 
-  // Match player name: exact match or "NOM " prefix (handles "CUENOT" vs "CUENOT Damien")
   const playerName = player.nom.toUpperCase();
-  const matchesPlayerName = (name: string) => {
-    const upper = name.toUpperCase();
-    return upper === playerName || upper.startsWith(playerName + " ");
-  };
   const playerMatches = matches.filter(
-    (m) => matchesPlayerName(m.vainqueur) || matchesPlayerName(m.perdant)
+    (m) => nameMatches(m.vainqueur, playerName) || nameMatches(m.perdant, playerName)
   );
 
   // Bug #4 fix: use only the date of the player's specific tour/division, not all dates
@@ -457,15 +460,7 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
         )
       );
 
-    // Build dedup bag: for each elimination match, track one adversaire+result to remove from pool
-    // Uses a count-based approach so playing the same opponent in pool AND elimination both show
-    const elimMatchBag = new Map<string, number>();
-    for (const m of playerMatches) {
-      const isWinner = matchesPlayerName(m.vainqueur);
-      const advName = (isWinner ? m.perdant : m.vainqueur).toUpperCase();
-      const key = `${advName}|${isWinner ? "V" : "D"}`;
-      elimMatchBag.set(key, (elimMatchBag.get(key) ?? 0) + 1);
-    }
+    const elimMatchBag = buildElimMatchBag(playerMatches, playerName);
 
     poolMatches = allPoolParties
       .filter((p) => {
@@ -497,7 +492,7 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
 
   // Combine: pool matches first, then elimination phase matches
   const eliminationMatches = playerMatches.map((m) => {
-    const isWinner = matchesPlayerName(m.vainqueur);
+    const isWinner = nameMatches(m.vainqueur, playerName);
     const adversaire = isWinner ? m.perdant : m.vainqueur;
     const partieInfo = partiesByAdv.get(adversaire.toUpperCase());
     return {
