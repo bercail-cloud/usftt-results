@@ -172,7 +172,6 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
 
     if (spidParties.length === 0) continue;
 
-    // Get existing mysql-sourced parties for this player
     const existingParties = await db
       .select({
         id_partie: parties_individuelles.id_partie,
@@ -183,9 +182,6 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
       .where(eq(parties_individuelles.licence, joueur.licence));
 
     type ExistingPartie = typeof existingParties[number];
-    const existingIdParties = new Set(
-      existingParties.map((p: ExistingPartie) => p.id_partie).filter(Boolean)
-    );
     const existingByIdPartie = new Map(
       existingParties.filter((p: ExistingPartie) => p.id_partie).map((p: ExistingPartie) => [p.id_partie!, p])
     );
@@ -193,7 +189,7 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
     // Enrich existing rows with SPID data (epreuve_libelle, adversaire_rang, classement, points)
     const playerClt = joueur.points_mensuels ?? 500;
     for (const sp of spidParties) {
-      if (!sp.idpartie || !existingIdParties.has(sp.idpartie)) continue;
+      if (!sp.idpartie || !existingByIdPartie.has(sp.idpartie)) continue;
 
       const parsed = parseSpidClassement(sp.classement);
       const existing = existingByIdPartie.get(sp.idpartie) as ExistingPartie | undefined;
@@ -221,9 +217,8 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
         );
     }
 
-    // Add SPID-only matches (not yet in mysql)
     const spidOnlyRows = spidParties
-      .filter((sp) => sp.idpartie && !existingIdParties.has(sp.idpartie))
+      .filter((sp) => sp.idpartie && !existingByIdPartie.has(sp.idpartie))
       .map((sp) => {
         const victoire = sp.victoire === "V";
         const parsed = parseSpidClassement(sp.classement);
