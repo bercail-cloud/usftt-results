@@ -251,6 +251,13 @@ export function Progression() {
 
   const [filterCategorie, setFilterCategorie] = useState(searchParams.get("cat") ?? "");
   const [filterSexe, setFilterSexe] = useState(searchParams.get("sexe") ?? "");
+  const [search, setSearch] = useState(searchParams.get("q") ?? "");
+
+  const normalizedSearch = search
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 
   const { data: joueursData, isLoading: joueursLoading } = useJoueurs() as {
     data: JoueursResponse | undefined;
@@ -263,6 +270,13 @@ export function Progression() {
     .filter((j) => {
       if (filterCategorie && !(j.categorie ?? "").startsWith(filterCategorie)) return false;
       if (filterSexe && j.sexe !== filterSexe) return false;
+      if (normalizedSearch) {
+        const haystack = `${j.nom} ${j.prenom}`
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        if (!haystack.includes(normalizedSearch)) return false;
+      }
       return true;
     })
     .slice()
@@ -283,6 +297,34 @@ export function Progression() {
       {/* Filters */}
       <div className="space-y-3">
         <div className="flex flex-wrap gap-6 items-start">
+          <div className="space-y-1.5 flex-1 min-w-[200px] max-w-sm">
+            <label
+              htmlFor="player-search"
+              className="text-[11px] font-semibold uppercase tracking-widest text-[#737686] block"
+            >
+              Recherche
+            </label>
+            <div className="relative">
+              <input
+                id="player-search"
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Nom ou prénom…"
+                className="w-full px-4 py-1.5 pr-8 rounded-full text-sm bg-[#f2f4f6] border border-transparent focus:outline-none focus:border-[#2563eb] focus:bg-white transition-colors"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full text-[#737686] hover:bg-[#e8eaed] hover:text-[#191c1e] transition-colors"
+                  aria-label="Effacer la recherche"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
           <div className="space-y-1.5">
             <span className="text-[11px] font-semibold uppercase tracking-widest text-[#737686]">
               Catégorie
@@ -306,6 +348,16 @@ export function Progression() {
             />
           </div>
         </div>
+        <div className="flex items-center gap-4 text-[11px] text-[#737686]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block w-1 h-3.5 rounded-sm bg-blue-400" aria-hidden="true" />
+            Homme
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inline-block w-1 h-3.5 rounded-sm bg-pink-400" aria-hidden="true" />
+            Femme
+          </span>
+        </div>
       </div>
 
       {/* Players overview table */}
@@ -319,6 +371,7 @@ export function Progression() {
             const params = new URLSearchParams();
             if (filterCategorie) params.set("cat", filterCategorie);
             if (filterSexe) params.set("sexe", filterSexe);
+            if (search.trim()) params.set("q", search.trim());
             const qs = params.toString();
             navigate(`/progression/${licence}${qs ? `?${qs}` : ""}`);
           }}
