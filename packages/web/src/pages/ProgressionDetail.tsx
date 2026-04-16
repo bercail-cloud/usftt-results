@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import {
   LineChart,
@@ -104,6 +105,22 @@ function formatDate(dateStr: string): string {
 }
 
 
+type CompType = "Équipes" | "Critérium" | "Tournoi" | "Autres";
+
+function getCompType(epreuve: string, epreuveLibelle: string | null): CompType {
+  if (epreuve === "1" || epreuve === "2") return "Équipes";
+  if (epreuve === "I") return "Critérium";
+  if (epreuve === "T") return "Tournoi";
+  // Fallback: use epreuve_libelle for SPID-only matches (epreuve is empty)
+  if (!epreuve && epreuveLibelle) {
+    const lib = epreuveLibelle.toLowerCase();
+    if (lib.includes("equipe") || lib.includes("équipe")) return "Équipes";
+    if (lib.includes("crit")) return "Critérium";
+    if (lib.includes("tournoi")) return "Tournoi";
+  }
+  return "Autres";
+}
+
 function formatChartLabel(point: ProgressionPoint): string {
   const yearMatch = point.saison.match(/(\d{4})\s*[/-]\s*(\d{4})/);
   if (yearMatch) {
@@ -114,9 +131,20 @@ function formatChartLabel(point: ProgressionPoint): string {
   return `${point.saison} P${point.phase}`;
 }
 
+type EpreuveFilter = "all" | "Équipes" | "Critérium" | "Tournoi" | "Autres";
+
+const EPREUVE_FILTERS: ReadonlyArray<{ value: EpreuveFilter; label: string }> = [
+  { value: "all", label: "Toutes" },
+  { value: "Équipes", label: "Équipes" },
+  { value: "Critérium", label: "Critérium" },
+  { value: "Tournoi", label: "Tournoi" },
+  { value: "Autres", label: "Autres" },
+];
+
 export function ProgressionDetail() {
   const { licence } = useParams<{ licence: string }>();
   const navigate = useNavigate();
+  const [epreuveFilter, setEpreuveFilter] = useState<EpreuveFilter>("all");
 
   const { data: joueursData } = useJoueurs() as {
     data: JoueursResponse | undefined;
@@ -212,21 +240,6 @@ export function ProgressionDetail() {
   const pctVictoires = totalMatchs > 0 ? Math.round((totalVictoires / totalMatchs) * 100) : 0;
 
   // Par type de compétition
-  type CompType = "Équipes" | "Critérium" | "Tournoi" | "Autres";
-  const getCompType = (epreuve: string, epreuveLibelle: string | null): CompType => {
-    if (epreuve === "1" || epreuve === "2") return "Équipes";
-    if (epreuve === "I") return "Critérium";
-    if (epreuve === "T") return "Tournoi";
-    // Fallback: use epreuve_libelle for SPID-only matches (epreuve is empty)
-    if (!epreuve && epreuveLibelle) {
-      const lib = epreuveLibelle.toLowerCase();
-      if (lib.includes("equipe") || lib.includes("équipe")) return "Équipes";
-      if (lib.includes("crit")) return "Critérium";
-      if (lib.includes("tournoi")) return "Tournoi";
-    }
-    return "Autres";
-  };
-
   const byType: Record<CompType, { v: number; d: number; pts: number }> = {
     "Équipes": { v: 0, d: 0, pts: 0 },
     "Critérium": { v: 0, d: 0, pts: 0 },
@@ -549,14 +562,46 @@ export function ProgressionDetail() {
 
       {/* Matches table card */}
       <div className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="px-6 py-5">
+        <div className="px-6 py-5 flex flex-wrap items-center justify-between gap-3">
           <h2
             className="font-extrabold text-[#191c1e]"
             style={{ fontFamily: "Manrope, sans-serif" }}
           >
             Parties
           </h2>
+          {sortedParties.length > 0 && (
+            <div
+              className="flex gap-1.5 flex-wrap"
+              role="group"
+              aria-label="Filtrer les parties par type d'épreuve"
+            >
+              {EPREUVE_FILTERS.map((opt) => {
+                const isActive = epreuveFilter === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setEpreuveFilter(opt.value)}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                      isActive
+                        ? "bg-gradient-to-r from-[#004ac6] to-[#2563eb] text-white shadow-[0_2px_6px_rgba(37,99,235,0.3)]"
+                        : "bg-[#f2f4f6] text-[#505f76] hover:bg-[#e8eaed]"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
+        {!partiesLoading && sortedParties.length > 0 && (
+          <div className="px-6 pb-2 flex items-center gap-3 text-[11px] text-[#737686] border-t border-[rgba(67,70,85,0.06)] pt-2">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block w-4 h-4 rounded-md bg-[#475569] opacity-70 text-white text-[9px] font-bold flex items-center justify-center" aria-hidden="true">~</span>
+              Match estimé (en attente de validation FFTT)
+            </span>
+          </div>
+        )}
         {partiesLoading ? (
           <div className="px-6 pb-5">
             <LoadingSkeleton lines={5} />
@@ -566,11 +611,23 @@ export function ProgressionDetail() {
             <EmptyState message="Aucune partie disponible" />
           </div>
         ) : (() => {
+          const filteredParties = epreuveFilter === "all"
+            ? sortedParties
+            : sortedParties.filter((p) => getCompType(p.epreuve, p.epreuve_libelle) === epreuveFilter);
+
+          if (filteredParties.length === 0) {
+            return (
+              <div className="px-6 pb-5">
+                <EmptyState message="Aucune partie pour ce type d'épreuve" />
+              </div>
+            );
+          }
+
           // Group by date + epreuve
           const groups: Array<{ label: string; color: string; parties: typeof sortedParties }> = [];
           let currentKey = "";
 
-          for (const partie of sortedParties) {
+          for (const partie of filteredParties) {
             const eprLabel = partie.epreuve_libelle
               ? partie.epreuve_libelle.replace(/^FED_/, "").replace(/^L\d+_/, "")
               : formatEpreuve(partie.epreuve);
