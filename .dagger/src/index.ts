@@ -107,8 +107,9 @@ export class UsfttCi {
       .container()
       .from("alpine:latest")
       .withExec(["apk", "add", "--no-cache", "openssh-client", "docker-cli", "docker-cli-compose"])
-      .withMountedSecret("/root/.ssh/id_ed25519", sshKey)
-      .withExec(["chmod", "600", "/root/.ssh/id_ed25519"])
+      .withExec(["mkdir", "-p", "/root/.ssh"])
+      .withMountedSecret("/tmp/ssh-key", sshKey)
+      .withExec(["sh", "-c", "cp /tmp/ssh-key /root/.ssh/id_ed25519 && chmod 600 /root/.ssh/id_ed25519"])
       .withExec([
         "sh", "-c",
         `ssh-keyscan -H ${vpsHost} >> /root/.ssh/known_hosts 2>/dev/null`,
