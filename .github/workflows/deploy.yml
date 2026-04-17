@@ -12,7 +12,7 @@ jobs:
         uses: dagger/dagger-for-github@v8.4.1
         with:
           version: "0.20.6"
-          args: call ci --source=.
+          args: ci --source=.
 
   build-and-push:
     needs: ci
@@ -27,7 +27,7 @@ jobs:
         with:
           version: "0.20.6"
           args: >-
-            call publish
+            publish
             --source=.
             --github-token=env:GITHUB_TOKEN
             --git-sha=${{ github.sha }}
@@ -44,7 +44,7 @@ jobs:
         with:
           version: "0.20.6"
           args: >-
-            call deploy
+            deploy
             --source=.
             --ssh-key=env:VPS_SSH_KEY
             --vps-host=${{ vars.VPS_HOST }}
