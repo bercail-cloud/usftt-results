@@ -12,4 +12,4 @@ jobs:
         uses: dagger/dagger-for-github@v8.4.1
         with:
           version: "0.20.6"
-          args: call ci --source=.
+          args: ci --source=.
