@@ -8,24 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - name: Run CI pipeline
+        uses: dagger/dagger-for-github@v8
         with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build -w @usftt/shared
-      - name: Typecheck
-        run: npx turbo run typecheck
-      - name: Lint
-        run: npm run lint
-      - name: Test
-        run: npm run test
-      - name: Check Drizzle migrations are in sync
-        run: |
-          cd packages/api
-          npx drizzle-kit check
-      - name: Build
-        run: npm run build
+          version: "0.20.6"
+          args: call ci --source=.
 
   build-and-push:
     needs: ci
@@ -35,59 +22,31 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v5
-      - uses: docker/login-action@v4
+      - name: Build and push images
+        uses: dagger/dagger-for-github@v8
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/setup-buildx-action@v4
-      - name: Build and push API image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          target: api
-          push: true
-          tags: |
-            ghcr.io/dcuenot/usftt-results-api:latest
-            ghcr.io/dcuenot/usftt-results-api:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      - name: Build and push Web image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          target: web
-          push: true
-          tags: |
-            ghcr.io/dcuenot/usftt-results-web:latest
-            ghcr.io/dcuenot/usftt-results-web:${{ github.sha }}
-          build-args: VITE_API_URL=https://api.usftt-results.bercail.cloud
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          version: "0.20.6"
+          args: >-
+            call publish
+            --source=.
+            --github-token=env:GITHUB_TOKEN
+            --git-sha=${{ github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Copy docker-compose.yml to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ vars.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: docker-compose.yml
-          target: /opt/usftt-results/
-          overwrite: true
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1
+        uses: dagger/dagger-for-github@v8
         with:
-          host: ${{ vars.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            cd /opt/usftt-results
-            docker compose pull
-            # Rolling update: start new containers, wait for healthy, stop old ones
-            docker compose up -d --wait --wait-timeout 60
-            docker image prune -f
+          version: "0.20.6"
+          args: >-
+            call deploy
+            --source=.
+            --ssh-key=env:VPS_SSH_KEY
+            --vps-host=${{ vars.VPS_HOST }}
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
