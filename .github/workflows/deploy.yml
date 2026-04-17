@@ -39,14 +39,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Deploy to VPS
-        uses: dagger/dagger-for-github@v8.4.1
+      - name: Copy docker-compose.yml to VPS
+        uses: appleboy/scp-action@v0.1.7
         with:
-          version: "0.20.6"
-          args: >-
-            deploy
-            --source=.
-            --ssh-key=env:VPS_SSH_KEY
-            --vps-host=${{ vars.VPS_HOST }}
-        env:
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          host: ${{ vars.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: docker-compose.yml
+          target: /opt/usftt-results/
+          overwrite: true
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/usftt-results
+            docker compose pull
+            docker compose up -d --wait --wait-timeout 60
+            docker image prune -f
