@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Run CI pipeline
-        uses: dagger/dagger-for-github@v8
+        uses: dagger/dagger-for-github@v8.4.1
         with:
           version: "0.20.6"
           args: call ci --source=.
@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Build and push images
-        uses: dagger/dagger-for-github@v8
+        uses: dagger/dagger-for-github@v8.4.1
         with:
           version: "0.20.6"
           args: >-
@@ -40,7 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Deploy to VPS
-        uses: dagger/dagger-for-github@v8
+        uses: dagger/dagger-for-github@v8.4.1
         with:
           version: "0.20.6"
           args: >-
