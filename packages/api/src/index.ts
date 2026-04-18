@@ -7,37 +7,44 @@ import { criteriumRoutes } from "./routes/criterium.js";
 import { joueursRoutes } from "./routes/joueurs.js";
 import { startScheduler } from "./sync/scheduler.js";
 import { db } from "./db/connection.js";
+import { env, hasFfttConfig } from "./env.js";
 import type { CriteriumFfttConfig } from "./sync/sync-criterium.js";
 
-// Build FFTT config from env
-const hasEnvVars =
-  process.env.FFTT_APP_ID &&
-  process.env.FFTT_PASSWORD &&
-  process.env.FFTT_SERIE &&
-  process.env.DATABASE_URL;
-
-const ffttConfig: CriteriumFfttConfig | null = hasEnvVars
+const ffttConfig: CriteriumFfttConfig | null = hasFfttConfig(env)
   ? {
-      appId: process.env.FFTT_APP_ID!,
-      password: process.env.FFTT_PASSWORD!,
-      serie: process.env.FFTT_SERIE!,
-      clubNumero: process.env.CLUB_NUMERO ?? "08940073",
-      clubNom: process.env.CLUB_NOM ?? "",
+      appId: env.FFTT_APP_ID,
+      password: env.FFTT_PASSWORD,
+      serie: env.FFTT_SERIE,
+      clubNumero: env.CLUB_NUMERO,
+      clubNom: env.CLUB_NOM,
     }
   : null;
 
 const app = new Hono();
 
-app.use("/*", cors());
+const allowedOrigins = env.ALLOWED_ORIGINS
+  ? env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+  : null;
 
-app.route("/api", createSystemRoutes(ffttConfig));
+app.use(
+  "/*",
+  cors({
+    origin: allowedOrigins ?? "*",
+  })
+);
+
+app.route("/api", createSystemRoutes(ffttConfig, env.SYNC_TRIGGER_TOKEN));
 app.route("/api", equipesRoutes);
 app.route("/api", criteriumRoutes);
 app.route("/api", joueursRoutes);
 
-const port = parseInt(process.env.PORT ?? "3000", 10);
-serve({ fetch: app.fetch, port }, () => {
-  console.log(`API server running on port ${port}`);
+serve({ fetch: app.fetch, port: env.PORT }, () => {
+  console.log(`API server running on port ${env.PORT}`);
+  if (!env.SYNC_TRIGGER_TOKEN) {
+    console.warn(
+      "WARN: SYNC_TRIGGER_TOKEN not set; /api/sync/trigger/:module is unauthenticated."
+    );
+  }
 });
 
 if (ffttConfig) {
