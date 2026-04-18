@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq, and, like, asc, sql } from "drizzle-orm";
+import { eq, and, like, ilike, or, asc, inArray } from "drizzle-orm";
 import { db } from "../db/connection.js";
 import {
   criterium_tours,
@@ -10,6 +10,16 @@ import {
 } from "../db/schema.js";
 
 const USFTT_CLUB = "FONTENAYSIENNE";
+const USFTT_CLUB_NUMERO = "08940073";
+
+/** Match criterium / championnat federal epreuve libelles (case-insensitive, accent-tolerant). */
+function isCriteriumEpreuve() {
+  return or(
+    ilike(parties_individuelles.epreuve_libelle, "%crit%"),
+    ilike(parties_individuelles.epreuve_libelle, "%fédéral%"),
+    ilike(parties_individuelles.epreuve_libelle, "%federal%")
+  );
+}
 
 /** Match player name: exact match or "NOM " prefix (handles "CUENOT" vs "CUENOT Damien") */
 function nameMatches(candidate: string, playerName: string): boolean {
@@ -90,7 +100,7 @@ app.get("/criterium/tours", async (c) => {
         .from(criterium_classement)
         .where(
           and(
-            sql`${criterium_classement.criterium_tour_id} IN (${sql.raw(tourData.tourIds.join(","))})`,
+            inArray(criterium_classement.criterium_tour_id, tourData.tourIds),
             like(criterium_classement.club, `%${USFTT_CLUB}%`)
           )
         );
@@ -137,7 +147,7 @@ app.get("/criterium/tours/:tour", async (c) => {
     .from(criterium_classement)
     .where(
       and(
-        sql`${criterium_classement.criterium_tour_id} IN (${sql.raw(tourIds.join(","))})`,
+        inArray(criterium_classement.criterium_tour_id, tourIds),
         like(criterium_classement.club, `%${USFTT_CLUB}%`)
       )
     )
@@ -152,7 +162,7 @@ app.get("/criterium/tours/:tour", async (c) => {
     ? await db
         .select({ licence: joueurs.licence, prenom: joueurs.prenom })
         .from(joueurs)
-        .where(sql`${joueurs.licence} IN (${sql.raw(licences.map((l) => `'${l}'`).join(","))})`)
+        .where(inArray(joueurs.licence, licences))
     : [];
   const prenomByLicence = new Map(joueursRows.map((j) => [j.licence, j.prenom]));
 
@@ -195,7 +205,7 @@ app.get("/criterium/tours/:tour", async (c) => {
           .where(
             and(
               eq(parties_individuelles.licence, player.licence),
-              sql`${parties_individuelles.date_partie} = ${playerTourDate}`
+              eq(parties_individuelles.date_partie, playerTourDate)
             )
           );
 
@@ -237,7 +247,6 @@ app.get("/criterium/tours/:tour", async (c) => {
   );
 
   if (tourDates.length > 0) {
-    const dateList = tourDates.map((d) => `'${d}'`).join(",");
     const missingPlayers = await db
       .select({
         licence: parties_individuelles.licence,
@@ -251,9 +260,9 @@ app.get("/criterium/tours/:tour", async (c) => {
       .innerJoin(joueurs, eq(joueurs.licence, parties_individuelles.licence))
       .where(
         and(
-          eq(joueurs.club_numero, "08940073"),
-          sql`${parties_individuelles.date_partie} IN (${sql.raw(dateList)})`,
-          sql`(${parties_individuelles.epreuve_libelle} ILIKE '%crit%' OR ${parties_individuelles.epreuve_libelle} ILIKE '%fédéral%' OR ${parties_individuelles.epreuve_libelle} ILIKE '%federal%')`
+          eq(joueurs.club_numero, USFTT_CLUB_NUMERO),
+          inArray(parties_individuelles.date_partie, tourDates),
+          isCriteriumEpreuve()
         )
       );
 
@@ -314,6 +323,10 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
   const tour = parseInt(c.req.param("tour"), 10);
   const licence = c.req.param("licence");
 
+  if (Number.isNaN(tour)) {
+    return c.json({ error: "Invalid tour parameter" }, 400);
+  }
+
   // Find tour rows for this tour number
   const tourRows = await db
     .select()
@@ -327,15 +340,20 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
   const tourIds = tourRows.map((t) => t.id);
 
   // Find the player - use specific tourId if provided (for players in multiple categories)
-  const specificTourId = c.req.query("tourId");
+  const specificTourIdRaw = c.req.query("tourId");
+  const specificTourId = specificTourIdRaw ? parseInt(specificTourIdRaw, 10) : null;
+  if (specificTourIdRaw && (specificTourId === null || Number.isNaN(specificTourId))) {
+    return c.json({ error: "Invalid tourId query parameter" }, 400);
+  }
+
   const playerRows = await db
     .select()
     .from(criterium_classement)
     .where(
       and(
-        specificTourId
-          ? sql`${criterium_classement.criterium_tour_id} = ${parseInt(specificTourId, 10)}`
-          : sql`${criterium_classement.criterium_tour_id} IN (${sql.raw(tourIds.join(","))})`,
+        specificTourId !== null
+          ? eq(criterium_classement.criterium_tour_id, specificTourId)
+          : inArray(criterium_classement.criterium_tour_id, tourIds),
         eq(criterium_classement.licence, licence)
       )
     )
@@ -348,7 +366,6 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
       return c.json({ error: "Player not found in this tour" }, 404);
     }
 
-    const dateList = tourDates.map((d) => `'${d}'`).join(",");
     // Bug #1 fix: filter by criterium epreuve type (same as overview)
     const fallbackParties = await db
       .select()
@@ -356,8 +373,8 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
       .where(
         and(
           eq(parties_individuelles.licence, licence),
-          sql`${parties_individuelles.date_partie} IN (${sql.raw(dateList)})`,
-          sql`(${parties_individuelles.epreuve_libelle} ILIKE '%crit%' OR ${parties_individuelles.epreuve_libelle} ILIKE '%fédéral%' OR ${parties_individuelles.epreuve_libelle} ILIKE '%federal%')`
+          inArray(parties_individuelles.date_partie, tourDates),
+          isCriteriumEpreuve()
         )
       );
 
@@ -456,7 +473,7 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
       .where(
         and(
           eq(parties_individuelles.licence, licence),
-          sql`${parties_individuelles.date_partie} IN (${sql.raw(tourDates.map((d) => `'${d}'`).join(","))})`
+          inArray(parties_individuelles.date_partie, tourDates)
         )
       );
 

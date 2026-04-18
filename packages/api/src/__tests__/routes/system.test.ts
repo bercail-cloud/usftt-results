@@ -34,6 +34,46 @@ describe("GET /api/health", () => {
   });
 });
 
+describe("POST /api/sync/trigger/:module auth", () => {
+  it("returns 401 when a trigger token is configured and header is missing", async () => {
+    const secured = new Hono();
+    secured.route("/api", createSystemRoutes(null, "super-secret-token"));
+    const res = await secured.request("/api/sync/trigger/criterium", {
+      method: "POST",
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it("returns 401 when the bearer token does not match", async () => {
+    const secured = new Hono();
+    secured.route("/api", createSystemRoutes(null, "super-secret-token"));
+    const res = await secured.request("/api/sync/trigger/criterium", {
+      method: "POST",
+      headers: { authorization: "Bearer wrong" },
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it("passes auth and returns 503 (no FFTT config) when token matches", async () => {
+    const secured = new Hono();
+    secured.route("/api", createSystemRoutes(null, "super-secret-token"));
+    const res = await secured.request("/api/sync/trigger/criterium", {
+      method: "POST",
+      headers: { authorization: "Bearer super-secret-token" },
+    });
+    expect(res.status).toBe(503);
+  });
+
+  it("skips auth when no trigger token is configured (backward compat)", async () => {
+    const open = new Hono();
+    open.route("/api", createSystemRoutes(null));
+    const res = await open.request("/api/sync/trigger/criterium", {
+      method: "POST",
+    });
+    expect(res.status).toBe(503); // still 503 because ffttConfig is null
+  });
+});
+
 describe("GET /api/sync/status", () => {
   beforeEach(() => {
     vi.clearAllMocks();
