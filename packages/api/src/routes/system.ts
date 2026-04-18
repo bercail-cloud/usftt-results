@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { desc, sql } from "drizzle-orm";
+import { timingSafeEqual } from "node:crypto";
+import { desc, eq } from "drizzle-orm";
 import { db } from "../db/connection.js";
 import { sync_status, sync_logs } from "../db/schema.js";
 import { syncCriterium } from "../sync/sync-criterium.js";
@@ -17,7 +18,10 @@ function isSyncStale(jobName: string): boolean {
   return startedAt !== undefined && Date.now() - startedAt > SYNC_TIMEOUT_MS;
 }
 
-export function createSystemRoutes(ffttConfig: CriteriumFfttConfig | null) {
+export function createSystemRoutes(
+  ffttConfig: CriteriumFfttConfig | null,
+  triggerToken?: string
+) {
   const app = new Hono();
 
   app.get("/health", (c) => c.json({ status: "ok" }));
@@ -39,6 +43,16 @@ export function createSystemRoutes(ffttConfig: CriteriumFfttConfig | null) {
   });
 
   app.post("/sync/trigger/:module", async (c) => {
+    if (triggerToken) {
+      const header = c.req.header("authorization") ?? "";
+      const provided = header.startsWith("Bearer ") ? header.slice(7) : "";
+      const a = Buffer.from(provided);
+      const b = Buffer.from(triggerToken);
+      if (a.length !== b.length || !timingSafeEqual(a, b)) {
+        return c.json({ error: "Unauthorized" }, 401);
+      }
+    }
+
     if (!ffttConfig) {
       return c.json({ error: "FFTT config not available" }, 503);
     }
@@ -86,13 +100,10 @@ export function createSystemRoutes(ffttConfig: CriteriumFfttConfig | null) {
     const rows = await db
       .select()
       .from(sync_logs)
-      .where(sql`${sync_logs.job_name} = ${jobName}`)
+      .where(eq(sync_logs.job_name, jobName))
       .orderBy(desc(sync_logs.created_at));
     return c.json({ logs: rows });
   });
 
   return app;
 }
-
-// Backward-compatible export for cases without config
-export const systemRoutes = createSystemRoutes(null);
