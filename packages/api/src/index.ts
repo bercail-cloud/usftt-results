@@ -38,6 +38,12 @@ app.route("/api", equipesRoutes);
 app.route("/api", criteriumRoutes);
 app.route("/api", joueursRoutes);
 
+if (!env.SYNC_TRIGGER_TOKEN && process.env.NODE_ENV === "production") {
+  throw new Error(
+    "SYNC_TRIGGER_TOKEN is required in production: /api/sync/trigger/:module would otherwise be unauthenticated."
+  );
+}
+
 serve({ fetch: app.fetch, port: env.PORT }, () => {
   console.log(`API server running on port ${env.PORT}`);
   if (!env.SYNC_TRIGGER_TOKEN) {

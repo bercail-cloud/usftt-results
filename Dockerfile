@@ -34,7 +34,8 @@ COPY --from=builder /app/packages/api/package.json ./packages/api/
 COPY --from=builder /app/packages/api/src/db/migrations ./packages/api/src/db/migrations
 COPY --from=builder /app/packages/api/scripts/ ./packages/api/scripts/
 COPY docker-entrypoint.sh ./
-RUN chmod +x docker-entrypoint.sh
+RUN chmod +x docker-entrypoint.sh && chown -R node:node /app
+USER node
 ENTRYPOINT ["./docker-entrypoint.sh"]
 
 # Stage 5: web
