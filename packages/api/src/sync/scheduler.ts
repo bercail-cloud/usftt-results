@@ -13,6 +13,16 @@ import { sync_status, equipes as equipesTable, rencontres } from "../db/schema.j
 import type { CriteriumFfttConfig } from "./sync-criterium.js";
 import type { SyncDb } from "./sync-equipes.js";
 
+// /api/sync/status is public, so the stored message is reader-visible.
+// Keep it short and strip stack traces / env-specific paths.
+const MAX_ERROR_MESSAGE_LEN = 500;
+
+function sanitizeErrorMessage(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error);
+  const firstLine = raw.split("\n")[0] ?? "";
+  return firstLine.slice(0, MAX_ERROR_MESSAGE_LEN);
+}
+
 async function logSyncStatus(
   db: SyncDb,
   jobName: string,
@@ -47,7 +57,7 @@ export async function runJob(
     await fn();
     await logSyncStatus(db, name, "success");
   } catch (error) {
-    await logSyncStatus(db, name, "error", String(error));
+    await logSyncStatus(db, name, "error", sanitizeErrorMessage(error));
     console.error(`Sync job ${name} failed:`, error);
   }
 }

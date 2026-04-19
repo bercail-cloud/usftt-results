@@ -190,6 +190,35 @@ describe("GET /api/equipes/:id", () => {
   });
 });
 
+describe("GET /api/equipes/:id parameter validation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 400 when :id is not an integer", async () => {
+    const res = await app.request("/api/equipes/not-a-number");
+    expect(res.status).toBe(400);
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when :id is zero or negative", async () => {
+    const res = await app.request("/api/equipes/0");
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("GET /api/equipes/:id/rencontres/:rencId parameter validation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 400 when :rencId is not an integer", async () => {
+    const res = await app.request("/api/equipes/1/rencontres/abc");
+    expect(res.status).toBe(400);
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+});
+
 describe("GET /api/equipes/:id/rencontres/:rencId", () => {
   beforeEach(() => {
     vi.clearAllMocks();
