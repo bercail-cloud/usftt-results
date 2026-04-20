@@ -1,6 +1,7 @@
 import { getEquipes } from "../fftt/endpoints.js";
 import { equipes } from "../db/schema.js";
 import { sql } from "drizzle-orm";
+import { dedupeBy } from "./coerce.js";
 
 export interface FfttConfig {
   appId: string;
@@ -24,14 +25,11 @@ export async function syncEquipes(
     return [];
   }
 
-  // Deduplicate by lib_equipe + id_epreuve (API can return duplicates for Phase 1/2)
-  const seen = new Set<string>();
-  const dedupedEquipes = equipesFromApi.filter((equipe) => {
-    const key = `${equipe.libEquipe}|${equipe.idEpreuve}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  // API can return duplicates for Phase 1/2
+  const dedupedEquipes = dedupeBy(
+    equipesFromApi,
+    (equipe) => `${equipe.libEquipe}|${equipe.idEpreuve}`
+  );
 
   const rows = dedupedEquipes.map((equipe) => {
     const params = new URLSearchParams(equipe.lienDivision);

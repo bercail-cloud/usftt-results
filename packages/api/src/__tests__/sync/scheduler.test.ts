@@ -138,6 +138,37 @@ describe("syncFull", () => {
     expect(valuesCalls).toBeDefined();
   });
 
+  it("redacts urls and auth params from persisted error_message", async () => {
+    const db = makeDb([]);
+    const insertMock = db.insert as ReturnType<typeof vi.fn>;
+    const valuesCalls: unknown[] = [];
+    insertMock.mockImplementation(() => ({
+      values: (v: unknown) => {
+        valuesCalls.push(v);
+        return {
+          onConflictDoUpdate: () => ({ returning: vi.fn().mockResolvedValue([]) }),
+        };
+      },
+    }));
+    mockSyncEquipes.mockRejectedValue(
+      new Error(
+        "fetch https://www.fftt.com/mobile/pxml/xml_equipe.php?tm=20260420120000&tmc=abc123&password=secret failed"
+      )
+    );
+    mockSyncJoueurs.mockResolvedValue(0);
+    mockSyncPartiesSpid.mockResolvedValue(0);
+
+    await syncFull(db as SyncDb, FFTT_CONFIG);
+
+    const errorRow = valuesCalls.find(
+      (v) => (v as { job_name: string }).job_name === "sync-equipes"
+    ) as { error_message: string } | undefined;
+    expect(errorRow).toBeDefined();
+    expect(errorRow!.error_message).not.toMatch(/fftt\.com/);
+    expect(errorRow!.error_message).not.toMatch(/secret/);
+    expect(errorRow!.error_message).toMatch(/\[url\]/);
+  });
+
   it("failure in syncEquipes does NOT prevent syncJoueurs from running", async () => {
     const db = makeDb([]);
     mockSyncEquipes.mockRejectedValue(new Error("equipes API down"));

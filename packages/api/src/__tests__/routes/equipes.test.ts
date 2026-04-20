@@ -190,9 +190,27 @@ describe("GET /api/equipes/:id", () => {
   });
 });
 
+describe("GET /api/equipes/:id id validation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 400 when id is not a number", async () => {
+    const res = await app.request("/api/equipes/abc");
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body).toHaveProperty("error");
+  });
+});
+
 describe("GET /api/equipes/:id/rencontres/:rencId", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("returns 400 when rencId is not a number", async () => {
+    const res = await app.request("/api/equipes/1/rencontres/notanumber");
+    expect(res.status).toBe(400);
   });
 
   it("returns 404 when rencontre not found", async () => {

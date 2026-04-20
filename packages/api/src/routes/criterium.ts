@@ -8,6 +8,7 @@ import {
   parties_individuelles,
   joueurs,
 } from "../db/schema.js";
+import { parseIntParam } from "./_params.js";
 
 const USFTT_CLUB = "FONTENAYSIENNE";
 const USFTT_CLUB_NUMERO = "08940073";
@@ -118,7 +119,8 @@ app.get("/criterium/tours", async (c) => {
 });
 
 app.get("/criterium/tours/:tour", async (c) => {
-  const tour = parseInt(c.req.param("tour"), 10);
+  const tour = parseIntParam(c, "tour");
+  if (tour === null) return c.json({ error: "Invalid tour parameter" }, 400);
 
   // Get all tour rows for this tour number
   const tourRows = await db
@@ -320,10 +322,10 @@ app.get("/criterium/tours/:tour", async (c) => {
 });
 
 app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
-  const tour = parseInt(c.req.param("tour"), 10);
+  const tour = parseIntParam(c, "tour");
   const licence = c.req.param("licence");
 
-  if (Number.isNaN(tour)) {
+  if (tour === null) {
     return c.json({ error: "Invalid tour parameter" }, 400);
   }
 

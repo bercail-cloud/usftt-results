@@ -3,6 +3,8 @@ import { XMLParser } from "fast-xml-parser";
 const parser = new XMLParser({
   ignoreAttributes: false,
   parseTagValue: false,
+  processEntities: true,
+  htmlEntities: false,
 });
 
 function parseXml(xml: string): Record<string, unknown> {
