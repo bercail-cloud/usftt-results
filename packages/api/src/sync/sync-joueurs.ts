@@ -2,6 +2,7 @@ import { getLicenceB } from "../fftt/endpoints.js";
 import { joueurs } from "../db/schema.js";
 import { sql } from "drizzle-orm";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
+import { safeIntOrNull, safeFloatOrNull } from "./coerce.js";
 
 export async function syncJoueurs(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
   const { appId, serie, password, clubNumero } = ffttConfig;
@@ -12,27 +13,15 @@ export async function syncJoueurs(db: SyncDb, ffttConfig: FfttConfig): Promise<n
     return 0;
   }
 
-  const safeInt = (val: string | undefined): number | null => {
-    if (!val) return null;
-    const n = parseInt(val, 10);
-    return Number.isNaN(n) ? null : n;
-  };
-
-  const safeFloat = (val: string | undefined): number | null => {
-    if (!val) return null;
-    const n = parseFloat(val);
-    return Number.isNaN(n) ? null : n;
-  };
-
   const rows = players.map((player) => ({
     licence: player.licence,
     nom: player.nom,
     prenom: player.prenom,
     club_numero: player.numclub,
-    points_officiels: safeInt(player.point),
-    points_mensuels: safeFloat(player.pointm),
-    ancien_points_mensuels: safeFloat(player.apointm),
-    points_initm: safeFloat(player.initm),
+    points_officiels: safeIntOrNull(player.point),
+    points_mensuels: safeFloatOrNull(player.pointm),
+    ancien_points_mensuels: safeFloatOrNull(player.apointm),
+    points_initm: safeFloatOrNull(player.initm),
     categorie: player.cat || null,
     type_licence: player.type || null,
     sexe: player.sexe || "M",

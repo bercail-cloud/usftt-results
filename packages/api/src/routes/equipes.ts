@@ -8,6 +8,7 @@ import {
   parties_rencontre,
   sync_status,
 } from "../db/schema.js";
+import { parseIntParam } from "./_params.js";
 
 type CompetitionLevel = "Nationale" | "Régionale" | "Départementale" | "Autre";
 
@@ -110,7 +111,8 @@ app.get("/equipes", async (c) => {
 });
 
 app.get("/equipes/:id", async (c) => {
-  const id = parseInt(c.req.param("id"), 10);
+  const id = parseIntParam(c, "id");
+  if (id === null) return c.json({ error: "Invalid id parameter" }, 400);
 
   const equipeRows = await db
     .select()
@@ -137,7 +139,8 @@ app.get("/equipes/:id", async (c) => {
 });
 
 app.get("/equipes/:id/rencontres/:rencId", async (c) => {
-  const rencId = parseInt(c.req.param("rencId"), 10);
+  const rencId = parseIntParam(c, "rencId");
+  if (rencId === null) return c.json({ error: "Invalid rencId parameter" }, 400);
 
   const rencontreRows = await db
     .select()

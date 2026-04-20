@@ -2,6 +2,7 @@ import { getPartieMysql, getPartieSpid } from "../fftt/endpoints.js";
 import { joueurs, parties_individuelles } from "../db/schema.js";
 import { eq, sql } from "drizzle-orm";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
+import { safeInt, safeFloat } from "./coerce.js";
 
 /**
  * FFTT official points table (coefficient = 1)
@@ -77,18 +78,6 @@ export function parseSpidClassement(raw: string): { points: number; rang: string
   const n = parseInt(raw, 10);
   return { points: Number.isNaN(n) ? 0 : n, rang: null };
 }
-
-const safeInt = (val: string | undefined): number => {
-  if (!val) return 0;
-  const n = parseInt(val, 10);
-  return Number.isNaN(n) ? 0 : n;
-};
-
-const safeFloat = (val: string | undefined): number => {
-  if (!val) return 0;
-  const n = parseFloat(val);
-  return Number.isNaN(n) ? 0 : n;
-};
 
 async function getActiveJoueurs(db: SyncDb) {
   return db

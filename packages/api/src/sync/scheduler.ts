@@ -13,6 +13,19 @@ import { sync_status, equipes as equipesTable, rencontres } from "../db/schema.j
 import type { CriteriumFfttConfig } from "./sync-criterium.js";
 import type { SyncDb } from "./sync-equipes.js";
 
+/**
+ * Strip URLs, query strings, and anything resembling a token from an error
+ * message before persisting to the DB or exposing over /api/sync/logs.
+ * FFTT errors can contain the full request URL, including `tm` / `tmc` auth.
+ */
+function sanitizeError(error: unknown): string {
+  const raw = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+  return raw
+    .replace(/https?:\/\/\S+/gi, "[url]")
+    .replace(/(tm|tmc|password|token|authorization)=\S+/gi, "$1=[redacted]")
+    .slice(0, 1000);
+}
+
 async function logSyncStatus(
   db: SyncDb,
   jobName: string,
@@ -47,7 +60,7 @@ export async function runJob(
     await fn();
     await logSyncStatus(db, name, "success");
   } catch (error) {
-    await logSyncStatus(db, name, "error", String(error));
+    await logSyncStatus(db, name, "error", sanitizeError(error));
     console.error(`Sync job ${name} failed:`, error);
   }
 }
@@ -64,7 +77,7 @@ async function syncAllClassements(
       await syncRencontres(db, eq, ffttConfig);
       await syncDetailsRencontres(db, eq.id, ffttConfig);
     } catch (error) {
-      const msg = `Equipe ${eq.lib_equipe} (id=${eq.id}): ${String(error)}`;
+      const msg = `Equipe ${eq.lib_equipe} (id=${eq.id}): ${sanitizeError(error)}`;
       console.error(`sync-classements error: ${msg}`);
       errors.push(msg);
     }

@@ -10,12 +10,7 @@ import {
   parties_rencontre,
 } from "../db/schema.js";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
-
-function si(v: unknown): number {
-  if (v === null || v === undefined || v === "") return 0;
-  const n = Number(v);
-  return Number.isNaN(n) ? 0 : Math.floor(n);
-}
+import { safeInt, dedupeBy } from "./coerce.js";
 
 export interface EquipeRow {
   id: number;
@@ -49,14 +44,14 @@ export async function syncClassementsPoule(
     equipe_id: equipe.id,
     club_numero: s.idclub || "",
     nom_equipe: s.equipe || "",
-    position: si(s.clt),
-    points: si(s.pts),
-    joue: si(s.joue),
-    victoires: si(s.vic),
-    defaites: si(s.def),
-    nuls: si(s.nul),
-    parties_gagnees: si(s.pg),
-    parties_perdues: si(s.pp),
+    position: safeInt(s.clt),
+    points: safeInt(s.pts),
+    joue: safeInt(s.joue),
+    victoires: safeInt(s.vic),
+    defaites: safeInt(s.def),
+    nuls: safeInt(s.nul),
+    parties_gagnees: safeInt(s.pg),
+    parties_perdues: safeInt(s.pp),
   }));
 
   await db.insert(classements_poule).values(rows);
@@ -106,14 +101,11 @@ export async function syncRencontres(
     };
   });
 
-  // Deduplicate: FFTT API can return duplicate matches for some poules
-  const seen = new Set<string>();
-  const dedupedRows = rows.filter((r) => {
-    const key = `${r.equipe_a}|${r.equipe_b}|${r.date_prevue}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  // FFTT API can return duplicate matches for some poules
+  const dedupedRows = dedupeBy(
+    rows,
+    (r) => `${r.equipe_a}|${r.equipe_b}|${r.date_prevue}`
+  );
 
   // Delete existing parties_rencontre + rencontres for this equipe, then re-insert
   const existingRencontreIds = (await db.select({ id: rencontres.id }).from(rencontres).where(eq(rencontres.equipe_id, equipe.id))).map((r: { id: number }) => r.id);
@@ -187,8 +179,8 @@ export async function syncDetailsRencontres(
       classement_a: classementA.get(partie.ja) ?? "",
       joueur_b: partie.jb,
       classement_b: classementB.get(partie.jb) ?? "",
-      score_a: si(partie.scorea),
-      score_b: si(partie.scoreb),
+      score_a: safeInt(partie.scorea),
+      score_b: safeInt(partie.scoreb),
       detail_sets: partie.detail,
     }));
 

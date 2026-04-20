@@ -1,16 +1,36 @@
 import { z } from "zod";
 
-const envSchema = z.object({
-  FFTT_APP_ID: z.string().min(1).optional(),
-  FFTT_PASSWORD: z.string().min(1).optional(),
-  FFTT_SERIE: z.string().length(15).optional(),
-  CLUB_NUMERO: z.string().default("08940073"),
-  CLUB_NOM: z.string().default(""),
-  DATABASE_URL: z.string().url(),
-  PORT: z.coerce.number().int().positive().default(3000),
-  SYNC_TRIGGER_TOKEN: z.string().min(1).optional(),
-  ALLOWED_ORIGINS: z.string().optional(),
-});
+const envSchema = z
+  .object({
+    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    FFTT_APP_ID: z.string().min(1).optional(),
+    FFTT_PASSWORD: z.string().min(1).optional(),
+    FFTT_SERIE: z.string().length(15).optional(),
+    CLUB_NUMERO: z.string().default("08940073"),
+    CLUB_NOM: z.string().default(""),
+    DATABASE_URL: z.string().url(),
+    PORT: z.coerce.number().int().positive().default(3000),
+    SYNC_TRIGGER_TOKEN: z.string().min(16).optional(),
+    ALLOWED_ORIGINS: z.string().optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.NODE_ENV !== "production") return;
+    if (!val.SYNC_TRIGGER_TOKEN) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["SYNC_TRIGGER_TOKEN"],
+        message:
+          "required in production (>=16 chars) — /api/sync/trigger/:module must be authenticated",
+      });
+    }
+    if (!val.ALLOWED_ORIGINS) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["ALLOWED_ORIGINS"],
+        message: "required in production — comma-separated list of allowed origins",
+      });
+    }
+  });
 
 export type Env = z.infer<typeof envSchema>;
 

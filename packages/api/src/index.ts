@@ -24,14 +24,19 @@ const app = new Hono();
 
 const allowedOrigins = env.ALLOWED_ORIGINS
   ? env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
-  : null;
+  : ["http://localhost:5180", "http://localhost:5173"];
 
 app.use(
   "/*",
   cors({
-    origin: allowedOrigins ?? "*",
+    origin: allowedOrigins,
   })
 );
+
+app.onError((err, c) => {
+  console.error("Unhandled error:", err);
+  return c.json({ error: "Internal server error" }, 500);
+});
 
 app.route("/api", createSystemRoutes(ffttConfig, env.SYNC_TRIGGER_TOKEN));
 app.route("/api", equipesRoutes);
@@ -42,7 +47,7 @@ serve({ fetch: app.fetch, port: env.PORT }, () => {
   console.log(`API server running on port ${env.PORT}`);
   if (!env.SYNC_TRIGGER_TOKEN) {
     console.warn(
-      "WARN: SYNC_TRIGGER_TOKEN not set; /api/sync/trigger/:module is unauthenticated."
+      "WARN: SYNC_TRIGGER_TOKEN not set; /api/sync/trigger/:module is unauthenticated (dev only)."
     );
   }
 });
