@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { timingSafeEqual } from "node:crypto";
+import type { MiddlewareHandler } from "hono";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { desc, eq } from "drizzle-orm";
 import { db } from "../db/connection.js";
 import { sync_status, sync_logs } from "../db/schema.js";
@@ -12,10 +13,31 @@ import type { SyncDb } from "../sync/sync-equipes.js";
 const activeSyncs = new Set<string>();
 const SYNC_TIMEOUT_MS = 15 * 60 * 1000; // 15 min max
 const syncStartedAt = new Map<string, number>();
+const DEFAULT_LOG_LIMIT = 200;
+const MAX_LOG_LIMIT = 1000;
 
 function isSyncStale(jobName: string): boolean {
   const startedAt = syncStartedAt.get(jobName);
   return startedAt !== undefined && Date.now() - startedAt > SYNC_TIMEOUT_MS;
+}
+
+function sha256(input: string): Buffer {
+  return createHash("sha256").update(input).digest();
+}
+
+function bearerTokenMatches(header: string | undefined, expected: string): boolean {
+  const provided = header?.startsWith("Bearer ") ? header.slice(7) : "";
+  return timingSafeEqual(sha256(provided), sha256(expected));
+}
+
+function requireToken(triggerToken: string | undefined): MiddlewareHandler {
+  return async (c, next) => {
+    if (!triggerToken) return next();
+    if (!bearerTokenMatches(c.req.header("authorization"), triggerToken)) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+    return next();
+  };
 }
 
 export function createSystemRoutes(
@@ -23,10 +45,11 @@ export function createSystemRoutes(
   triggerToken?: string
 ) {
   const app = new Hono();
+  const auth = requireToken(triggerToken);
 
   app.get("/health", (c) => c.json({ status: "ok" }));
 
-  app.get("/sync/status", async (c) => {
+  app.get("/sync/status", auth, async (c) => {
     const rows = await db.select().from(sync_status).orderBy(desc(sync_status.last_run));
 
     const latestByJob = new Map<string, typeof rows[0]>();
@@ -42,17 +65,7 @@ export function createSystemRoutes(
     });
   });
 
-  app.post("/sync/trigger/:module", async (c) => {
-    if (triggerToken) {
-      const header = c.req.header("authorization") ?? "";
-      const provided = header.startsWith("Bearer ") ? header.slice(7) : "";
-      const a = Buffer.from(provided);
-      const b = Buffer.from(triggerToken);
-      if (a.length !== b.length || !timingSafeEqual(a, b)) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
-    }
-
+  app.post("/sync/trigger/:module", auth, async (c) => {
     if (!ffttConfig) {
       return c.json({ error: "FFTT config not available" }, 503);
     }
@@ -87,21 +100,28 @@ export function createSystemRoutes(
     activeSyncs.add(module);
     syncStartedAt.set(module, Date.now());
 
-    syncModules[module]!().finally(() => {
-      activeSyncs.delete(module);
-      syncStartedAt.delete(module);
-    });
+    syncModules[module]!()
+      .catch((err) => console.error(`Sync ${module} failed:`, err))
+      .finally(() => {
+        activeSyncs.delete(module);
+        syncStartedAt.delete(module);
+      });
 
     return c.json({ message: `Sync ${module} started` });
   });
 
-  app.get("/sync/logs/:jobName", async (c) => {
+  app.get("/sync/logs/:jobName", auth, async (c) => {
     const jobName = c.req.param("jobName");
+    const rawLimit = Number(c.req.query("limit"));
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0
+      ? Math.min(Math.floor(rawLimit), MAX_LOG_LIMIT)
+      : DEFAULT_LOG_LIMIT;
     const rows = await db
       .select()
       .from(sync_logs)
       .where(eq(sync_logs.job_name, jobName))
-      .orderBy(desc(sync_logs.created_at));
+      .orderBy(desc(sync_logs.created_at))
+      .limit(limit);
     return c.json({ logs: rows });
   });
 

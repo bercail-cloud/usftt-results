@@ -9,13 +9,8 @@ import {
   rencontres,
   parties_rencontre,
 } from "../db/schema.js";
+import { toIntOrZero, toIntOrNull } from "../lib/parse.js";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
-
-function si(v: unknown): number {
-  if (v === null || v === undefined || v === "") return 0;
-  const n = Number(v);
-  return Number.isNaN(n) ? 0 : Math.floor(n);
-}
 
 export interface EquipeRow {
   id: number;
@@ -49,14 +44,14 @@ export async function syncClassementsPoule(
     equipe_id: equipe.id,
     club_numero: s.idclub || "",
     nom_equipe: s.equipe || "",
-    position: si(s.clt),
-    points: si(s.pts),
-    joue: si(s.joue),
-    victoires: si(s.vic),
-    defaites: si(s.def),
-    nuls: si(s.nul),
-    parties_gagnees: si(s.pg),
-    parties_perdues: si(s.pp),
+    position: toIntOrZero(s.clt),
+    points: toIntOrZero(s.pts),
+    joue: toIntOrZero(s.joue),
+    victoires: toIntOrZero(s.vic),
+    defaites: toIntOrZero(s.def),
+    nuls: toIntOrZero(s.nul),
+    parties_gagnees: toIntOrZero(s.pg),
+    parties_perdues: toIntOrZero(s.pp),
   }));
 
   await db.insert(classements_poule).values(rows);
@@ -83,13 +78,8 @@ export async function syncRencontres(
 
   const rows = matches.map((match) => {
     const is_domicile = match.equipeA.includes(equipe.lib_equipe);
-    const parseScore = (v: string): number | null => {
-      if (!v || v === "") return null;
-      const n = parseInt(v, 10);
-      return Number.isNaN(n) ? null : n;
-    };
-    const score_a = parseScore(match.scoreA);
-    const score_b = parseScore(match.scoreB);
+    const score_a = toIntOrNull(match.scoreA);
+    const score_b = toIntOrNull(match.scoreB);
     const lien_detail = match.lien !== "" ? match.lien : null;
 
     return {
@@ -187,8 +177,8 @@ export async function syncDetailsRencontres(
       classement_a: classementA.get(partie.ja) ?? "",
       joueur_b: partie.jb,
       classement_b: classementB.get(partie.jb) ?? "",
-      score_a: si(partie.scorea),
-      score_b: si(partie.scoreb),
+      score_a: toIntOrZero(partie.scorea),
+      score_b: toIntOrZero(partie.scoreb),
       detail_sets: partie.detail,
     }));
 

@@ -1,6 +1,7 @@
 import { getLicenceB } from "../fftt/endpoints.js";
 import { joueurs } from "../db/schema.js";
 import { sql } from "drizzle-orm";
+import { toIntOrNull, toFloatOrNull } from "../lib/parse.js";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
 export async function syncJoueurs(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
@@ -12,27 +13,15 @@ export async function syncJoueurs(db: SyncDb, ffttConfig: FfttConfig): Promise<n
     return 0;
   }
 
-  const safeInt = (val: string | undefined): number | null => {
-    if (!val) return null;
-    const n = parseInt(val, 10);
-    return Number.isNaN(n) ? null : n;
-  };
-
-  const safeFloat = (val: string | undefined): number | null => {
-    if (!val) return null;
-    const n = parseFloat(val);
-    return Number.isNaN(n) ? null : n;
-  };
-
   const rows = players.map((player) => ({
     licence: player.licence,
     nom: player.nom,
     prenom: player.prenom,
     club_numero: player.numclub,
-    points_officiels: safeInt(player.point),
-    points_mensuels: safeFloat(player.pointm),
-    ancien_points_mensuels: safeFloat(player.apointm),
-    points_initm: safeFloat(player.initm),
+    points_officiels: toIntOrNull(player.point),
+    points_mensuels: toFloatOrNull(player.pointm),
+    ancien_points_mensuels: toFloatOrNull(player.apointm),
+    points_initm: toFloatOrNull(player.initm),
     categorie: player.cat || null,
     type_licence: player.type || null,
     sexe: player.sexe || "M",
