@@ -8,8 +8,8 @@ import {
   parties_rencontre,
   historique_classement,
   parties_individuelles,
-  sync_status,
 } from "../db/schema.js";
+import { getLastSync } from "../lib/sync-status.js";
 
 const app = new Hono();
 
@@ -42,12 +42,7 @@ app.get("/joueurs", async (c) => {
       : null,
   }));
 
-  const syncRows = await db
-    .select()
-    .from(sync_status)
-    .orderBy(desc(sync_status.last_run));
-
-  const lastSync = syncRows.length > 0 ? syncRows[0]!.last_run : null;
+  const lastSync = await getLastSync(db);
 
   return c.json({ data: enriched, lastSync });
 });

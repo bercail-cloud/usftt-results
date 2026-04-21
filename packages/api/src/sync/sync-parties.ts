@@ -1,6 +1,7 @@
 import { getPartieMysql, getPartieSpid } from "../fftt/endpoints.js";
 import { joueurs, parties_individuelles } from "../db/schema.js";
 import { eq, sql } from "drizzle-orm";
+import { toIntOrZero, toFloatOrZero } from "../lib/parse.js";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
 /**
@@ -78,18 +79,6 @@ export function parseSpidClassement(raw: string): { points: number; rang: string
   return { points: Number.isNaN(n) ? 0 : n, rang: null };
 }
 
-const safeInt = (val: string | undefined): number => {
-  if (!val) return 0;
-  const n = parseInt(val, 10);
-  return Number.isNaN(n) ? 0 : n;
-};
-
-const safeFloat = (val: string | undefined): number => {
-  if (!val) return 0;
-  const n = parseFloat(val);
-  return Number.isNaN(n) ? 0 : n;
-};
-
 async function getActiveJoueurs(db: SyncDb) {
   return db
     .select({ licence: joueurs.licence, points_mensuels: joueurs.points_mensuels })
@@ -117,7 +106,7 @@ export async function syncPartiesMysql(db: SyncDb, ffttConfig: FfttConfig): Prom
       const clt = partie.advclaof || "";
       // Parse "N352" (ranked player with explicit N prefix) or plain integer (points)
       const nMatch = clt.match(/^N(\d+)/);
-      const advClassement = nMatch ? 0 : safeInt(clt);
+      const advClassement = nMatch ? 0 : toIntOrZero(clt);
       const advRang = nMatch ? `N${nMatch[1]}` : null;
 
       return {
@@ -127,13 +116,13 @@ export async function syncPartiesMysql(db: SyncDb, ffttConfig: FfttConfig): Prom
       adversaire_classement: advClassement,
       adversaire_rang: advRang,
       victoire: partie.vd === "V",
-      points_resultat: safeFloat(partie.pointres),
-      coefficient: safeFloat(partie.coefchamp),
+      points_resultat: toFloatOrZero(partie.pointres),
+      coefficient: toFloatOrZero(partie.coefchamp),
       date_partie: partie.date || "",
       epreuve: partie.codechamp || "",
       epreuve_libelle: null as string | null,
       id_partie: partie.idpartie || null,
-      journee: safeInt(partie.numjourn),
+      journee: toIntOrZero(partie.numjourn),
       forfait: false,
       estimated: false,
     };
@@ -166,7 +155,8 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
     let spidParties;
     try {
       spidParties = await getPartieSpid(joueur.licence, appId, serie, password);
-    } catch {
+    } catch (err) {
+      console.error(`sync-parties-spid: SPID fetch failed for licence=${joueur.licence}:`, err);
       continue;
     }
 
@@ -198,7 +188,7 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
       // Estimate points if mysql returned 0 (not yet calculated by FFTT)
       const needsEstimation = existing && existing.points_resultat === 0 && !isForfait;
       const estimatedPts = needsEstimation
-        ? estimatePoints(playerClt, parsed.points, existing.victoire, safeFloat(sp.coefchamp), false)
+        ? estimatePoints(playerClt, parsed.points, existing.victoire, toFloatOrZero(sp.coefchamp), false)
         : undefined;
 
       await db
@@ -222,7 +212,7 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
       .map((sp) => {
         const victoire = sp.victoire === "V";
         const parsed = parseSpidClassement(sp.classement);
-        const coef = safeFloat(sp.coefchamp);
+        const coef = toFloatOrZero(sp.coefchamp);
         const isForfait = sp.forfait === "1";
         const estimated = estimatePoints(playerClt, parsed.points, victoire, coef, isForfait);
 

@@ -76,8 +76,14 @@ describe("GET /api/equipes", () => {
         // rencontres queries (calls 5, 6, 7)
         return { from: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(rencontres) }) };
       } else {
-        // sync_status (call 8)
-        return { from: vi.fn().mockReturnValue({ orderBy: vi.fn().mockResolvedValue(syncStatuses) }) };
+        // sync_status (call 8) - now uses .limit(1)
+        return {
+          from: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue(syncStatuses),
+            }),
+          }),
+        };
       }
     });
 
@@ -117,7 +123,9 @@ describe("GET /api/equipes", () => {
       } else {
         return {
           from: vi.fn().mockReturnValue({
-            orderBy: vi.fn().mockResolvedValue([]),
+            orderBy: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue([]),
+            }),
           }),
         };
       }

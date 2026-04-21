@@ -10,6 +10,14 @@ import { db } from "./db/connection.js";
 import { env, hasFfttConfig } from "./env.js";
 import type { CriteriumFfttConfig } from "./sync/sync-criterium.js";
 
+const isProd = env.NODE_ENV === "production";
+
+if (isProd && !env.SYNC_TRIGGER_TOKEN) {
+  throw new Error(
+    "SYNC_TRIGGER_TOKEN is required in production (must be set to a secret of at least 16 chars)."
+  );
+}
+
 const ffttConfig: CriteriumFfttConfig | null = hasFfttConfig(env)
   ? {
       appId: env.FFTT_APP_ID,
@@ -26,12 +34,21 @@ const allowedOrigins = env.ALLOWED_ORIGINS
   ? env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
   : null;
 
+if (isProd && !allowedOrigins) {
+  throw new Error("ALLOWED_ORIGINS is required in production (comma-separated list).");
+}
+
 app.use(
   "/*",
   cors({
-    origin: allowedOrigins ?? "*",
+    origin: allowedOrigins ?? (isProd ? [] : "*"),
   })
 );
+
+app.onError((err, c) => {
+  console.error("Unhandled error:", err);
+  return c.json({ error: "Internal server error" }, 500);
+});
 
 app.route("/api", createSystemRoutes(ffttConfig, env.SYNC_TRIGGER_TOKEN));
 app.route("/api", equipesRoutes);
@@ -42,7 +59,7 @@ serve({ fetch: app.fetch, port: env.PORT }, () => {
   console.log(`API server running on port ${env.PORT}`);
   if (!env.SYNC_TRIGGER_TOKEN) {
     console.warn(
-      "WARN: SYNC_TRIGGER_TOKEN not set; /api/sync/trigger/:module is unauthenticated."
+      "WARN: SYNC_TRIGGER_TOKEN not set; /api/sync/* endpoints are unauthenticated (development mode)."
     );
   }
 });

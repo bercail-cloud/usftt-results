@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const envSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   FFTT_APP_ID: z.string().min(1).optional(),
   FFTT_PASSWORD: z.string().min(1).optional(),
   FFTT_SERIE: z.string().length(15).optional(),
@@ -8,7 +9,7 @@ const envSchema = z.object({
   CLUB_NOM: z.string().default(""),
   DATABASE_URL: z.string().url(),
   PORT: z.coerce.number().int().positive().default(3000),
-  SYNC_TRIGGER_TOKEN: z.string().min(1).optional(),
+  SYNC_TRIGGER_TOKEN: z.string().min(16).optional(),
   ALLOWED_ORIGINS: z.string().optional(),
 });
 

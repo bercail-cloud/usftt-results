@@ -53,10 +53,12 @@ describe("GET /api/joueurs", () => {
           }),
         };
       }
-      // sync_status query: select().from().orderBy()
+      // sync_status query: select().from().orderBy().limit()
       return {
         from: vi.fn().mockReturnValue({
-          orderBy: vi.fn().mockResolvedValue(syncRows),
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue(syncRows),
+          }),
         }),
       };
     });
@@ -93,10 +95,12 @@ describe("GET /api/joueurs", () => {
           }),
         };
       }
-      // sync_status query: select().from().orderBy()
+      // sync_status query: select().from().orderBy().limit()
       return {
         from: vi.fn().mockReturnValue({
-          orderBy: vi.fn().mockResolvedValue([]),
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+          }),
         }),
       };
     });

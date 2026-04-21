@@ -13,16 +13,11 @@ import {
   sync_logs,
 } from "../db/schema.js";
 import { sql } from "drizzle-orm";
+import { toIntOrZero } from "../lib/parse.js";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
 export interface CriteriumFfttConfig extends FfttConfig {
   clubNom: string;
-}
-
-function si(v: unknown): number {
-  if (v === null || v === undefined || v === "") return 0;
-  const n = Number(v);
-  return Number.isNaN(n) ? 0 : Math.floor(n);
 }
 
 function parseClassementFromClt(clt: string): number {
@@ -338,7 +333,7 @@ export async function syncCriterium(
               const clt = parseClassementFromClt(String(s.clt ?? ""));
               return {
                 criterium_tour_id: tourId,
-                rang: si(s.rang),
+                rang: toIntOrZero(s.rang),
                 licence: findLicence(s.nom, clt),
                 nom: s.nom,
                 club: s.club,
