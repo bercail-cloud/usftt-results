@@ -3,6 +3,13 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+if [ ! -f .env.development ]; then
+  echo "No .env.development found. Bootstrapping from .env.example..."
+  cp .env.example .env.development
+  echo "Edit .env.development to fill in FFTT_APP_ID, FFTT_PASSWORD, FFTT_SERIE."
+  exit 1
+fi
+
 # Start postgres if not running
 if ! docker ps --format '{{.Names}}' | grep -q 'usftt-pg'; then
   echo "Starting PostgreSQL..."

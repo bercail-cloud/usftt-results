@@ -1,15 +1,11 @@
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
+const REQUEST_TIMEOUT_MS = 30_000;
 
-async function request<T>(path: string): Promise<T> {
-  const response = await fetch(`${BASE_URL}${path}`);
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
-  }
-  return response.json();
-}
-
-async function post<T>(path: string): Promise<T> {
-  const response = await fetch(`${BASE_URL}${path}`, { method: "POST" });
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${BASE_URL}${path}`, {
+    ...init,
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
   if (!response.ok) {
     throw new Error(`API error: ${response.status}`);
   }
@@ -18,5 +14,5 @@ async function post<T>(path: string): Promise<T> {
 
 export const api = {
   get: <T>(path: string) => request<T>(path),
-  post: <T>(path: string) => post<T>(path),
+  post: <T>(path: string) => request<T>(path, { method: "POST" }),
 };

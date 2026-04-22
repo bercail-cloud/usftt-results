@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { desc, sql } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "../db/connection.js";
 import { sync_status, sync_logs } from "../db/schema.js";
 import { syncCriterium } from "../sync/sync-criterium.js";
@@ -23,17 +23,10 @@ export function createSystemRoutes(ffttConfig: CriteriumFfttConfig | null) {
   app.get("/health", (c) => c.json({ status: "ok" }));
 
   app.get("/sync/status", async (c) => {
-    const rows = await db.select().from(sync_status).orderBy(desc(sync_status.last_run));
-
-    const latestByJob = new Map<string, typeof rows[0]>();
-    for (const row of rows) {
-      if (!latestByJob.has(row.job_name)) {
-        latestByJob.set(row.job_name, row);
-      }
-    }
-
+    // sync_status.job_name has a unique constraint, so one row per job.
+    const jobs = await db.select().from(sync_status).orderBy(desc(sync_status.last_run));
     return c.json({
-      jobs: Array.from(latestByJob.values()),
+      jobs,
       activeSyncs: Array.from(activeSyncs),
     });
   });
@@ -86,13 +79,10 @@ export function createSystemRoutes(ffttConfig: CriteriumFfttConfig | null) {
     const rows = await db
       .select()
       .from(sync_logs)
-      .where(sql`${sync_logs.job_name} = ${jobName}`)
+      .where(eq(sync_logs.job_name, jobName))
       .orderBy(desc(sync_logs.created_at));
     return c.json({ logs: rows });
   });
 
   return app;
 }
-
-// Backward-compatible export for cases without config
-export const systemRoutes = createSystemRoutes(null);
