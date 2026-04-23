@@ -9,13 +9,8 @@ import {
   rencontres,
   parties_rencontre,
 } from "../db/schema.js";
+import { toIntOrZero as si } from "../lib/parsing.js";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
-
-function si(v: unknown): number {
-  if (v === null || v === undefined || v === "") return 0;
-  const n = Number(v);
-  return Number.isNaN(n) ? 0 : Math.floor(n);
-}
 
 export interface EquipeRow {
   id: number;
@@ -81,13 +76,14 @@ export async function syncRencontres(
     return [];
   }
 
+  const parseScore = (v: string): number | null => {
+    if (!v) return null;
+    const n = parseInt(v, 10);
+    return Number.isNaN(n) ? null : n;
+  };
+
   const rows = matches.map((match) => {
     const is_domicile = match.equipeA.includes(equipe.lib_equipe);
-    const parseScore = (v: string): number | null => {
-      if (!v || v === "") return null;
-      const n = parseInt(v, 10);
-      return Number.isNaN(n) ? null : n;
-    };
     const score_a = parseScore(match.scoreA);
     const score_b = parseScore(match.scoreB);
     const lien_detail = match.lien !== "" ? match.lien : null;

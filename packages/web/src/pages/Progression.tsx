@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useJoueurs } from "../hooks/use-joueurs.js";
 import { LoadingSkeleton } from "../components/LoadingSkeleton.js";
 import { EmptyState } from "../components/EmptyState.js";
@@ -247,7 +247,7 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
 
 export function Progression() {
   const navigate = useNavigate();
-  const searchParams = new URLSearchParams(window.location.search);
+  const [searchParams] = useSearchParams();
 
   const [filterCategorie, setFilterCategorie] = useState(searchParams.get("cat") ?? "");
   const [filterSexe, setFilterSexe] = useState(searchParams.get("sexe") ?? "");

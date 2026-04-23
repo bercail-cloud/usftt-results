@@ -103,6 +103,30 @@ describe("GET /api/criterium/tours/:tour/joueurs/:licence", () => {
     vi.clearAllMocks();
   });
 
+  it("returns 400 when tour is not a number", async () => {
+    const res = await app.request("/api/criterium/tours/oops/joueurs/0940001");
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when tourId query param is not a number", async () => {
+    // The handler fetches tour rows before reading tourId, so the mock must
+    // return a row for us to reach the tourId validation branch.
+    (mockDb.select as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([
+          { id: 1, date_tour: "13/03/2026", tour: 1 },
+        ]),
+      }),
+    }));
+
+    const res = await app.request(
+      "/api/criterium/tours/1/joueurs/0940001?tourId=abc"
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body).toEqual({ error: "Invalid tourId query parameter" });
+  });
+
   it("returns 404 when tour not found", async () => {
     (mockDb.select as ReturnType<typeof vi.fn>).mockImplementation(() => ({
       from: vi.fn().mockReturnValue({
