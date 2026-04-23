@@ -8,6 +8,7 @@ import {
   parties_rencontre,
   sync_status,
 } from "../db/schema.js";
+import { tryParseInt } from "../lib/http.js";
 
 type CompetitionLevel = "Nationale" | "Régionale" | "Départementale" | "Autre";
 
@@ -45,17 +46,9 @@ const app = new Hono();
 app.get("/equipes", async (c) => {
   const typeFilter = c.req.query("type");
 
-  let equipesQuery;
-  if (typeFilter) {
-    equipesQuery = db
-      .select()
-      .from(equipes)
-      .where(eq(equipes.type_epreuve, typeFilter!));
-  } else {
-    equipesQuery = db.select().from(equipes);
-  }
-
-  const equipesRows = await equipesQuery;
+  const equipesRows = await (typeFilter
+    ? db.select().from(equipes).where(eq(equipes.type_epreuve, typeFilter))
+    : db.select().from(equipes));
 
   // For each equipe, get classements and rencontres
   const equipesWithData = await Promise.all(
@@ -110,7 +103,8 @@ app.get("/equipes", async (c) => {
 });
 
 app.get("/equipes/:id", async (c) => {
-  const id = parseInt(c.req.param("id"), 10);
+  const id = tryParseInt(c.req.param("id"));
+  if (id === null) return c.json({ error: "Invalid id" }, 400);
 
   const equipeRows = await db
     .select()
@@ -137,7 +131,8 @@ app.get("/equipes/:id", async (c) => {
 });
 
 app.get("/equipes/:id/rencontres/:rencId", async (c) => {
-  const rencId = parseInt(c.req.param("rencId"), 10);
+  const rencId = tryParseInt(c.req.param("rencId"));
+  if (rencId === null) return c.json({ error: "Invalid rencId" }, 400);
 
   const rencontreRows = await db
     .select()

@@ -13,24 +13,14 @@ import {
   sync_logs,
 } from "../db/schema.js";
 import { sql } from "drizzle-orm";
+import {
+  toIntOrZero as si,
+  parseClassementFromClt,
+} from "../lib/parsing.js";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
 export interface CriteriumFfttConfig extends FfttConfig {
   clubNom: string;
-}
-
-function si(v: unknown): number {
-  if (v === null || v === undefined || v === "") return 0;
-  const n = Number(v);
-  return Number.isNaN(n) ? 0 : Math.floor(n);
-}
-
-function parseClassementFromClt(clt: string): number {
-  if (!clt) return 0;
-  const parts = clt.split(" - ");
-  const numStr = parts.length > 1 ? parts[parts.length - 1] : clt;
-  const n = parseInt(numStr!, 10);
-  return Number.isNaN(n) ? 0 : n;
 }
 
 function parseTourAndGroupe(libelle: string): { tour: number; groupe: string } {
@@ -271,21 +261,18 @@ export async function syncCriterium(
 
           if (standings.length === 0) continue;
 
-          // Check if any USFTT player is in this group
           // Only match players whose club contains the club name to avoid homonyms from other clubs
-          const hasClubPlayer = standings.some(
-            (s) =>
-              clubNom &&
-              s.club.toUpperCase().includes(clubNom.toUpperCase())
-          );
+          const clubNomUpper = clubNom.toUpperCase();
+          const clubPlayers = clubNom
+            ? standings.filter((s) => s.club.toUpperCase().includes(clubNomUpper))
+            : [];
 
-          if (!hasClubPlayer) {
+          if (clubPlayers.length === 0) {
             const playerNames = standings.map((s) => `${s.nom} (${s.club})`).join(", ");
             await syncLog(db, "info", `Skip ${poule.libelle} ${division.libelle}: aucun joueur USFTT`, playerNames);
             continue;
           }
 
-          const clubPlayers = standings.filter((s) => clubNom && s.club.toUpperCase().includes(clubNom.toUpperCase()));
           await syncLog(db, "info", `Match ${poule.libelle} ${division.libelle}: ${clubPlayers.length} joueur(s) USFTT`,
             clubPlayers.map((s) => `${s.nom} (${s.club}, clt: ${s.clt})`).join(", ")
           );

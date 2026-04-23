@@ -1,7 +1,14 @@
 import { getPartieMysql, getPartieSpid } from "../fftt/endpoints.js";
 import { joueurs, parties_individuelles } from "../db/schema.js";
 import { eq, sql } from "drizzle-orm";
+import {
+  toIntOrDefault as safeInt,
+  toFloatOrZero as safeFloat,
+  parseSpidClassement,
+} from "../lib/parsing.js";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
+
+export { parseSpidClassement };
 
 /**
  * FFTT official points table (coefficient = 1)
@@ -61,34 +68,6 @@ export function estimatePoints(
 
   return Math.round(base * coefficient * 10) / 10;
 }
-
-/**
- * Parse SPID classement field.
- * Formats: "N718 - 2130" (rank - points), "1999" (just points)
- */
-export function parseSpidClassement(raw: string): { points: number; rang: string | null } {
-  if (!raw) return { points: 0, rang: null };
-  const dashIdx = raw.lastIndexOf(" - ");
-  if (dashIdx >= 0) {
-    const rangPart = raw.slice(0, dashIdx).trim();
-    const n = parseInt(raw.slice(dashIdx + 3), 10);
-    return { points: Number.isNaN(n) ? 0 : n, rang: rangPart || null };
-  }
-  const n = parseInt(raw, 10);
-  return { points: Number.isNaN(n) ? 0 : n, rang: null };
-}
-
-const safeInt = (val: string | undefined): number => {
-  if (!val) return 0;
-  const n = parseInt(val, 10);
-  return Number.isNaN(n) ? 0 : n;
-};
-
-const safeFloat = (val: string | undefined): number => {
-  if (!val) return 0;
-  const n = parseFloat(val);
-  return Number.isNaN(n) ? 0 : n;
-};
 
 async function getActiveJoueurs(db: SyncDb) {
   return db
