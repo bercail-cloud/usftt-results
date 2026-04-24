@@ -8,7 +8,7 @@ import {
 import { syncJoueurs } from "./sync-joueurs.js";
 import { syncPartiesMysql, syncPartiesSpid } from "./sync-parties.js";
 import { syncHistorique } from "./sync-historique.js";
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { sync_status, equipes as equipesTable, rencontres } from "../db/schema.js";
 import type { CriteriumFfttConfig } from "./sync-criterium.js";
 import type { SyncDb } from "./sync-equipes.js";
@@ -34,8 +34,7 @@ async function logSyncStatus(
         status,
         error_message: errorMessage ?? null,
       },
-    })
-    .returning();
+    });
 }
 
 export async function runJob(
@@ -114,7 +113,7 @@ async function hasMatchToday(db: SyncDb): Promise<boolean> {
   const rows = await db
     .select({ id: rencontres.id })
     .from(rencontres)
-    .where(sql`${rencontres.date_prevue} = ${today}`)
+    .where(eq(rencontres.date_prevue, today))
     .limit(1);
   return rows.length > 0;
 }

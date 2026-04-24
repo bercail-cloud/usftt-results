@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { timingSafeEqual } from "node:crypto";
 import { desc, eq } from "drizzle-orm";
 import { db } from "../db/connection.js";
@@ -16,6 +17,14 @@ const syncStartedAt = new Map<string, number>();
 function isSyncStale(jobName: string): boolean {
   const startedAt = syncStartedAt.get(jobName);
   return startedAt !== undefined && Date.now() - startedAt > SYNC_TIMEOUT_MS;
+}
+
+function checkBearerToken(c: Context, expected: string): boolean {
+  const header = c.req.header("authorization") ?? "";
+  const provided = header.startsWith("Bearer ") ? header.slice(7) : "";
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 export function createSystemRoutes(
@@ -43,14 +52,8 @@ export function createSystemRoutes(
   });
 
   app.post("/sync/trigger/:module", async (c) => {
-    if (triggerToken) {
-      const header = c.req.header("authorization") ?? "";
-      const provided = header.startsWith("Bearer ") ? header.slice(7) : "";
-      const a = Buffer.from(provided);
-      const b = Buffer.from(triggerToken);
-      if (a.length !== b.length || !timingSafeEqual(a, b)) {
-        return c.json({ error: "Unauthorized" }, 401);
-      }
+    if (triggerToken && !checkBearerToken(c, triggerToken)) {
+      return c.json({ error: "Unauthorized" }, 401);
     }
 
     if (!ffttConfig) {
@@ -96,6 +99,9 @@ export function createSystemRoutes(
   });
 
   app.get("/sync/logs/:jobName", async (c) => {
+    if (triggerToken && !checkBearerToken(c, triggerToken)) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
     const jobName = c.req.param("jobName");
     const rows = await db
       .select()

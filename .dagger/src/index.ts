@@ -80,8 +80,8 @@ export class UsfttCi {
       })
       .withRegistryAuth(registry, username, githubToken)
 
-    // Push both in parallel
-    const [apiRef, webRef] = await Promise.all([
+    // Push all four tags in parallel
+    await Promise.all([
       apiImage.publish(`${registry}/${username}/usftt-results-api:latest`),
       apiImage.publish(`${registry}/${username}/usftt-results-api:${gitSha}`),
       webImage.publish(`${registry}/${username}/usftt-results-web:latest`),

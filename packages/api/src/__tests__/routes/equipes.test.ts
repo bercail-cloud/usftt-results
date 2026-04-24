@@ -190,9 +190,25 @@ describe("GET /api/equipes/:id", () => {
   });
 });
 
+describe("GET /api/equipes/:id input validation", () => {
+  it("returns 400 when id is not a number", async () => {
+    const res = await app.request("/api/equipes/not-a-number");
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body).toEqual({ error: "Invalid id parameter" });
+  });
+});
+
 describe("GET /api/equipes/:id/rencontres/:rencId", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("returns 400 when rencId is not a number", async () => {
+    const res = await app.request("/api/equipes/1/rencontres/not-a-number");
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body).toEqual({ error: "Invalid rencId parameter" });
   });
 
   it("returns 404 when rencontre not found", async () => {
