@@ -74,6 +74,37 @@ describe("POST /api/sync/trigger/:module auth", () => {
   });
 });
 
+describe("GET /api/sync/logs/:jobName auth", () => {
+  it("returns 401 when a trigger token is configured and header is missing", async () => {
+    const secured = new Hono();
+    secured.route("/api", createSystemRoutes(null, "super-secret-token"));
+    const res = await secured.request("/api/sync/logs/sync-criterium");
+    expect(res.status).toBe(401);
+  });
+
+  it("returns 401 when the bearer token does not match", async () => {
+    const secured = new Hono();
+    secured.route("/api", createSystemRoutes(null, "super-secret-token"));
+    const res = await secured.request("/api/sync/logs/sync-criterium", {
+      headers: { authorization: "Bearer wrong" },
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it("skips auth when no trigger token is configured (backward compat)", async () => {
+    const open = new Hono();
+    open.route("/api", createSystemRoutes(null));
+    const { selectMock, fromMock, whereMock, orderByMock } = makeSelectChain([]);
+    (mockDb.select as ReturnType<typeof vi.fn>).mockImplementation(selectMock);
+    fromMock.mockReturnValue({ where: whereMock });
+    whereMock.mockReturnValue({ orderBy: orderByMock });
+    orderByMock.mockResolvedValue([]);
+
+    const res = await open.request("/api/sync/logs/sync-criterium");
+    expect(res.status).toBe(200);
+  });
+});
+
 describe("GET /api/sync/status", () => {
   beforeEach(() => {
     vi.clearAllMocks();

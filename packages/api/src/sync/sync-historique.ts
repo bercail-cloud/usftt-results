@@ -1,6 +1,6 @@
 import { getHistoClassement } from "../fftt/endpoints.js";
 import { joueurs, historique_classement } from "../db/schema.js";
-import { sql } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
 export async function syncHistorique(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
@@ -10,7 +10,7 @@ export async function syncHistorique(db: SyncDb, ffttConfig: FfttConfig): Promis
   const joueursInDb: Array<{ licence: string }> = await db
     .select({ licence: joueurs.licence })
     .from(joueurs)
-    .where(sql`${joueurs.type_licence} IN ('T', 'A')`);
+    .where(inArray(joueurs.type_licence, ["T", "A"]));
 
   if (joueursInDb.length === 0) {
     return 0;

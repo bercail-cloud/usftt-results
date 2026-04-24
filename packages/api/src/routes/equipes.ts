@@ -111,6 +111,9 @@ app.get("/equipes", async (c) => {
 
 app.get("/equipes/:id", async (c) => {
   const id = parseInt(c.req.param("id"), 10);
+  if (Number.isNaN(id)) {
+    return c.json({ error: "Invalid id parameter" }, 400);
+  }
 
   const equipeRows = await db
     .select()
@@ -138,6 +141,9 @@ app.get("/equipes/:id", async (c) => {
 
 app.get("/equipes/:id/rencontres/:rencId", async (c) => {
   const rencId = parseInt(c.req.param("rencId"), 10);
+  if (Number.isNaN(rencId)) {
+    return c.json({ error: "Invalid rencId parameter" }, 400);
+  }
 
   const rencontreRows = await db
     .select()

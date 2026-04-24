@@ -1,6 +1,6 @@
 import { getPartieMysql, getPartieSpid } from "../fftt/endpoints.js";
 import { joueurs, parties_individuelles } from "../db/schema.js";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
 
 /**
@@ -94,7 +94,7 @@ async function getActiveJoueurs(db: SyncDb) {
   return db
     .select({ licence: joueurs.licence, points_mensuels: joueurs.points_mensuels })
     .from(joueurs)
-    .where(sql`${joueurs.type_licence} IN ('T', 'A')`);
+    .where(inArray(joueurs.type_licence, ["T", "A"]));
 }
 
 /**
@@ -213,7 +213,10 @@ export async function syncPartiesSpid(db: SyncDb, ffttConfig: FfttConfig): Promi
             : { estimated: false }),
         })
         .where(
-          sql`${parties_individuelles.licence} = ${joueur.licence} AND ${parties_individuelles.id_partie} = ${sp.idpartie}`
+          and(
+            eq(parties_individuelles.licence, joueur.licence),
+            eq(parties_individuelles.id_partie, sp.idpartie)
+          )
         );
     }
 
