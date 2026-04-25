@@ -131,7 +131,7 @@ describe("syncCriterium", () => {
     mockGetEpreuves.mockResolvedValue([]);
     const db = makeDb();
 
-    await syncCriterium(db as SyncDb, FFTT_CONFIG);
+    await syncCriterium(db as unknown as SyncDb, FFTT_CONFIG);
 
     // 5 organismes: federal (1), zone jeunes (7), zone seniors (8), regional (16), departemental (112)
     expect(mockGetEpreuves).toHaveBeenCalledTimes(5);
@@ -149,7 +149,7 @@ describe("syncCriterium", () => {
     mockGetDivisions.mockResolvedValue([]);
     const db = makeDb();
 
-    await syncCriterium(db as SyncDb, FFTT_CONFIG);
+    await syncCriterium(db as unknown as SyncDb, FFTT_CONFIG);
 
     // 5 organismes, each keeping only 1 most recent C epreuve = 5 calls
     expect(mockGetDivisions).toHaveBeenCalledTimes(5);
@@ -163,7 +163,7 @@ describe("syncCriterium", () => {
     mockGetResultIndivPoules.mockResolvedValue([]);
     const db = makeDb();
 
-    await syncCriterium(db as SyncDb, FFTT_CONFIG);
+    await syncCriterium(db as unknown as SyncDb, FFTT_CONFIG);
 
     // 3 organismes, each with 1 division = 3 calls
     expect(mockGetResultIndivPoules).toHaveBeenCalledTimes(5);
@@ -182,7 +182,7 @@ describe("syncCriterium", () => {
     mockGetResultIndivPoules.mockResolvedValue([]);
     const db = makeDb();
 
-    await syncCriterium(db as SyncDb, FFTT_CONFIG);
+    await syncCriterium(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockGetResultIndivClassement).not.toHaveBeenCalled();
   });
@@ -195,7 +195,7 @@ describe("syncCriterium", () => {
     mockGetResultIndivParties.mockResolvedValue([]);
     const db = makeDb([]);
 
-    await syncCriterium(db as SyncDb, FFTT_CONFIG);
+    await syncCriterium(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockGetResultIndivClassement).toHaveBeenCalledWith(
       "EP1",
@@ -211,7 +211,7 @@ describe("syncCriterium", () => {
     mockGetEpreuves.mockResolvedValue([]);
     const db = makeDb();
 
-    await syncCriterium(db as SyncDb, FFTT_CONFIG);
+    await syncCriterium(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockGetDivisions).not.toHaveBeenCalled();
   });
@@ -225,7 +225,7 @@ describe("syncCriterium", () => {
     ]);
     const db = makeDb([]);
 
-    await syncCriterium(db as SyncDb, FFTT_CONFIG);
+    await syncCriterium(db as unknown as SyncDb, FFTT_CONFIG);
 
     // No criterium data should be inserted since no USFTT player found
     expect(mockGetResultIndivParties).not.toHaveBeenCalled();
@@ -239,7 +239,7 @@ describe("syncCriterium", () => {
     mockGetResultIndivParties.mockResolvedValue([makePartie()]);
     const db = makeDb([]);
 
-    await syncCriterium(db as SyncDb, FFTT_CONFIG);
+    await syncCriterium(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockGetResultIndivParties).toHaveBeenCalled();
   });

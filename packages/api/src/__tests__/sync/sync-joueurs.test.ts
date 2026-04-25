@@ -57,7 +57,7 @@ describe("syncJoueurs", () => {
   it("calls getLicenceB with club from config", async () => {
     mockGetLicenceB.mockResolvedValue([]);
     const db = makeInsertMock();
-    await syncJoueurs(db as SyncDb, FFTT_CONFIG);
+    await syncJoueurs(db as unknown as SyncDb, FFTT_CONFIG);
     expect(mockGetLicenceB).toHaveBeenCalledWith(
       { club: FFTT_CONFIG.clubNumero },
       FFTT_CONFIG.appId,
@@ -69,7 +69,7 @@ describe("syncJoueurs", () => {
   it("returns 0 when no players returned from API", async () => {
     mockGetLicenceB.mockResolvedValue([]);
     const db = makeInsertMock();
-    const count = await syncJoueurs(db as SyncDb, FFTT_CONFIG);
+    const count = await syncJoueurs(db as unknown as SyncDb, FFTT_CONFIG);
     expect(count).toBe(0);
     expect(db.insert).not.toHaveBeenCalled();
   });
@@ -91,7 +91,7 @@ describe("syncJoueurs", () => {
       }),
     };
 
-    await syncJoueurs(db as SyncDb, FFTT_CONFIG);
+    await syncJoueurs(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(insertedValues).toHaveLength(1);
     const row = insertedValues[0] as Record<string, unknown>;
@@ -122,7 +122,7 @@ describe("syncJoueurs", () => {
       }),
     };
 
-    await syncJoueurs(db as SyncDb, FFTT_CONFIG);
+    await syncJoueurs(db as unknown as SyncDb, FFTT_CONFIG);
 
     const row = insertedValues[0] as Record<string, unknown>;
     expect(row.points_officiels).toBe(1750);
@@ -148,7 +148,7 @@ describe("syncJoueurs", () => {
       }),
     };
 
-    const count = await syncJoueurs(db as SyncDb, FFTT_CONFIG);
+    const count = await syncJoueurs(db as unknown as SyncDb, FFTT_CONFIG);
     expect(count).toBe(3);
   });
 
@@ -169,7 +169,7 @@ describe("syncJoueurs", () => {
       }),
     };
 
-    await syncJoueurs(db as SyncDb, FFTT_CONFIG);
+    await syncJoueurs(db as unknown as SyncDb, FFTT_CONFIG);
     expect(conflictSetArg).toHaveProperty("updated_at");
   });
 });

@@ -114,3 +114,31 @@ describe("GET /api/criterium/tours/:tour/joueurs/:licence", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("input validation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 400 when /criterium/tours/:tour is not an integer", async () => {
+    const res = await app.request("/api/criterium/tours/abc");
+    expect(res.status).toBe(400);
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when /criterium/tours/:tour/joueurs/:licence has non-integer tour", async () => {
+    const res = await app.request("/api/criterium/tours/abc/joueurs/9999999");
+    expect(res.status).toBe(400);
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when ?tourId= is not an integer", async () => {
+    (mockDb.select as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([{ id: 1, tour: 1, date_tour: "01/01/2026" }]),
+      }),
+    }));
+    const res = await app.request("/api/criterium/tours/1/joueurs/9999999?tourId=abc");
+    expect(res.status).toBe(400);
+  });
+});

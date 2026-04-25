@@ -58,7 +58,7 @@ describe("syncClassementsPoule", () => {
       }),
     };
 
-    await syncClassementsPoule(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
+    await syncClassementsPoule(db as unknown as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(mockGetClassement).toHaveBeenCalledWith(
       EQUIPE.id_division,
@@ -80,7 +80,7 @@ describe("syncClassementsPoule", () => {
       }),
     };
 
-    await syncClassementsPoule(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
+    await syncClassementsPoule(db as unknown as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(db.delete).toHaveBeenCalledTimes(1);
     expect(whereMock).toHaveBeenCalledTimes(1);
@@ -121,7 +121,7 @@ describe("syncClassementsPoule", () => {
       }),
     };
 
-    await syncClassementsPoule(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
+    await syncClassementsPoule(db as unknown as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(insertedValues).toHaveLength(1);
     const row = insertedValues[0] as Record<string, unknown>;
@@ -146,7 +146,7 @@ describe("syncClassementsPoule", () => {
       insert: vi.fn(),
     };
 
-    await syncClassementsPoule(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
+    await syncClassementsPoule(db as unknown as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(db.insert).not.toHaveBeenCalled();
   });
@@ -178,7 +178,7 @@ describe("syncRencontres", () => {
       }),
     };
 
-    await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
+    await syncRencontres(db as unknown as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(mockGetMatches).toHaveBeenCalledWith(
       EQUIPE.id_division,
@@ -221,7 +221,7 @@ describe("syncRencontres", () => {
       }),
     };
 
-    await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
+    await syncRencontres(db as unknown as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     expect(insertedValues).toHaveLength(1);
     const row = insertedValues[0] as Record<string, unknown>;
@@ -260,7 +260,7 @@ describe("syncRencontres", () => {
       }),
     };
 
-    await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
+    await syncRencontres(db as unknown as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     const row = insertedValues[0] as Record<string, unknown>;
     expect(row.is_domicile).toBe(false);
@@ -298,7 +298,7 @@ describe("syncRencontres", () => {
       }),
     };
 
-    await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
+    await syncRencontres(db as unknown as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     const row = insertedValues[0] as Record<string, unknown>;
     expect(row.score_a).toBeNull();
@@ -337,7 +337,7 @@ describe("syncRencontres", () => {
       }),
     };
 
-    await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
+    await syncRencontres(db as unknown as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
 
     const row = insertedValues[0] as Record<string, unknown>;
     expect(row.lien_detail).toBeNull();
@@ -360,7 +360,7 @@ describe("syncRencontres", () => {
       }),
     };
 
-    const result = await syncRencontres(db as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
+    const result = await syncRencontres(db as unknown as SyncDb, EQUIPE as EquipeRow, FFTT_CONFIG);
     expect(result).toEqual([]);
     expect(db.insert).not.toHaveBeenCalled();
   });
@@ -406,7 +406,7 @@ describe("syncDetailsRencontres", () => {
       update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }),
     };
 
-    await syncDetailsRencontres(db as SyncDb, 1, FFTT_CONFIG);
+    await syncDetailsRencontres(db as unknown as SyncDb, 1, FFTT_CONFIG);
 
     expect(mockGetChpRenc).toHaveBeenCalledTimes(1);
     const [calledParams] = mockGetChpRenc.mock.calls[0]!;
@@ -442,7 +442,7 @@ describe("syncDetailsRencontres", () => {
       update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }),
     };
 
-    await syncDetailsRencontres(db as SyncDb, 1, FFTT_CONFIG);
+    await syncDetailsRencontres(db as unknown as SyncDb, 1, FFTT_CONFIG);
 
     expect(db.delete).toHaveBeenCalledTimes(1);
     expect(whereMock).toHaveBeenCalledTimes(1);
@@ -480,7 +480,7 @@ describe("syncDetailsRencontres", () => {
       update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }),
     };
 
-    await syncDetailsRencontres(db as SyncDb, 1, FFTT_CONFIG);
+    await syncDetailsRencontres(db as unknown as SyncDb, 1, FFTT_CONFIG);
 
     expect(insertedValues).toHaveLength(1);
     const row = insertedValues[0] as Record<string, unknown>;
@@ -506,7 +506,7 @@ describe("syncDetailsRencontres", () => {
       update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }),
     };
 
-    await syncDetailsRencontres(db as SyncDb, 1, FFTT_CONFIG);
+    await syncDetailsRencontres(db as unknown as SyncDb, 1, FFTT_CONFIG);
 
     expect(mockGetChpRenc).not.toHaveBeenCalled();
     expect(db.delete).not.toHaveBeenCalled();
