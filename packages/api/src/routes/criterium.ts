@@ -8,9 +8,11 @@ import {
   parties_individuelles,
   joueurs,
 } from "../db/schema.js";
+import { parseIntParam, parseIntQuery } from "./utils.js";
+import { env } from "../env.js";
 
-const USFTT_CLUB = "FONTENAYSIENNE";
-const USFTT_CLUB_NUMERO = "08940073";
+const USFTT_CLUB = env.CLUB_NOM || "FONTENAYSIENNE";
+const USFTT_CLUB_NUMERO = env.CLUB_NUMERO;
 
 /** Match criterium / championnat federal epreuve libelles (case-insensitive, accent-tolerant). */
 function isCriteriumEpreuve() {
@@ -118,7 +120,9 @@ app.get("/criterium/tours", async (c) => {
 });
 
 app.get("/criterium/tours/:tour", async (c) => {
-  const tour = parseInt(c.req.param("tour"), 10);
+  const parsedTour = parseIntParam(c, "tour");
+  if (!parsedTour.ok) return parsedTour.response;
+  const tour = parsedTour.value;
 
   // Get all tour rows for this tour number
   const tourRows = await db
@@ -320,12 +324,10 @@ app.get("/criterium/tours/:tour", async (c) => {
 });
 
 app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
-  const tour = parseInt(c.req.param("tour"), 10);
+  const parsedTour = parseIntParam(c, "tour");
+  if (!parsedTour.ok) return parsedTour.response;
+  const tour = parsedTour.value;
   const licence = c.req.param("licence");
-
-  if (Number.isNaN(tour)) {
-    return c.json({ error: "Invalid tour parameter" }, 400);
-  }
 
   // Find tour rows for this tour number
   const tourRows = await db
@@ -340,11 +342,9 @@ app.get("/criterium/tours/:tour/joueurs/:licence", async (c) => {
   const tourIds = tourRows.map((t) => t.id);
 
   // Find the player - use specific tourId if provided (for players in multiple categories)
-  const specificTourIdRaw = c.req.query("tourId");
-  const specificTourId = specificTourIdRaw ? parseInt(specificTourIdRaw, 10) : null;
-  if (specificTourIdRaw && (specificTourId === null || Number.isNaN(specificTourId))) {
-    return c.json({ error: "Invalid tourId query parameter" }, 400);
-  }
+  const parsedSpecificTour = parseIntQuery(c, "tourId");
+  if (parsedSpecificTour && !parsedSpecificTour.ok) return parsedSpecificTour.response;
+  const specificTourId = parsedSpecificTour ? parsedSpecificTour.value : null;
 
   const playerRows = await db
     .select()

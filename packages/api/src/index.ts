@@ -22,14 +22,21 @@ const ffttConfig: CriteriumFfttConfig | null = hasFfttConfig(env)
 
 const app = new Hono();
 
+const DEFAULT_DEV_ORIGIN = "http://localhost:5180";
 const allowedOrigins = env.ALLOWED_ORIGINS
   ? env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
-  : null;
+  : [DEFAULT_DEV_ORIGIN];
+
+if (!env.ALLOWED_ORIGINS) {
+  console.warn(
+    `WARN: ALLOWED_ORIGINS not set; CORS limited to ${DEFAULT_DEV_ORIGIN}.`
+  );
+}
 
 app.use(
   "/*",
   cors({
-    origin: allowedOrigins ?? "*",
+    origin: (origin) => (allowedOrigins.includes(origin) ? origin : null),
   })
 );
 

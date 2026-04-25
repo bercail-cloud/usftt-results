@@ -89,7 +89,7 @@ describe("syncFull", () => {
     mockSyncPartiesSpid.mockResolvedValue(0);
     mockSyncCriterium.mockResolvedValue(0);
 
-    await syncFull(db as SyncDb, FFTT_CONFIG);
+    await syncFull(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncEquipes).toHaveBeenCalledWith(db, FFTT_CONFIG);
     expect(mockSyncJoueurs).toHaveBeenCalledWith(db, FFTT_CONFIG);
@@ -103,7 +103,7 @@ describe("syncFull", () => {
     mockSyncJoueurs.mockResolvedValue(0);
     mockSyncPartiesSpid.mockResolvedValue(0);
 
-    await syncFull(db as SyncDb, FFTT_CONFIG);
+    await syncFull(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(db.insert).toHaveBeenCalled();
     const insertedStatuses = (db.insert as ReturnType<typeof vi.fn>).mock.calls.map(
@@ -118,7 +118,7 @@ describe("syncFull", () => {
     mockSyncJoueurs.mockResolvedValue(0);
     mockSyncPartiesSpid.mockResolvedValue(0);
 
-    await expect(syncFull(db as SyncDb, FFTT_CONFIG)).resolves.not.toThrow();
+    await expect(syncFull(db as unknown as SyncDb, FFTT_CONFIG)).resolves.not.toThrow();
 
     expect(mockSyncJoueurs).toHaveBeenCalled();
     expect(mockSyncPartiesSpid).toHaveBeenCalled();
@@ -131,7 +131,7 @@ describe("syncFull", () => {
     mockSyncJoueurs.mockResolvedValue(0);
     mockSyncPartiesSpid.mockResolvedValue(0);
 
-    await syncFull(db as SyncDb, FFTT_CONFIG);
+    await syncFull(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(db.insert).toHaveBeenCalled();
     const valuesCalls = (db.select as ReturnType<typeof vi.fn>).mock.calls;
@@ -144,7 +144,7 @@ describe("syncFull", () => {
     mockSyncJoueurs.mockResolvedValue(5);
     mockSyncPartiesSpid.mockResolvedValue(0);
 
-    await syncFull(db as SyncDb, FFTT_CONFIG);
+    await syncFull(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncJoueurs).toHaveBeenCalledTimes(1);
   });
@@ -155,7 +155,7 @@ describe("syncFull", () => {
     mockSyncJoueurs.mockRejectedValue(new Error("joueurs API down"));
     mockSyncPartiesSpid.mockResolvedValue(3);
 
-    await syncFull(db as SyncDb, FFTT_CONFIG);
+    await syncFull(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncPartiesSpid).toHaveBeenCalledTimes(1);
   });
@@ -166,7 +166,7 @@ describe("syncFull", () => {
     mockSyncJoueurs.mockRejectedValue(new Error("joueurs failed"));
     mockSyncPartiesSpid.mockResolvedValue(0);
 
-    await expect(syncFull(db as SyncDb, FFTT_CONFIG)).resolves.not.toThrow();
+    await expect(syncFull(db as unknown as SyncDb, FFTT_CONFIG)).resolves.not.toThrow();
 
     expect(mockSyncPartiesSpid).toHaveBeenCalled();
   });
@@ -184,7 +184,7 @@ describe("syncFull", () => {
     mockSyncDetailsRencontres.mockResolvedValue(undefined);
     mockSyncPartiesSpid.mockResolvedValue(0);
 
-    await syncFull(db as SyncDb, FFTT_CONFIG);
+    await syncFull(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncClassementsPoule).toHaveBeenCalledTimes(2);
     expect(mockSyncRencontres).toHaveBeenCalledTimes(2);
@@ -207,7 +207,7 @@ describe("syncQuotidienEtJourDeMatch", () => {
     mockSyncDetailsRencontres.mockResolvedValue(undefined);
     mockSyncPartiesSpid.mockResolvedValue(0);
 
-    await syncQuotidienEtJourDeMatch(db as SyncDb, FFTT_CONFIG);
+    await syncQuotidienEtJourDeMatch(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncClassementsPoule).toHaveBeenCalled();
     expect(mockSyncRencontres).toHaveBeenCalled();
@@ -219,7 +219,7 @@ describe("syncQuotidienEtJourDeMatch", () => {
     const db = makeDb([]);
     mockSyncPartiesSpid.mockResolvedValue(0);
 
-    await syncQuotidienEtJourDeMatch(db as SyncDb, FFTT_CONFIG);
+    await syncQuotidienEtJourDeMatch(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncCriterium).not.toHaveBeenCalled();
     expect(mockSyncJoueurs).not.toHaveBeenCalled();
@@ -230,7 +230,7 @@ describe("syncQuotidienEtJourDeMatch", () => {
     const db = makeDb([]);
     mockSyncPartiesSpid.mockResolvedValue(0);
 
-    await expect(syncQuotidienEtJourDeMatch(db as SyncDb, FFTT_CONFIG)).resolves.not.toThrow();
+    await expect(syncQuotidienEtJourDeMatch(db as unknown as SyncDb, FFTT_CONFIG)).resolves.not.toThrow();
 
     expect(mockSyncPartiesSpid).toHaveBeenCalledTimes(1);
   });
@@ -247,7 +247,7 @@ describe("syncHebdoEtDebutPhaseBiQuotidien", () => {
     mockSyncJoueurs.mockResolvedValue(0);
     mockSyncHistorique.mockResolvedValue(0);
 
-    await syncHebdoEtDebutPhaseBiQuotidien(db as SyncDb, FFTT_CONFIG);
+    await syncHebdoEtDebutPhaseBiQuotidien(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncEquipes).toHaveBeenCalledWith(db, FFTT_CONFIG);
     expect(mockSyncJoueurs).toHaveBeenCalledWith(db, FFTT_CONFIG);
@@ -260,7 +260,7 @@ describe("syncHebdoEtDebutPhaseBiQuotidien", () => {
     mockSyncJoueurs.mockResolvedValue(0);
     mockSyncHistorique.mockResolvedValue(0);
 
-    await syncHebdoEtDebutPhaseBiQuotidien(db as SyncDb, FFTT_CONFIG);
+    await syncHebdoEtDebutPhaseBiQuotidien(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockSyncPartiesSpid).not.toHaveBeenCalled();
     expect(mockSyncClassementsPoule).not.toHaveBeenCalled();
@@ -272,7 +272,7 @@ describe("syncHebdoEtDebutPhaseBiQuotidien", () => {
     mockSyncJoueurs.mockResolvedValue(0);
     mockSyncHistorique.mockResolvedValue(0);
 
-    await expect(syncHebdoEtDebutPhaseBiQuotidien(db as SyncDb, FFTT_CONFIG)).resolves.not.toThrow();
+    await expect(syncHebdoEtDebutPhaseBiQuotidien(db as unknown as SyncDb, FFTT_CONFIG)).resolves.not.toThrow();
 
     expect(mockSyncJoueurs).toHaveBeenCalledTimes(1);
     expect(mockSyncHistorique).toHaveBeenCalledTimes(1);
@@ -286,14 +286,14 @@ describe("startScheduler", () => {
 
   it("registers all cron jobs", () => {
     const db = makeDb([]);
-    startScheduler(db as SyncDb, FFTT_CONFIG);
+    startScheduler(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockCronSchedule).toHaveBeenCalledTimes(5);
   });
 
   it("registers daily sync at 7am and 19pm", () => {
     const db = makeDb([]);
-    startScheduler(db as SyncDb, FFTT_CONFIG);
+    startScheduler(db as unknown as SyncDb, FFTT_CONFIG);
 
     const schedules = mockCronSchedule.mock.calls.map((call) => call[0]);
     expect(schedules).toContain("0 7,19 * * *");
@@ -301,7 +301,7 @@ describe("startScheduler", () => {
 
   it("registers match day sync every hour on Saturday", () => {
     const db = makeDb([]);
-    startScheduler(db as SyncDb, FFTT_CONFIG);
+    startScheduler(db as unknown as SyncDb, FFTT_CONFIG);
 
     const schedules = mockCronSchedule.mock.calls.map((call) => call[0]);
     expect(schedules).toContain("0 * * * 6");
@@ -309,7 +309,7 @@ describe("startScheduler", () => {
 
   it("registers historique sync every 2 days in January and September", () => {
     const db = makeDb([]);
-    startScheduler(db as SyncDb, FFTT_CONFIG);
+    startScheduler(db as unknown as SyncDb, FFTT_CONFIG);
 
     const schedules = mockCronSchedule.mock.calls.map((call) => call[0]);
     expect(schedules).toContain("0 6 1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31 1,9 *");
@@ -317,7 +317,7 @@ describe("startScheduler", () => {
 
   it("registers weekly historique sync on Mondays for remaining months", () => {
     const db = makeDb([]);
-    startScheduler(db as SyncDb, FFTT_CONFIG);
+    startScheduler(db as unknown as SyncDb, FFTT_CONFIG);
 
     const schedules = mockCronSchedule.mock.calls.map((call) => call[0]);
     expect(schedules).toContain("0 6 * 2-8,10-12 1");
@@ -325,7 +325,7 @@ describe("startScheduler", () => {
 
   it("registers mysql parties sync mid-month", () => {
     const db = makeDb([]);
-    startScheduler(db as SyncDb, FFTT_CONFIG);
+    startScheduler(db as unknown as SyncDb, FFTT_CONFIG);
 
     const schedules = mockCronSchedule.mock.calls.map((call) => call[0]);
     expect(schedules).toContain("0 6 12-20 * *");

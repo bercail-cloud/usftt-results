@@ -42,7 +42,7 @@ describe("syncHistorique", () => {
       }),
     };
 
-    const count = await syncHistorique(db as SyncDb, FFTT_CONFIG);
+    const count = await syncHistorique(db as unknown as SyncDb, FFTT_CONFIG);
     expect(count).toBe(0);
     expect(mockGetHistoClassement).not.toHaveBeenCalled();
   });
@@ -66,7 +66,7 @@ describe("syncHistorique", () => {
 
     mockGetHistoClassement.mockResolvedValue([]);
 
-    await syncHistorique(db as SyncDb, FFTT_CONFIG);
+    await syncHistorique(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockGetHistoClassement).toHaveBeenCalledTimes(2);
     expect(mockGetHistoClassement).toHaveBeenCalledWith(
@@ -107,7 +107,7 @@ describe("syncHistorique", () => {
       }),
     });
 
-    await syncHistorique(db as SyncDb, FFTT_CONFIG);
+    await syncHistorique(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(insertedValues).toHaveLength(1);
     const row = insertedValues[0] as Record<string, unknown>;
@@ -143,7 +143,7 @@ describe("syncHistorique", () => {
       }),
     });
 
-    await syncHistorique(db as SyncDb, FFTT_CONFIG);
+    await syncHistorique(db as unknown as SyncDb, FFTT_CONFIG);
 
     const row = insertedValues[0] as Record<string, unknown>;
     expect(row.phase).toBe(2);
@@ -176,7 +176,7 @@ describe("syncHistorique", () => {
       }),
     });
 
-    await syncHistorique(db as SyncDb, FFTT_CONFIG);
+    await syncHistorique(db as unknown as SyncDb, FFTT_CONFIG);
     expect(usedOnConflictDoNothing).toBe(true);
   });
 
@@ -203,7 +203,7 @@ describe("syncHistorique", () => {
       .mockResolvedValueOnce([makeApiHisto(), makeApiHisto({ saison: "2023" })])
       .mockResolvedValueOnce([makeApiHisto({ saison: "2022" })]);
 
-    const count = await syncHistorique(db as SyncDb, FFTT_CONFIG);
+    const count = await syncHistorique(db as unknown as SyncDb, FFTT_CONFIG);
     expect(count).toBe(4);
   });
 
@@ -228,8 +228,8 @@ describe("syncHistorique", () => {
       makeApiHisto(),
     ]);
 
-    await expect(syncHistorique(db as SyncDb, FFTT_CONFIG)).resolves.not.toThrow();
-    const count = await syncHistorique(db as SyncDb, FFTT_CONFIG);
+    await expect(syncHistorique(db as unknown as SyncDb, FFTT_CONFIG)).resolves.not.toThrow();
+    const count = await syncHistorique(db as unknown as SyncDb, FFTT_CONFIG);
     expect(count).toBe(0);
   });
 
@@ -245,7 +245,7 @@ describe("syncHistorique", () => {
 
     mockGetHistoClassement.mockResolvedValue([]);
 
-    const count = await syncHistorique(db as SyncDb, FFTT_CONFIG);
+    const count = await syncHistorique(db as unknown as SyncDb, FFTT_CONFIG);
     expect(count).toBe(0);
     expect(db.insert).not.toHaveBeenCalled();
   });

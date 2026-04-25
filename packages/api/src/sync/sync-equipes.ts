@@ -1,6 +1,7 @@
 import { getEquipes } from "../fftt/endpoints.js";
 import { equipes } from "../db/schema.js";
 import { sql } from "drizzle-orm";
+import type { db } from "../db/connection.js";
 
 export interface FfttConfig {
   appId: string;
@@ -9,8 +10,7 @@ export interface FfttConfig {
   clubNumero: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type SyncDb = any;
+export type SyncDb = typeof db;
 
 export async function syncEquipes(
   db: SyncDb,

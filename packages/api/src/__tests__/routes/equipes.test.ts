@@ -240,3 +240,21 @@ describe("GET /api/equipes/:id/rencontres/:rencId", () => {
     expect(body.parties).toHaveLength(2);
   });
 });
+
+describe("input validation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 400 when /equipes/:id is not an integer", async () => {
+    const res = await app.request("/api/equipes/abc");
+    expect(res.status).toBe(400);
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when /equipes/:id/rencontres/:rencId rencId is not an integer", async () => {
+    const res = await app.request("/api/equipes/1/rencontres/notanid");
+    expect(res.status).toBe(400);
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+});

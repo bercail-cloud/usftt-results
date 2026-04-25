@@ -48,7 +48,7 @@ describe("syncPartiesMysql", () => {
     const selectMock = vi.fn().mockReturnValue({ from: fromMock });
     const db = { select: selectMock };
 
-    await syncPartiesMysql(db as SyncDb, FFTT_CONFIG);
+    await syncPartiesMysql(db as unknown as SyncDb, FFTT_CONFIG);
     expect(selectMock).toHaveBeenCalled();
   });
 
@@ -57,7 +57,7 @@ describe("syncPartiesMysql", () => {
     const fromMock = vi.fn().mockReturnValue({ where: whereMock });
     const db = { select: vi.fn().mockReturnValue({ from: fromMock }) };
 
-    const count = await syncPartiesMysql(db as SyncDb, FFTT_CONFIG);
+    const count = await syncPartiesMysql(db as unknown as SyncDb, FFTT_CONFIG);
     expect(count).toBe(0);
     expect(mockGetPartieMysql).not.toHaveBeenCalled();
   });
@@ -80,7 +80,7 @@ describe("syncPartiesMysql", () => {
     };
     mockGetPartieMysql.mockResolvedValue([]);
 
-    await syncPartiesMysql(db as SyncDb, FFTT_CONFIG);
+    await syncPartiesMysql(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(mockGetPartieMysql).toHaveBeenCalledTimes(2);
     expect(mockGetPartieMysql).toHaveBeenCalledWith(
@@ -123,7 +123,7 @@ describe("syncPartiesMysql", () => {
       }),
     });
 
-    await syncPartiesMysql(db as SyncDb, FFTT_CONFIG);
+    await syncPartiesMysql(db as unknown as SyncDb, FFTT_CONFIG);
 
     const rows = insertedValues as Array<Record<string, unknown>>;
     const victoire = rows.find((r) => r.adversaire_licence === "87654321");
@@ -153,7 +153,7 @@ describe("syncPartiesMysql", () => {
       }),
     });
 
-    await syncPartiesMysql(db as SyncDb, FFTT_CONFIG);
+    await syncPartiesMysql(db as unknown as SyncDb, FFTT_CONFIG);
 
     expect(insertedValues).toHaveLength(1);
     const row = insertedValues[0] as Record<string, unknown>;
@@ -192,7 +192,7 @@ describe("syncPartiesMysql", () => {
       }),
     });
 
-    await syncPartiesMysql(db as SyncDb, FFTT_CONFIG);
+    await syncPartiesMysql(db as unknown as SyncDb, FFTT_CONFIG);
 
     const row = insertedValues[0] as Record<string, unknown>;
     expect(row.adversaire_classement).toBe(1750);
@@ -225,7 +225,7 @@ describe("syncPartiesMysql", () => {
       .mockResolvedValueOnce([makeApiPartie(), makeApiPartie({ advlic: "AAAAAAAA" })])
       .mockResolvedValueOnce([makeApiPartie({ licence: "22222222" })]);
 
-    const count = await syncPartiesMysql(db as SyncDb, FFTT_CONFIG);
+    const count = await syncPartiesMysql(db as unknown as SyncDb, FFTT_CONFIG);
     expect(count).toBe(3);
   });
 
@@ -242,7 +242,7 @@ describe("syncPartiesMysql", () => {
 
     mockGetPartieMysql.mockResolvedValue([]);
 
-    const count = await syncPartiesMysql(db as SyncDb, FFTT_CONFIG);
+    const count = await syncPartiesMysql(db as unknown as SyncDb, FFTT_CONFIG);
     expect(count).toBe(0);
     expect(db.insert).not.toHaveBeenCalled();
   });
