@@ -2,6 +2,7 @@ import { getLicenceB } from "../fftt/endpoints.js";
 import { joueurs } from "../db/schema.js";
 import { sql } from "drizzle-orm";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
+import { safeIntOrNull as safeInt, safeFloatOrNull as safeFloat } from "./parsers.js";
 
 export async function syncJoueurs(db: SyncDb, ffttConfig: FfttConfig): Promise<number> {
   const { appId, serie, password, clubNumero } = ffttConfig;
@@ -11,18 +12,6 @@ export async function syncJoueurs(db: SyncDb, ffttConfig: FfttConfig): Promise<n
   if (players.length === 0) {
     return 0;
   }
-
-  const safeInt = (val: string | undefined): number | null => {
-    if (!val) return null;
-    const n = parseInt(val, 10);
-    return Number.isNaN(n) ? null : n;
-  };
-
-  const safeFloat = (val: string | undefined): number | null => {
-    if (!val) return null;
-    const n = parseFloat(val);
-    return Number.isNaN(n) ? null : n;
-  };
 
   const rows = players.map((player) => ({
     licence: player.licence,

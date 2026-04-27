@@ -78,17 +78,7 @@ export function parseSpidClassement(raw: string): { points: number; rang: string
   return { points: Number.isNaN(n) ? 0 : n, rang: null };
 }
 
-const safeInt = (val: string | undefined): number => {
-  if (!val) return 0;
-  const n = parseInt(val, 10);
-  return Number.isNaN(n) ? 0 : n;
-};
-
-const safeFloat = (val: string | undefined): number => {
-  if (!val) return 0;
-  const n = parseFloat(val);
-  return Number.isNaN(n) ? 0 : n;
-};
+import { safeIntOrZero as safeInt, safeFloatOrZero as safeFloat } from "./parsers.js";
 
 async function getActiveJoueurs(db: SyncDb) {
   return db

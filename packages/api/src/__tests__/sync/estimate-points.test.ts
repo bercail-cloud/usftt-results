@@ -87,6 +87,23 @@ describe("estimatePoints", () => {
     expect(estimatePoints(1500, 1500, true, 1.0)).toBe(6);
     expect(estimatePoints(1500, 1500, false, 1.0)).toBe(-5);
   });
+
+  describe("edge cases", () => {
+    it("returns 0 for forfait even with extreme classement gap", () => {
+      expect(estimatePoints(0, 5000, true, 1.0, true)).toBe(0);
+      expect(estimatePoints(5000, 0, false, 10.0, true)).toBe(0);
+    });
+
+    it("handles zero coefficient by yielding zero points", () => {
+      expect(estimatePoints(1500, 1490, true, 0)).toBe(0);
+      expect(estimatePoints(1400, 2000, true, 0)).toBe(0);
+    });
+
+    it("handles a zero classement by promoting to 0 (treated as rank * 100 = 0)", () => {
+      // Both zero -> ecart 0, player tied so stronger, normal win = +6
+      expect(estimatePoints(0, 0, true, 1.0)).toBe(6);
+    });
+  });
 });
 
 describe("parseSpidClassement", () => {
