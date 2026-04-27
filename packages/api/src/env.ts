@@ -1,18 +1,6 @@
-import { z } from "zod";
+import { envSchema, type Env } from "./env-schema.js";
 
-const envSchema = z.object({
-  FFTT_APP_ID: z.string().min(1).optional(),
-  FFTT_PASSWORD: z.string().min(1).optional(),
-  FFTT_SERIE: z.string().length(15).optional(),
-  CLUB_NUMERO: z.string().default("08940073"),
-  CLUB_NOM: z.string().default(""),
-  DATABASE_URL: z.string().url(),
-  PORT: z.coerce.number().int().positive().default(3000),
-  SYNC_TRIGGER_TOKEN: z.string().min(1).optional(),
-  ALLOWED_ORIGINS: z.string().optional(),
-});
-
-export type Env = z.infer<typeof envSchema>;
+export { envSchema, type Env };
 
 function loadEnv(): Env {
   const parsed = envSchema.safeParse(process.env);

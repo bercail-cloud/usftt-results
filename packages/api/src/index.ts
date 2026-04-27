@@ -26,6 +26,9 @@ const allowedOrigins = env.ALLOWED_ORIGINS
   ? env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
   : null;
 
+// Outside production we default to "*" for convenience. In production the
+// envSchema refuses to load without ALLOWED_ORIGINS, so allowedOrigins is
+// always non-empty here.
 app.use(
   "/*",
   cors({
@@ -40,7 +43,7 @@ app.route("/api", joueursRoutes);
 
 serve({ fetch: app.fetch, port: env.PORT }, () => {
   console.log(`API server running on port ${env.PORT}`);
-  if (!env.SYNC_TRIGGER_TOKEN) {
+  if (env.NODE_ENV !== "production" && !env.SYNC_TRIGGER_TOKEN) {
     console.warn(
       "WARN: SYNC_TRIGGER_TOKEN not set; /api/sync/trigger/:module is unauthenticated."
     );

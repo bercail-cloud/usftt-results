@@ -14,15 +14,10 @@ import {
 } from "../db/schema.js";
 import { sql } from "drizzle-orm";
 import type { FfttConfig, SyncDb } from "./sync-equipes.js";
+import { safeIntOrZero as si } from "./parsers.js";
 
 export interface CriteriumFfttConfig extends FfttConfig {
   clubNom: string;
-}
-
-function si(v: unknown): number {
-  if (v === null || v === undefined || v === "") return 0;
-  const n = Number(v);
-  return Number.isNaN(n) ? 0 : Math.floor(n);
 }
 
 function parseClassementFromClt(clt: string): number {
