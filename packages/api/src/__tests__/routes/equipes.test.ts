@@ -133,6 +133,14 @@ describe("GET /api/equipes/:id", () => {
     vi.clearAllMocks();
   });
 
+  it("returns 400 when id is not a number", async () => {
+    const res = await app.request("/api/equipes/abc");
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body).toHaveProperty("error");
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
   it("returns 404 when equipe not found", async () => {
     (mockDb.select as ReturnType<typeof vi.fn>).mockImplementation(() => {
       return {
@@ -193,6 +201,14 @@ describe("GET /api/equipes/:id", () => {
 describe("GET /api/equipes/:id/rencontres/:rencId", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("returns 400 when rencId is not a number", async () => {
+    const res = await app.request("/api/equipes/1/rencontres/not-a-number");
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body).toHaveProperty("error");
+    expect(mockDb.select).not.toHaveBeenCalled();
   });
 
   it("returns 404 when rencontre not found", async () => {

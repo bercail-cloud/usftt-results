@@ -11,7 +11,7 @@ export function useJoueurs() {
 export function useJoueurProgression(licence: string) {
   return useQuery({
     queryKey: ["progression", licence],
-    queryFn: () => api.get(`/api/joueurs/${licence}/progression`),
+    queryFn: () => api.get(`/api/joueurs/${encodeURIComponent(licence)}/progression`),
     enabled: !!licence,
   });
 }
@@ -19,7 +19,7 @@ export function useJoueurProgression(licence: string) {
 export function useJoueurEquipes(licence: string) {
   return useQuery({
     queryKey: ["joueur-equipes", licence],
-    queryFn: () => api.get(`/api/joueurs/${licence}/equipes`),
+    queryFn: () => api.get(`/api/joueurs/${encodeURIComponent(licence)}/equipes`),
     enabled: !!licence,
   });
 }
@@ -27,7 +27,7 @@ export function useJoueurEquipes(licence: string) {
 export function useJoueurParties(licence: string) {
   return useQuery({
     queryKey: ["parties", licence],
-    queryFn: () => api.get(`/api/joueurs/${licence}/parties`),
+    queryFn: () => api.get(`/api/joueurs/${encodeURIComponent(licence)}/parties`),
     enabled: !!licence,
   });
 }

@@ -84,6 +84,14 @@ describe("GET /api/criterium/tours/:tour", () => {
     vi.clearAllMocks();
   });
 
+  it("returns 400 when tour parameter is not a number", async () => {
+    const res = await app.request("/api/criterium/tours/abc");
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body).toHaveProperty("error");
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
   it("returns empty array when no tour rows found", async () => {
     (mockDb.select as ReturnType<typeof vi.fn>).mockImplementation(() => ({
       from: vi.fn().mockReturnValue({
@@ -101,6 +109,24 @@ describe("GET /api/criterium/tours/:tour", () => {
 describe("GET /api/criterium/tours/:tour/joueurs/:licence", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("returns 400 when tour parameter is not a number", async () => {
+    const res = await app.request("/api/criterium/tours/abc/joueurs/0940001");
+    expect(res.status).toBe(400);
+    expect(mockDb.select).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when tourId query parameter is not a number", async () => {
+    const tourRows = [{ id: 1, tour: 1, date_tour: "13/03/2026", division_libelle: "D1", niveau: "Departemental" }];
+    (mockDb.select as ReturnType<typeof vi.fn>).mockImplementation(() => ({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(tourRows),
+      }),
+    }));
+
+    const res = await app.request("/api/criterium/tours/1/joueurs/0940001?tourId=abc");
+    expect(res.status).toBe(400);
   });
 
   it("returns 404 when tour not found", async () => {

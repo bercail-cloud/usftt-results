@@ -11,13 +11,17 @@ export function useCriteriumTours() {
 export function useCriteriumTour(tour: number) {
   return useQuery({
     queryKey: ["criterium", tour],
-    queryFn: () => api.get(`/api/criterium/tours/${tour}`),
+    queryFn: () => api.get(`/api/criterium/tours/${encodeURIComponent(tour)}`),
   });
 }
 
 export function useCriteriumDetail(tour: number, licence: string, tourId?: string) {
   return useQuery({
     queryKey: ["criterium", tour, licence, tourId],
-    queryFn: () => api.get(`/api/criterium/tours/${tour}/joueurs/${licence}${tourId ? `?tourId=${tourId}` : ""}`),
+    queryFn: () => {
+      const base = `/api/criterium/tours/${encodeURIComponent(tour)}/joueurs/${encodeURIComponent(licence)}`;
+      const qs = tourId ? `?tourId=${encodeURIComponent(tourId)}` : "";
+      return api.get(`${base}${qs}`);
+    },
   });
 }

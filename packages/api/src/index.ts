@@ -26,6 +26,13 @@ const allowedOrigins = env.ALLOWED_ORIGINS
   ? env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
   : null;
 
+if (env.NODE_ENV === "production" && (!allowedOrigins || allowedOrigins.length === 0)) {
+  console.warn(
+    "WARN: ALLOWED_ORIGINS is not set in production; CORS will allow any origin. " +
+      "Set ALLOWED_ORIGINS to a comma-separated list of trusted origins."
+  );
+}
+
 app.use(
   "/*",
   cors({
