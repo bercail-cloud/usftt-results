@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router";
 import { NavBar } from "./components/NavBar";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { EquipesOverview } from "./pages/EquipesOverview";
 import { EquipeDetail } from "./pages/EquipeDetail";
 import { CriteriumOverview } from "./pages/CriteriumOverview";
@@ -13,20 +14,22 @@ export function App() {
     <div className="min-h-screen bg-bg-page">
       <NavBar />
       <main className="pb-16 sm:pb-0">
-        <Routes>
-          <Route path="/" element={<Navigate to="/equipes" replace />} />
-          <Route path="/equipes" element={<EquipesOverview />} />
-          <Route path="/equipes/:id" element={<EquipeDetail />} />
-          <Route path="/criterium" element={<CriteriumOverview />} />
-          <Route
-            path="/criterium/tours/:tour/joueurs/:licence"
-            element={<CriteriumDetail />}
-          />
-          <Route path="/progression" element={<Progression />} />
-          <Route path="/progression/:licence" element={<ProgressionDetail />} />
-          <Route path="/sync" element={<Sync />} />
-          <Route path="*" element={<Navigate to="/equipes" replace />} />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/" element={<Navigate to="/equipes" replace />} />
+            <Route path="/equipes" element={<EquipesOverview />} />
+            <Route path="/equipes/:id" element={<EquipeDetail />} />
+            <Route path="/criterium" element={<CriteriumOverview />} />
+            <Route
+              path="/criterium/tours/:tour/joueurs/:licence"
+              element={<CriteriumDetail />}
+            />
+            <Route path="/progression" element={<Progression />} />
+            <Route path="/progression/:licence" element={<ProgressionDetail />} />
+            <Route path="/sync" element={<Sync />} />
+            <Route path="*" element={<Navigate to="/equipes" replace />} />
+          </Routes>
+        </ErrorBoundary>
       </main>
     </div>
   );

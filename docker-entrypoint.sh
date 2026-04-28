@@ -1,10 +1,18 @@
 #!/bin/sh
 set -e
 
-echo "Waiting for PostgreSQL..."
+PGHOST="${PGHOST:-postgres}"
+PGPORT="${PGPORT:-5432}"
+
+echo "Waiting for PostgreSQL at ${PGHOST}:${PGPORT}..."
 RETRIES=30
-until nc -z postgres 5432 || [ $RETRIES -eq 0 ]; do
-  echo "Waiting for postgres, $((RETRIES--)) remaining..."
+until nc -z -w 2 "$PGHOST" "$PGPORT"; do
+  RETRIES=$((RETRIES - 1))
+  if [ $RETRIES -le 0 ]; then
+    echo "ERROR: PostgreSQL is not reachable at ${PGHOST}:${PGPORT} after 30 attempts" >&2
+    exit 1
+  fi
+  echo "Waiting for postgres, $RETRIES remaining..."
   sleep 1
 done
 

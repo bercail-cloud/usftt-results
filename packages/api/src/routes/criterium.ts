@@ -119,6 +119,9 @@ app.get("/criterium/tours", async (c) => {
 
 app.get("/criterium/tours/:tour", async (c) => {
   const tour = parseInt(c.req.param("tour"), 10);
+  if (Number.isNaN(tour)) {
+    return c.json({ error: "Invalid tour parameter" }, 400);
+  }
 
   // Get all tour rows for this tour number
   const tourRows = await db

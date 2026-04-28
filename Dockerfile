@@ -24,17 +24,20 @@ RUN npx turbo run build
 
 # Stage 4: api
 FROM base AS api
-RUN apk add --no-cache netcat-openbsd
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
-COPY --from=builder /app/packages/api/dist ./packages/api/dist
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/packages/shared/package.json ./packages/shared/
-COPY --from=builder /app/packages/api/package.json ./packages/api/
-COPY --from=builder /app/packages/api/src/db/migrations ./packages/api/src/db/migrations
-COPY --from=builder /app/packages/api/scripts/ ./packages/api/scripts/
-COPY docker-entrypoint.sh ./
+RUN apk add --no-cache netcat-openbsd \
+ && addgroup -g 1001 -S nodeapp \
+ && adduser -u 1001 -S nodeapp -G nodeapp
+COPY --from=deps --chown=nodeapp:nodeapp /app/node_modules ./node_modules
+COPY --from=builder --chown=nodeapp:nodeapp /app/packages/shared/dist ./packages/shared/dist
+COPY --from=builder --chown=nodeapp:nodeapp /app/packages/api/dist ./packages/api/dist
+COPY --from=builder --chown=nodeapp:nodeapp /app/package.json ./
+COPY --from=builder --chown=nodeapp:nodeapp /app/packages/shared/package.json ./packages/shared/
+COPY --from=builder --chown=nodeapp:nodeapp /app/packages/api/package.json ./packages/api/
+COPY --from=builder --chown=nodeapp:nodeapp /app/packages/api/src/db/migrations ./packages/api/src/db/migrations
+COPY --from=builder --chown=nodeapp:nodeapp /app/packages/api/scripts/ ./packages/api/scripts/
+COPY --chown=nodeapp:nodeapp docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
+USER nodeapp
 ENTRYPOINT ["./docker-entrypoint.sh"]
 
 # Stage 5: web

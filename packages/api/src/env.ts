@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const envSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   FFTT_APP_ID: z.string().min(1).optional(),
   FFTT_PASSWORD: z.string().min(1).optional(),
   FFTT_SERIE: z.string().length(15).optional(),
