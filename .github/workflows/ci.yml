@@ -5,7 +5,7 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on: macos-self-hosted
     steps:
       - uses: actions/checkout@v5
       - name: Run CI pipeline
