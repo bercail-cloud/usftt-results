@@ -4,7 +4,12 @@
  * Replaces GitHub Actions YAML with type-safe, locally-runnable pipeline functions.
  * Run `dagger call ci --source=.` to execute the full CI pipeline locally.
  */
-import { dag, Container, Directory, Secret, object, func } from "@dagger.io/dagger"
+import { dag, Container, Directory, Platform, Secret, object, func } from "@dagger.io/dagger"
+
+// Cible de production : VPS Linux x86_64. Quand le runner CI tourne sur
+// arm64 (MacBook self-hosted), sans platform explicite Dagger build des
+// images arm64 qui ne tournent pas sur le VPS. On force linux/amd64.
+const TARGET_PLATFORM = "linux/amd64" as Platform
 
 @object()
 export class UsfttCi {
@@ -41,12 +46,13 @@ export class UsfttCi {
     viteApiUrl: string = "https://api.usftt-results.bercail.cloud",
   ): Promise<string> {
     // Build API image
-    await source.dockerBuild({ target: "api" }).sync()
+    await source.dockerBuild({ target: "api", platform: TARGET_PLATFORM }).sync()
 
     // Build Web image with build arg
     await source
       .dockerBuild({
         target: "web",
+        platform: TARGET_PLATFORM,
         buildArgs: [{ name: "VITE_API_URL", value: viteApiUrl }],
       })
       .sync()
@@ -69,13 +75,14 @@ export class UsfttCi {
 
     // Build API image from Dockerfile
     const apiImage = source
-      .dockerBuild({ target: "api" })
+      .dockerBuild({ target: "api", platform: TARGET_PLATFORM })
       .withRegistryAuth(registry, username, githubToken)
 
     // Build Web image from Dockerfile
     const webImage = source
       .dockerBuild({
         target: "web",
+        platform: TARGET_PLATFORM,
         buildArgs: [{ name: "VITE_API_URL", value: viteApiUrl }],
       })
       .withRegistryAuth(registry, username, githubToken)
