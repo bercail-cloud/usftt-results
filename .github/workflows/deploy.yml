@@ -43,23 +43,42 @@ jobs:
     runs-on: macos-self-hosted
     steps:
       - uses: actions/checkout@v5
+
+      # appleboy/scp-action et ssh-action sont des Docker container
+      # actions, Linux-only. Sur runner macOS self-hosted on utilise
+      # ssh/scp natifs (même pattern que btbcsp deploy.yml).
+      - name: Setup SSH key
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ vars.VPS_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+
       - name: Copy docker-compose.yml to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ vars.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: docker-compose.yml
-          target: /opt/usftt-results/
-          overwrite: true
+        env:
+          VPS_HOST: ${{ vars.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            docker-compose.yml \
+            "$VPS_USER@$VPS_HOST:/opt/usftt-results/"
+
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ vars.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            cd /opt/usftt-results
-            docker compose pull
-            docker compose up -d --wait --wait-timeout 60
-            docker image prune -f
+        env:
+          VPS_HOST: ${{ vars.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" 'bash -s' << 'ENDSSH'
+          set -euo pipefail
+          cd /opt/usftt-results
+          docker compose pull
+          docker compose up -d --wait --wait-timeout 60
+          docker image prune -f
+          ENDSSH
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
