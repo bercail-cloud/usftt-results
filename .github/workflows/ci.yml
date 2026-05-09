@@ -5,7 +5,14 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on: macos-self-hosted
+    # GNU cut en tête de PATH (via brew coreutils) — `dagger/dagger-for-github`
+    # utilise `cut --fields N` (GNU syntax) que le BSD cut de macOS ne
+    # supporte pas. Sans ça, l'action échoue dès qu'un `dagger` est déjà
+    # installé sur le runner et qu'elle essaie de check sa version.
+    # Pré-requis runner : `brew install coreutils`.
+    env:
+      PATH: /opt/homebrew/opt/coreutils/libexec/gnubin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
     steps:
       - uses: actions/checkout@v5
       - name: Run CI pipeline
