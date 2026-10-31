@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { useJoueurs } from "../hooks/use-joueurs.js";
 import { LoadingSkeleton } from "../components/LoadingSkeleton.js";
 import { EmptyState } from "../components/EmptyState.js";
+import { computeTopPercent } from "../lib/top-percent.js";
 
 // ──────────────────────────────────────────────
 // Types
@@ -118,6 +119,7 @@ function PillTabs<T extends string>({ options, value, onChange, label }: PillTab
 
 interface PlayersTableProps {
   joueurs: Joueur[];
+  topPercent: Map<string, number>;
   selectedLicence: string;
   onSelect: (licence: string) => void;
 }
@@ -125,7 +127,7 @@ interface PlayersTableProps {
 type SortKey = "points_mensuels" | "points_officiels" | "points_initm" | "progression_mensuelle" | "progression_saison" | "nb_matchs";
 type SortDir = "asc" | "desc";
 
-function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps) {
+function PlayersTable({ joueurs, topPercent, selectedLicence, onSelect }: PlayersTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("points_mensuels");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
@@ -185,6 +187,9 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
               <th className={thClass} onClick={() => handleSort("nb_matchs")}>
                 Matchs<SortIndicator col="nb_matchs" />
               </th>
+              <th className="text-right px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#737686] whitespace-nowrap">
+                Top %
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -231,6 +236,9 @@ function PlayersTable({ joueurs, selectedLicence, onSelect }: PlayersTableProps)
                   <td className="px-4 py-3 text-right text-[#737686]">
                     {j.nb_matchs ?? "—"}
                   </td>
+                  <td className="px-4 py-3 text-right text-[#737686] font-mono tabular-nums whitespace-nowrap">
+                    {topPercent.has(j.licence) ? `Top ${topPercent.get(j.licence)}%` : "—"}
+                  </td>
                 </tr>
               );
             })}
@@ -265,6 +273,7 @@ export function Progression() {
   };
 
   const allJoueurs = joueursData?.data ?? [];
+  const topPercent = computeTopPercent(allJoueurs);
 
   const filteredJoueurs = allJoueurs
     .filter((j) => {
@@ -366,6 +375,7 @@ export function Progression() {
       ) : (
         <PlayersTable
           joueurs={filteredJoueurs}
+          topPercent={topPercent}
           selectedLicence=""
           onSelect={(licence) => {
             const params = new URLSearchParams();

@@ -128,4 +128,23 @@ describe("Progression", () => {
     expect(screen.getByText("Dupont Jean")).toBeInTheDocument();
     expect(screen.queryByText("Martin Alice")).not.toBeInTheDocument();
   });
+
+  it("shows Top % based on rank among players with at least one match", () => {
+    const withZero = [
+      ...MOCK_JOUEURS,
+      { ...MOCK_JOUEURS[0], licence: "000", nom: "Zero", prenom: "Match", points_mensuels: 2000, nb_matchs: 0 },
+    ];
+    mockUseJoueurs.mockReturnValue({
+      data: { data: withZero, lastSync: null },
+      isLoading: false,
+    });
+    renderPage();
+    expect(screen.getByRole("columnheader", { name: /top %/i })).toBeInTheDocument();
+    const dupont = screen.getByText("Dupont Jean").closest("tr")!;
+    const martin = screen.getByText("Martin Alice").closest("tr")!;
+    const zero = screen.getByText("Zero Match").closest("tr")!;
+    expect(dupont).toHaveTextContent("Top 50%");
+    expect(martin).toHaveTextContent("Top 100%");
+    expect(zero).not.toHaveTextContent("Top");
+  });
 });
