@@ -1,97 +1,60 @@
-name: Deploy
+name: Deploy Dokploy
+
+# Le webhook GitHub -> Dokploy ne passe pas (Dokploy est tailnet-only) : la CI
+# rejoint le tailnet via un noeud Tailscale ephemere et appelle l'API Dokploy
+# `application.deploy` ; Dokploy fait le build-from-Git. Meme pattern qu'aero-3d.
+#
+# Secrets/vars a poser sur CE repo (les secrets org sont prives uniquement,
+# indisponibles pour un repo public) :
+#   - TS_AUTHKEY      (secret)   : clef Tailscale reusable + ephemere, tag:ci
+#   - DOKPLOY_API_KEY (secret)   : cle API Dokploy
+#   - DOKPLOY_URL     (variable) : http://100.122.209.88:3000
 
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   workflow_dispatch:
 
 concurrency:
-  group: deploy-prod
+  group: deploy-dokploy
   cancel-in-progress: false
 
 permissions:
   contents: read
 
+env:
+  USFTT_API_APP_ID: eP1lJQ0u5XTFx_f8FKLQB
+  USFTT_WEB_APP_ID: NfXK_Go0rw6TAZrc-eyNW
+
 jobs:
-  ci:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v5
-      - name: Run CI pipeline
-        uses: dagger/dagger-for-github@v8.4.1
-        with:
-          version: "0.20.6"
-          args: ci --source=.
-
-  build-and-push:
-    needs: ci
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v5
-      - name: Build and push images
-        uses: dagger/dagger-for-github@v8.4.1
-        with:
-          version: "0.20.6"
-          args: >-
-            publish
-            --source=.
-            --github-token=env:GITHUB_TOKEN
-            --git-sha=${{ github.sha }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   deploy:
-    needs: build-and-push
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
-
-      # Le VPS n'est joignable que par le tailnet : noeud Tailscale ephemere.
-      # TS_AUTHKEY doit etre un secret de CE repo (le secret org est prive
-      # uniquement, donc indisponible pour un repo public).
       - name: Join tailnet
         uses: tailscale/github-action@v4
         with:
           authkey: ${{ secrets.TS_AUTHKEY }}
 
-      - name: Setup SSH key
+      - name: Trigger Dokploy deploy (api + web)
         env:
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          VPS_HOST: ${{ vars.VPS_HOST }}
+          DOKPLOY_URL: ${{ vars.DOKPLOY_URL }}
+          DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$VPS_SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
-
-      - name: Copy docker-compose.yml to VPS
-        env:
-          VPS_HOST: ${{ vars.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-        run: |
-          scp -i ~/.ssh/deploy_key \
-            docker-compose.yml \
-            "$VPS_USER@$VPS_HOST:/opt/usftt-results/"
-
-      - name: Deploy to VPS
-        env:
-          VPS_HOST: ${{ vars.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-        run: |
-          ssh -i ~/.ssh/deploy_key "$VPS_USER@$VPS_HOST" 'bash -s' << 'ENDSSH'
           set -euo pipefail
-          cd /opt/usftt-results
-          docker compose pull
-          docker compose up -d --wait --wait-timeout 60
-          docker image prune -f
-          ENDSSH
-
-      - name: Cleanup SSH key
-        if: always()
-        run: rm -f ~/.ssh/deploy_key
+          if [ -z "${DOKPLOY_URL:-}" ] || [ -z "${DOKPLOY_API_KEY:-}" ]; then
+            echo "::error::DOKPLOY_URL / DOKPLOY_API_KEY manquants."
+            exit 1
+          fi
+          for app_id in "$USFTT_API_APP_ID" "$USFTT_WEB_APP_ID"; do
+            echo "== deploy application ${app_id} =="
+            curl -fsS --retry 3 --retry-delay 5 --max-time 30 \
+              -X POST "${DOKPLOY_URL%/}/api/application.deploy" \
+              -H "x-api-key: ${DOKPLOY_API_KEY}" \
+              -H "Content-Type: application/json" \
+              -d "{\"applicationId\":\"${app_id}\"}"
+            echo
+          done
