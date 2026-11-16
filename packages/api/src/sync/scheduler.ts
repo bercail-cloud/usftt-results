@@ -10,6 +10,7 @@ import { syncPartiesMysql, syncPartiesSpid } from "./sync-parties.js";
 import { syncHistorique } from "./sync-historique.js";
 import { sql } from "drizzle-orm";
 import { sync_status, equipes as equipesTable, rencontres } from "../db/schema.js";
+import { syncCriterium } from "./sync-criterium.js";
 import type { CriteriumFfttConfig } from "./sync-criterium.js";
 import type { SyncDb } from "./sync-equipes.js";
 
@@ -148,6 +149,11 @@ export function startScheduler(
   );
   // Mysql parties: daily from 12th to 20th of each month at 6am
   cron.schedule("0 6 12-20 * *", () => syncPartiesMysqlJob(db, ffttConfig));
+
+  // Criterium results: daily at 8:30am
+  cron.schedule("30 8 * * *", () =>
+    runJob(db, "sync-criterium", () => syncCriterium(db, ffttConfig))
+  );
 
   console.log("Scheduler started");
 }

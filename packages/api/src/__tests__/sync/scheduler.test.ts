@@ -288,7 +288,7 @@ describe("startScheduler", () => {
     const db = makeDb([]);
     startScheduler(db as SyncDb, FFTT_CONFIG);
 
-    expect(mockCronSchedule).toHaveBeenCalledTimes(5);
+    expect(mockCronSchedule).toHaveBeenCalledTimes(6);
   });
 
   it("registers daily sync at 7am and 19pm", () => {
@@ -329,5 +329,15 @@ describe("startScheduler", () => {
 
     const schedules = mockCronSchedule.mock.calls.map((call) => call[0]);
     expect(schedules).toContain("0 6 12-20 * *");
+  });
+
+  it("registers daily criterium sync and runs it as sync-criterium", async () => {
+    const db = makeDb([]);
+    startScheduler(db as SyncDb, FFTT_CONFIG);
+
+    const call = mockCronSchedule.mock.calls.find((c) => c[0] === "30 8 * * *");
+    expect(call).toBeDefined();
+    await (call![1] as () => Promise<void>)();
+    expect(mockSyncCriterium).toHaveBeenCalledTimes(1);
   });
 });
