@@ -5,7 +5,7 @@ const envSchema = z.object({
   FFTT_PASSWORD: z.string().min(1).optional(),
   FFTT_SERIE: z.string().length(15).optional(),
   CLUB_NUMERO: z.string().default("08940073"),
-  CLUB_NOM: z.string().default(""),
+  CLUB_NOM: z.string().default("FONTENAYSIENNE"),
   DATABASE_URL: z.string().url(),
   PORT: z.coerce.number().int().positive().default(3000),
   SYNC_TRIGGER_TOKEN: z.string().min(1).optional(),
